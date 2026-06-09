@@ -71,6 +71,7 @@ const FarmerDashboard = () => {
             fetchDashData();
         } catch (error) {
             console.error('Add product error:', error);
+            alert(error.response?.data?.message || 'Failed to add product');
         }
     };
 
@@ -380,6 +381,11 @@ const FarmerDashboard = () => {
                                         <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Available Quantity (kg)</label>
                                         <input required type="number" placeholder="100" style={{ width: '100%', padding: '1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.5rem' }} value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: e.target.value})} />
                                     </div>
+                                </div>
+                                
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '0.5rem' }}>Description</label>
+                                    <textarea required placeholder="Briefly describe your product..." rows="3" style={{ width: '100%', padding: '1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.5rem', resize: 'none' }} value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}></textarea>
                                 </div>
                                 
                                 <div>

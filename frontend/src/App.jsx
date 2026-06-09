@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { ShoppingCart, LogIn, UserPlus, LogOut, Menu, X, Globe, User, BarChart, Package, MapPin, Leaf, Search } from 'lucide-react';
+import ChatBox from './components/ChatBox';
 
 // Lazy loading pages
 const Home = lazy(() => import('./pages/Home'));
@@ -102,6 +103,9 @@ const App = () => {
               </Routes>
             </Suspense>
           </main>
+          
+          <ChatBox recipientName="Support / Seller" />
+          
           <footer style={{ padding: '4rem 2rem', textAlign: 'center', opacity: 0.5 }}>
              <p>&copy; 2026 Farmer-to-Consumer Direct Platform. All rights reserved.</p>
           </footer>

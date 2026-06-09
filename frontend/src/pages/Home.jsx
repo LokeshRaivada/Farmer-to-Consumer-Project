@@ -99,7 +99,7 @@ const Home = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5, duration: 0.8, type: 'spring' }}
             className="animate-float"
-            style={{ width: '450px', height: '550px', position: 'relative', zIndex: 10, display: 'none' }} // Hide on mobile, show on desktop via CSS normally, using inline for quick fix
+            style={{ width: '450px', height: '550px', position: 'relative', zIndex: 10, display: 'block' }} // Hide on mobile, show on desktop via CSS normally, using inline for quick fix
           >
             {/* Main Glass Card */}
             <div className="glass" style={{ width: '100%', height: '100%', borderRadius: '2rem', display: 'flex', flexDirection: 'column', padding: '2rem', position: 'relative', overflow: 'hidden', border: '1px solid rgba(0,255,157,0.4)', boxShadow: '0 0 50px rgba(0,255,157,0.2)' }}>
@@ -116,27 +116,45 @@ const Home = () => {
               </div>
 
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', zIndex: 1 }}>
-                {/* Mock UI Rows */}
-                {[1, 2, 3].map(i => (
-                  <div key={i} style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '1rem', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    <div style={{ width: '50px', height: '50px', borderRadius: '0.5rem', background: 'rgba(0,255,157,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Leaf color="var(--primary)" size={24} />
+                {/* Realistic Market Rows */}
+                {[
+                  { name: 'Organic Tomatoes', farm: 'Green Valley Farm', price: '₹40/kg', trend: '+12%', icon: '🍅' },
+                  { name: 'Fresh Spinach', farm: 'Sunrise Organics', price: '₹25/bunch', trend: '+5%', icon: '🥬' },
+                  { name: 'Local Potatoes', farm: 'Heritage Farms', price: '₹30/kg', trend: '-2%', icon: '🥔' }
+                ].map((item, i) => (
+                  <div key={i} style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '1rem', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = 'rgba(0,255,157,0.05)'; e.currentTarget.style.borderColor = 'rgba(0,255,157,0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'rgba(0,0,0,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; }}>
+                    <div style={{ width: '50px', height: '50px', borderRadius: '0.5rem', background: 'rgba(0,255,157,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+                      {item.icon}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ width: '60%', height: '12px', background: 'rgba(255,255,255,0.2)', borderRadius: '1rem', marginBottom: '0.5rem' }}></div>
-                      <div style={{ width: '40%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '1rem' }}></div>
+                      <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.95rem', marginBottom: '0.2rem' }}>{item.name}</div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{item.farm}</div>
                     </div>
-                    <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>+ 24%</div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ color: 'white', fontWeight: 'bold' }}>{item.price}</div>
+                      <div style={{ color: item.trend.startsWith('+') ? 'var(--primary)' : '#ff5f56', fontSize: '0.8rem', fontWeight: 'bold' }}>{item.trend}</div>
+                    </div>
                   </div>
                 ))}
               </div>
 
               <div style={{ marginTop: 'auto', zIndex: 1 }}>
-                <div style={{ width: '100%', height: '120px', background: 'linear-gradient(to top, rgba(0,255,157,0.2), transparent)', borderRadius: '1rem', borderBottom: '2px solid var(--primary)', position: 'relative' }}>
-                   {/* Mock Graph Line */}
-                   <svg viewBox="0 0 100 40" style={{ width: '100%', height: '100%', position: 'absolute', bottom: 0 }}>
-                     <path d="M0 40 L 20 30 L 40 35 L 60 15 L 80 20 L 100 0" fill="none" stroke="var(--primary)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+                <div style={{ width: '100%', height: '120px', background: 'linear-gradient(to top, rgba(0,255,157,0.2), transparent)', borderRadius: '1rem', borderBottom: '2px solid var(--primary)', position: 'relative', overflow: 'hidden' }}>
+                   {/* Animated Graph Area */}
+                   <svg viewBox="0 0 100 40" style={{ width: '100%', height: '100%', position: 'absolute', bottom: 0 }} preserveAspectRatio="none">
+                     <defs>
+                       <linearGradient id="graphGradient" x1="0" y1="0" x2="0" y2="1">
+                         <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4" />
+                         <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
+                       </linearGradient>
+                     </defs>
+                     <path d="M0 40 L 0 35 L 20 25 L 40 28 L 60 15 L 80 18 L 100 5 L 100 40 Z" fill="url(#graphGradient)" />
+                     <path d="M0 35 L 20 25 L 40 28 L 60 15 L 80 18 L 100 5" fill="none" stroke="var(--primary)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" style={{ filter: 'drop-shadow(0px 4px 6px rgba(0,255,157,0.5))' }} />
                    </svg>
+                   <div style={{ position: 'absolute', top: '10px', left: '15px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
+                     <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold', letterSpacing: '1px' }}>MARKET TREND</span>
+                   </div>
                 </div>
               </div>
 

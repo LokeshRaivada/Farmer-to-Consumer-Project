@@ -6,6 +6,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// Helper to load Razorpay script
+const loadScript = (src) => {
+    return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = src;
+        script.onload = () => {
+            resolve(true);
+        };
+        script.onerror = () => {
+            resolve(false);
+        };
+        document.body.appendChild(script);
+    });
+};
+
 const Cart = () => {
     const { user, t } = useAuth();
     const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
@@ -14,6 +29,7 @@ const Cart = () => {
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [address, setAddress] = useState(user?.address?.city ? `${user.address.city}, ${user.address.state}` : '');
     const [deliveryDate, setDeliveryDate] = useState('');
+    const [paymentMethod, setPaymentMethod] = useState('COD');
 
     const handleCheckout = async () => {
         if (!user) {
@@ -41,12 +57,62 @@ const Cart = () => {
                 })),
                 totalAmount: cartTotal,
                 shippingAddress: address,
-                deliverySchedule: deliveryDate
+                deliverySchedule: deliveryDate,
+                paymentMethod: paymentMethod
             };
 
-            await axios.post('/api/consumer/orders', orderData);
-            setOrderSuccess(true);
-            clearCart();
+            const response = await axios.post('/api/consumer/orders', orderData);
+            
+            if (paymentMethod === 'Online') {
+                const res = await loadScript('https://checkout.razorpay.com/v1/checkout.js');
+                if (!res) {
+                    alert('Razorpay SDK failed to load. Are you online?');
+                    setLoading(false);
+                    return;
+                }
+
+                // Create Razorpay order on backend
+                const orderRes = await axios.post('/api/payments/create-razorpay-order', {
+                    orderId: response.data._id,
+                    amount: cartTotal
+                });
+                
+                const { id: order_id, currency, amount } = orderRes.data;
+
+                const options = {
+                    key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_SxFAW9YORDUfza', // Enter the Key ID generated from the Dashboard
+                    amount: amount,
+                    currency: currency,
+                    name: 'FarmerDirect',
+                    description: 'Fresh Farm Produce',
+                    order_id: order_id,
+                    handler: async function (response) {
+                        // After successful payment, we could verify signature here
+                        setOrderSuccess(true);
+                        clearCart();
+                        setLoading(false);
+                    },
+                    prefill: {
+                        name: user.name,
+                        email: user.email,
+                        contact: user.phone || '9999999999'
+                    },
+                    theme: {
+                        color: '#00ff9d'
+                    }
+                };
+
+                const paymentObject = new window.Razorpay(options);
+                paymentObject.on('payment.failed', function (response){
+                    alert('Payment Failed! ' + response.error.description);
+                    setLoading(false);
+                });
+                paymentObject.open();
+            } else {
+                setOrderSuccess(true);
+                clearCart();
+                setLoading(false);
+            }
         } catch (error) {
             console.error('Checkout error:', error);
             alert('Failed to place order. Please try again.');
@@ -196,13 +262,13 @@ const Cart = () => {
                                 Payment Method
                             </label>
                             <div style={{ display: 'flex', gap: '1rem' }}>
-                                <label style={{ flex: 1, padding: '1rem', border: '1px solid var(--primary)', borderRadius: '0.5rem', background: 'rgba(0,255,157,0.1)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <input type="radio" name="payment" value="COD" defaultChecked style={{ accentColor: 'var(--primary)' }} />
+                                <label style={{ flex: 1, padding: '1rem', border: `1px solid ${paymentMethod === 'COD' ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '0.5rem', background: paymentMethod === 'COD' ? 'rgba(0,255,157,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <input type="radio" name="payment" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ accentColor: 'var(--primary)' }} />
                                     Cash on Delivery
                                 </label>
-                                <label style={{ flex: 1, padding: '1rem', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', background: 'rgba(255,255,255,0.02)', cursor: 'not-allowed', display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: 0.5 }}>
-                                    <input type="radio" name="payment" value="Online" disabled />
-                                    Online (Coming Soon)
+                                <label style={{ flex: 1, padding: '1rem', border: `1px solid ${paymentMethod === 'Online' ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '0.5rem', background: paymentMethod === 'Online' ? 'rgba(0,255,157,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <input type="radio" name="payment" value="Online" checked={paymentMethod === 'Online'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ accentColor: 'var(--primary)' }} />
+                                    Online (Razorpay)
                                 </label>
                             </div>
                         </div>
