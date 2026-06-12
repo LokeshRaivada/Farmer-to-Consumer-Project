@@ -14,6 +14,7 @@ export const AuthProvider = ({ children }) => {
         return null;
     });
     const [lang, setLang] = useState(localStorage.getItem('lang') || 'en');
+    const [largeText, setLargeText] = useState(localStorage.getItem('largeText') === 'true');
     const [loading, setLoading] = useState(false); // We initialize synchronously so no loading needed
 
     useEffect(() => {
@@ -48,6 +49,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('lang', newLang);
     };
 
+    const toggleLargeText = () => {
+        const newLarge = !largeText;
+        setLargeText(newLarge);
+        localStorage.setItem('largeText', String(newLarge));
+    };
+
     const t = (key) => {
         const translations = {
             en: {
@@ -65,33 +72,99 @@ export const AuthProvider = ({ children }) => {
                 buy_fresh: 'Buy Fresh, Direct from Farmers',
                 sell_produce: 'Sell your produce at a fair price',
                 nearby_farmers: 'Nearby Farmers',
-                categories: 'Categories'
+                categories: 'Categories',
+                
+                // Simplified Terminology
+                shop: 'Shop',
+                farmers: 'Farmers',
+                my_farm: 'My Farm',
+                my_crops: 'My Crops',
+                customer_orders: 'Orders From Customers',
+                money_earned: 'Money Earned',
+                sales_summary: 'View Sales',
+                low_stock_alerts: 'Crops Running Low',
+                messages: 'Customer Messages',
+                add_new_crop: 'Add Crop',
+                update_delivery_status: 'Update Delivery Status',
+                contact_customer: 'Call Customer',
+                order_placed: 'Order Placed',
+                farmer_accepted: 'Farmer Accepted',
+                ready_for_delivery: 'Ready',
+                on_the_way: 'On The Way',
+                delivered: 'Delivered',
+                wishlist: 'Wishlist',
+                alerts: 'Alerts',
+                profile: 'Profile',
+                nearby_farms: 'Nearby Farms',
+                price_range: 'Price Range',
+                search: 'Search',
+                category: 'Category',
+                empty_orders: 'No Orders Yet. When customers place orders, they will appear here.',
+                empty_crops: 'No Crops Added. Add your first crop to start selling.',
+                payment_received: 'Payment received successfully.',
+                order_on_the_way: 'Your order is on the way.',
+                verified_badge: 'Verified Farmer',
+                available: 'Available',
+                only_left: 'Only {count} KG Left'
             },
             te: {
                 welcome: 'స్వాగతం, రైతు',
                 home: 'హోమ్',
-                store: 'స్టోర్',
-                dashboard: 'డ్యాష్‌బోర్డ్',
+                store: 'షాప్',
+                dashboard: 'నా పొలం',
                 cart: 'కార్ట్',
                 login: 'లాగిన్',
                 signup: 'సైన్ అప్',
                 logout: 'లాగ్ అవుట్',
-                products: 'ఉత్పత్తులు',
-                orders: 'ఆర్డర్లు',
-                analytics: 'విశ్లేషణలు',
+                products: 'నా పంటలు',
+                orders: 'కస్టమర్ ఆర్డర్లు',
+                analytics: 'విక్రయాల సారాంశం',
                 buy_fresh: 'తాజా పంట, నేరుగా రైతు నుండి కొనండి',
                 sell_produce: 'మీ పంటను సరైన ధరకే అమ్మండి',
                 nearby_farmers: 'దగ్గరి రైతులు',
-                categories: 'రకాలు'
+                categories: 'రకాలు',
+                
+                // Simplified Terminology
+                shop: 'షాప్',
+                farmers: 'రైతులు',
+                my_farm: 'నా పొలం',
+                my_crops: 'నా పంటలు',
+                customer_orders: 'కస్టమర్ల నుండి ఆర్డర్లు',
+                money_earned: 'సంపాదించిన డబ్బు',
+                sales_summary: 'విక్రయాలు చూడండి',
+                low_stock_alerts: 'తక్కువగా ఉన్న పంటలు',
+                messages: 'కస్టమర్ సందేశాలు',
+                add_new_crop: 'పంటను జోడించు',
+                update_delivery_status: 'డెలివరీ స్థితిని మార్చు',
+                contact_customer: 'కస్టమర్‌కు ఫోన్ చేయి',
+                order_placed: 'ఆర్డర్ విజయవంతమైంది',
+                farmer_accepted: 'రైతు అంగీకరించారు',
+                ready_for_delivery: 'సిద్ధంగా ఉంది',
+                on_the_way: 'మధ్యలో ఉంది',
+                delivered: 'డెలివరీ చేయబడింది',
+                wishlist: 'విష్‌లిస్ట్',
+                alerts: 'హెచ్చరికలు',
+                profile: 'ప్రొఫైల్',
+                nearby_farms: 'దగ్గరి పొలాలు',
+                price_range: 'ధరల పరిధి',
+                search: 'వెతకండి',
+                category: 'రకాలు',
+                empty_orders: 'ఇంకా ఆర్డర్లు లేవు. కస్టమర్లు ఆర్డర్ చేసినప్పుడు, అవి ఇక్కడ కనిపిస్తాయి.',
+                empty_crops: 'ఇంకా ఏ పంటలు జోడించలేదు. అమ్మడం ప్రారంభించడానికి మీ మొదటి పంటను జోడించండి.',
+                payment_received: 'డబ్బు విజయవంతంగా చెల్లించబడింది.',
+                order_on_the_way: 'మీ ఆర్డర్ మధ్యలో ఉంది.',
+                verified_badge: 'వెరిఫైడ్ రైతు',
+                available: 'అందుబాటులో ఉంది',
+                only_left: 'కేవలం {count} కేజీలు మాత్రమే ఉంది'
             }
         };
         return translations[lang][key] || key;
-    }
+    };
 
     return (
-        <AuthContext.Provider value={{ user, lang, toggleLang, t, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, lang, toggleLang, t, login, register, logout, loading, largeText, toggleLargeText }}>
             {children}
-        </AuthContext.Provider>
+          </AuthContext.Provider>
     );
 };
 

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const Notification = require('../models/Notification');
 const { protect, authorize } = require('../middleware/auth');
 
 // @route   POST /api/farmer/products
@@ -113,10 +114,147 @@ router.put('/orders/:id', protect, authorize('farmer'), async (req, res) => {
         }
 
         order.status = status;
+        
+        let auditNote = `Order status updated to ${status}.`;
+        if (status === 'accepted') {
+            auditNote = 'Accepted by Farmer';
+        } else if (status === 'packed') {
+            auditNote = 'Ready for Dispatch';
+        } else if (status === 'shipped') {
+            auditNote = 'Dispatched to delivery location';
+        } else if (status === 'delivered') {
+            auditNote = 'Handed to Customer';
+        } else if (status === 'cancelled') {
+            auditNote = 'Order cancelled';
+        }
+
+        order.statusHistory.push({
+            status,
+            timestamp: new Date(),
+            updatedBy: req.user._id,
+            note: auditNote
+        });
+
         await order.save();
+
+        // Create notification for consumer
+        let title = 'Order Update 🚜';
+        let message = `Your order status has been updated to ${status}.`;
+        if (status === 'accepted') {
+            title = 'Order Accepted 🚜';
+            message = `Farmer ${req.user.name} has accepted your order. Fulfilling shortly.`;
+        } else if (status === 'packed') {
+            title = 'Order Packed 📦';
+            message = `Farmer ${req.user.name} has packed your items. Preparing for dispatch.`;
+        } else if (status === 'shipped') {
+            title = 'Order Shipped 🚚';
+            message = `Your order has been shipped by Farmer ${req.user.name}.`;
+        } else if (status === 'delivered') {
+            title = 'Order Delivered 🎉';
+            message = `Your order of fresh produce has been successfully delivered by Farmer ${req.user.name}.`;
+        } else if (status === 'cancelled') {
+            title = 'Order Cancelled ❌';
+            message = `Your order has been cancelled by Farmer ${req.user.name}.`;
+        }
+
+        await Notification.create({
+            recipient: order.consumer,
+            sender: req.user._id,
+            type: 'order_updated',
+            title,
+            message,
+            link: '/orders'
+        });
+
         res.json(order);
     } catch (error) {
         console.error('Update order error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   GET /api/farmer/analytics
+// @desc    Get consolidated farmer analytics
+// @access  Private/Farmer
+router.get('/analytics', protect, authorize('farmer'), async (req, res) => {
+    try {
+        // 1. Monthly Revenue Aggregation
+        const revenue = await Order.aggregate([
+            { $match: { farmer: req.user._id, status: 'delivered' } },
+            {
+                $group: {
+                    _id: { month: { $month: '$createdAt' } },
+                    revenue: { $sum: '$totalAmount' }
+                }
+            },
+            { $sort: { '_id.month': 1 } }
+        ]);
+
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const formattedRevenue = months.map((m, i) => {
+            const match = revenue.find(r => r._id.month === (i + 1));
+            return {
+                name: m,
+                revenue: match ? match.revenue : 0
+            };
+        });
+
+        // 2. Category Distribution
+        const categoryDistribution = await Product.aggregate([
+            { $match: { farmer: req.user._id } },
+            {
+                $group: {
+                    _id: '$category',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        // 3. Stock Analytics
+        const stockRes = await Product.aggregate([
+            { $match: { farmer: req.user._id } },
+            {
+                $group: {
+                    _id: null,
+                    totalStock: { $sum: '$quantity' }
+                }
+            }
+        ]);
+        const stock = stockRes.length > 0 ? stockRes[0].totalStock : 0;
+
+        // 4. Order Stats
+        const totalOrders = await Order.countDocuments({ farmer: req.user._id });
+        const deliveredOrders = await Order.countDocuments({ farmer: req.user._id, status: 'delivered' });
+        const pendingOrders = await Order.countDocuments({ farmer: req.user._id, status: { $in: ['pending', 'accepted', 'packed', 'shipped'] } });
+        const cancelledOrders = await Order.countDocuments({ farmer: req.user._id, status: 'cancelled' });
+
+        const orderStats = {
+            total: totalOrders,
+            delivered: deliveredOrders,
+            pending: pendingOrders,
+            cancelled: cancelledOrders
+        };
+
+        // 5. Review Ratings
+        const Review = require('../models/Review');
+        const reviews = await Review.find({ farmer: req.user._id });
+        const totalReviews = reviews.length;
+        const avgRating = totalReviews > 0
+            ? parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1))
+            : 0;
+
+        res.json({
+            revenue: formattedRevenue,
+            categoryDistribution,
+            stock,
+            orderStats,
+            rating: {
+                averageRating: avgRating,
+                numReviews: totalReviews
+            }
+        });
+    } catch (error) {
+        console.error('Farmer analytics error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&display=swap');
 
 :root {
   /* Premium Deep Green Color Palette */
@@ -260,3 +261,201 @@ input:focus, select:focus, textarea:focus {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary);
 }
+
+/* Shimmer / Skeleton Loader */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-glow {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.03) 25%, rgba(255, 255, 255, 0.08) 37%, rgba(255, 255, 255, 0.03) 63%);
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+}
+
+/* Premium Navbar Search Bar */
+.nav-search-wrapper {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  padding: 0.25rem 0.75rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-search-wrapper:hover, .nav-search-wrapper:focus-within {
+  background: rgba(0, 255, 157, 0.05);
+  border-color: var(--primary);
+  box-shadow: 0 0 15px rgba(0, 255, 157, 0.15);
+}
+
+.nav-search-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: white !important;
+  outline: none !important;
+  font-size: 0.85rem;
+  padding-left: 0.5rem;
+  width: 100px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-search-input:focus {
+  width: 160px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.nav-search-input.mobile-input {
+  width: 100% !important;
+}
+
+/* Telugu and Large Mode Accessibility overrides */
+.lang-te {
+  font-family: 'Noto Sans Telugu', sans-serif !important;
+}
+
+.lang-te p, .lang-te span, .lang-te button, .lang-te input, .lang-te select, .lang-te textarea, .lang-te a, .lang-te label, .lang-te div, .lang-te li, .lang-te td, .lang-te th, .lang-te h1, .lang-te h2, .lang-te h3, .lang-te h4 {
+  font-size: 17px !important;
+  line-height: 1.8 !important;
+}
+
+.lang-te h1 { font-size: 2.2rem !important; }
+.lang-te h2 { font-size: 1.8rem !important; }
+.lang-te h3 { font-size: 1.5rem !important; }
+.lang-te h4 { font-size: 1.25rem !important; }
+
+/* Large Text Mode */
+.large-mode p, .large-mode span, .large-mode button, .large-mode input, .large-mode select, .large-mode textarea, .large-mode a, .large-mode label, .large-mode div, .large-mode li, .large-mode td, .large-mode th, .large-mode h1, .large-mode h2, .large-mode h3, .large-mode h4 {
+  font-size: 20px !important;
+}
+
+.large-mode h1 { font-size: 2.6rem !important; }
+.large-mode h2 { font-size: 2.2rem !important; }
+.large-mode h3 { font-size: 1.8rem !important; }
+.large-mode h4 { font-size: 1.5rem !important; }
+
+/* Large Text + Telugu Mode Combined */
+.large-mode.lang-te p, .large-mode.lang-te span, .large-mode.lang-te button, .large-mode.lang-te input, .large-mode.lang-te select, .large-mode.lang-te textarea, .large-mode.lang-te a, .large-mode.lang-te label, .large-mode.lang-te div, .large-mode.lang-te li, .large-mode.lang-te td, .large-mode.lang-te th, .large-mode.lang-te h1, .large-mode.lang-te h2, .large-mode.lang-te h3, .large-mode.lang-te h4 {
+  font-size: 22px !important;
+  line-height: 1.9 !important;
+}
+
+.large-mode.lang-te h1 { font-size: 2.8rem !important; }
+.large-mode.lang-te h2 { font-size: 2.4rem !important; }
+.large-mode.lang-te h3 { font-size: 2.0rem !important; }
+.large-mode.lang-te h4 { font-size: 1.7rem !important; }
+
+/* Premium Navbar Action Buttons */
+.nav-btn {
+  background: transparent;
+  border: 1px solid rgba(0, 255, 157, 0.2) !important;
+  color: var(--text-light) !important;
+  padding: 0.4rem 0.8rem !important;
+  border-radius: 2rem !important;
+  font-size: 0.85rem !important;
+  text-transform: none !important; /* Prevents uppercase transformation */
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: auto !important;
+  overflow: visible !important;
+  letter-spacing: normal !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.nav-btn:hover {
+  background: rgba(0, 255, 157, 0.08) !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  box-shadow: 0 0 10px rgba(0, 255, 157, 0.2) !important;
+}
+
+.nav-btn.active {
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+  background: rgba(0, 255, 157, 0.05) !important;
+}
+
+/* Ghost navbar actions (Alerts, Wishlist, Cart) */
+.nav-action-btn {
+  background: transparent;
+  border: 1px solid transparent !important;
+  color: var(--text-light) !important;
+  padding: 0.4rem 0.6rem !important;
+  border-radius: 2rem !important;
+  font-size: 0.85rem !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.35rem !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  height: auto !important;
+  overflow: visible !important;
+  letter-spacing: normal !important;
+  text-decoration: none !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.nav-action-btn:hover {
+  background: rgba(0, 255, 157, 0.05) !important;
+  color: var(--primary) !important;
+}
+
+.nav-action-btn svg {
+  color: currentColor !important;
+  stroke-width: 2px !important;
+}
+
+/* Prevent navbar elements from blowing up in Telugu mode */
+.lang-te nav .logo-text,
+.lang-te nav .logo-text span {
+  font-size: 1.25rem !important;
+  line-height: 1.4 !important;
+}
+
+.lang-te nav .nav-link,
+.lang-te nav .nav-link span {
+  font-size: 0.9rem !important;
+  line-height: 1.4 !important;
+}
+
+.lang-te nav .nav-btn,
+.lang-te nav .nav-action-btn,
+.lang-te nav .nav-action-btn span {
+  font-size: 0.85rem !important;
+  line-height: 1.4 !important;
+}
+
+.lang-te nav .lang-toggle-btn {
+  font-size: 0.75rem !important;
+  line-height: 1.4 !important;
+}
+
+.lang-te nav .badge {
+  font-size: 9px !important;
+  line-height: 15px !important;
+}
+
+.lang-te nav .user-name {
+  font-size: 0.85rem !important;
+  line-height: 1.4 !important;
+}
+
+
+
+
+

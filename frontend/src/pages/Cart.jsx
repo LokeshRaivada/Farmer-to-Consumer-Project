@@ -22,7 +22,7 @@ const loadScript = (src) => {
 };
 
 const Cart = () => {
-    const { user, t } = useAuth();
+    const { user, t, lang } = useAuth();
     const { cartItems, removeFromCart, updateQuantity, cartTotal, clearCart } = useCart();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
@@ -73,7 +73,7 @@ const Cart = () => {
 
                 // Create Razorpay order on backend
                 const orderRes = await axios.post('/api/payments/create-razorpay-order', {
-                    orderId: response.data._id,
+                    orderId: response.data[0]._id,
                     amount: cartTotal
                 });
                 
@@ -86,8 +86,16 @@ const Cart = () => {
                     name: 'FarmerDirect',
                     description: 'Fresh Farm Produce',
                     order_id: order_id,
-                    handler: async function (response) {
-                        // After successful payment, we could verify signature here
+                    handler: async function (paymentResponse) {
+                        // After successful payment, notify backend to trigger notification
+                        try {
+                            await axios.post('/api/payments/success', {
+                                orderId: response.data[0]._id,
+                                amount: cartTotal
+                            });
+                        } catch (err) {
+                            console.error('Failed to report payment success:', err);
+                        }
                         setOrderSuccess(true);
                         clearCart();
                         setLoading(false);
@@ -232,43 +240,51 @@ const Cart = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gap: '1rem', marginBottom: '2rem' }}>
+                    <div style={{ display: 'grid', gap: '1.25rem', marginBottom: '2rem' }}>
                         <div className="form-group">
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                <MapPin size={14} /> Shipping Address
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: 'white' }}>
+                                <MapPin size={16} color="var(--primary)" /> {lang === 'te' ? 'పూర్తి డెలివరీ చిరునామా' : 'Full Shipping Address'}
                             </label>
                             <textarea 
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
-                                placeholder="Enter full delivery address..."
-                                style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.5rem', resize: 'none' }}
-                                rows={2}
+                                placeholder={lang === 'te' ? 'ఇంటి నెంబర్, వీధి, గ్రామం లేదా పట్టణం పేరు నమోదు చేయండి...' : 'Enter your full house number, street name, village or town name...'}
+                                style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', resize: 'none', fontSize: '1rem', lineHeight: '1.5' }}
+                                rows={3}
                             />
+                            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.4rem', opacity: 0.8 }}>
+                                💡 {lang === 'te' 
+                                  ? 'ఉదాహరణ: ఇంటి నెం. 4-12, పంచాయతీ ఆఫీస్ వీధి, రాంపూర్ గ్రామం, రంగారెడ్డి జిల్లా'
+                                  : 'Example: House No. 4-12, Near Panchayat Office, Rampur Village, Rangareddy District'
+                                }
+                            </p>
                         </div>
+                        
                         <div className="form-group">
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                <Calendar size={14} /> Preferred Delivery Date
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: 'white' }}>
+                                <Calendar size={16} color="var(--primary)" /> {lang === 'te' ? 'డెలివరీ తేదీ' : 'Preferred Delivery Date'}
                             </label>
                             <input 
                                 type="date"
                                 value={deliveryDate}
                                 onChange={(e) => setDeliveryDate(e.target.value)}
                                 min={new Date().toISOString().split('T')[0]}
-                                style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.5rem' }}
+                                style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '1rem' }}
                             />
                         </div>
+
                         <div className="form-group">
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-                                Payment Method
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: 'white' }}>
+                                💳 {lang === 'te' ? 'డబ్బులు చెల్లించే విధానం' : 'Payment Method'}
                             </label>
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <label style={{ flex: 1, padding: '1rem', border: `1px solid ${paymentMethod === 'COD' ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '0.5rem', background: paymentMethod === 'COD' ? 'rgba(0,255,157,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <input type="radio" name="payment" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ accentColor: 'var(--primary)' }} />
-                                    Cash on Delivery
+                            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                                <label style={{ flex: 1, minWidth: '140px', padding: '1.2rem 1rem', border: `2px solid ${paymentMethod === 'COD' ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '0.75rem', background: paymentMethod === 'COD' ? 'rgba(0,255,157,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', fontWeight: 'bold' }}>
+                                    <input type="radio" name="payment" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }} />
+                                    {lang === 'te' ? 'చేతికి డబ్బులు ఇవ్వడం (COD)' : 'Cash on Delivery'}
                                 </label>
-                                <label style={{ flex: 1, padding: '1rem', border: `1px solid ${paymentMethod === 'Online' ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '0.5rem', background: paymentMethod === 'Online' ? 'rgba(0,255,157,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <input type="radio" name="payment" value="Online" checked={paymentMethod === 'Online'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ accentColor: 'var(--primary)' }} />
-                                    Online (Razorpay)
+                                <label style={{ flex: 1, minWidth: '140px', padding: '1.2rem 1rem', border: `2px solid ${paymentMethod === 'Online' ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '0.75rem', background: paymentMethod === 'Online' ? 'rgba(0,255,157,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', fontWeight: 'bold' }}>
+                                    <input type="radio" name="payment" value="Online" checked={paymentMethod === 'Online'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }} />
+                                    {lang === 'te' ? 'ఆన్‌లైన్ పేమెంట్' : 'Online (Razorpay)'}
                                 </label>
                             </div>
                         </div>

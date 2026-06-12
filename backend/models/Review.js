@@ -9,12 +9,12 @@ const reviewSchema = new mongoose.Schema({
     product: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
-        required: true
+        required: false
     },
     farmer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: true
+        required: false
     },
     rating: {
         type: Number,
@@ -30,10 +30,12 @@ const reviewSchema = new mongoose.Schema({
     verifiedPurchase: {
         type: Boolean,
         default: false
+    },
+    reviewType: {
+        type: String,
+        enum: ['product', 'farmer', 'website'],
+        default: 'product'
     }
 }, { timestamps: true });
-
-// Prevent multiple reviews per user per product
-reviewSchema.index({ user: 1, product: 1 }, { unique: true });
 
 module.exports = mongoose.model('Review', reviewSchema);

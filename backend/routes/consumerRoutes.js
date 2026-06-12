@@ -3,17 +3,116 @@ const router = express.Router();
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 const { protect, authorize } = require('../middleware/auth');
+
+// @route   GET /api/consumer/home
+// @desc    Get aggregated homepage data in a single request
+// @access  Public
+router.get('/home', async (req, res) => {
+    try {
+        // 1. Stats
+        const totalFarmers = await User.countDocuments({ role: 'farmer' });
+        const totalProducts = await Product.countDocuments();
+        const totalOrders = await Order.countDocuments();
+        const stats = { totalFarmers, totalProducts, totalOrders };
+
+        // 2. Featured Products (top 8)
+        const featuredProducts = await Product.find({ isAvailable: true })
+            .populate('farmer', 'name location address averageRating isVerified')
+            .sort({ averageRating: -1, createdAt: -1 })
+            .limit(8);
+        const filteredFeatured = featuredProducts.filter(p => p.farmer != null);
+
+        // 3. Categories (derived from Product aggregation)
+        const categoryAggregation = await Product.aggregate([
+            { $match: { isAvailable: true } },
+            { $group: { _id: '$category', count: { $sum: 1 } } }
+        ]);
+        const categories = categoryAggregation.map(c => ({
+            name: c._id,
+            count: c.count
+        }));
+
+        // 4. Verified Farmers (top 3)
+        const farmers = await User.find({ role: 'farmer' })
+            .select('name address location createdAt isVerified')
+            .limit(10); // get top 10 to filter dynamically or calculate rating
+        
+        const Review = require('../models/Review');
+        const farmersWithStats = await Promise.all(farmers.map(async (f) => {
+            const reviews = await Review.find({ farmer: f._id });
+            const ratingCount = reviews.length;
+            const avgRating = ratingCount > 0 
+                ? parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / ratingCount).toFixed(1))
+                : 0;
+
+            const productsCount = await Product.countDocuments({ farmer: f._id, isAvailable: true });
+            return {
+                _id: f._id,
+                name: f.name,
+                address: f.address,
+                location: f.location,
+                isVerified: f.isVerified,
+                createdAt: f.createdAt,
+                rating: avgRating,
+                productsCount
+            };
+        }));
+        // Sort by verified and rating, slice top 3
+        const topFarmers = farmersWithStats
+            .sort((a, b) => (b.isVerified ? 1 : 0) - (a.isVerified ? 1 : 0) || b.rating - a.rating)
+            .slice(0, 3);
+
+        // 5. Recent Reviews (limit 6)
+        const recentReviews = await Review.find()
+            .sort({ createdAt: -1 })
+            .limit(6)
+            .populate('user', 'name')
+            .populate('product', 'name');
+
+        // 6. Price Trends & Fallback
+        const PriceTrend = require('../models/PriceTrend');
+        let trends = await PriceTrend.find().sort({ date: 1 });
+        
+        if (trends.length === 0) {
+            // Fallback: Group products by category and use current average price as trend data
+            const productPrices = await Product.aggregate([
+                { $match: { isAvailable: true } },
+                { $group: { _id: '$category', avgPrice: { $avg: '$price' } } }
+            ]);
+            // Create dummy trend points using today's avg price as fallback
+            trends = productPrices.map(p => ({
+                category: p._id,
+                avgPrice: parseFloat(p.avgPrice.toFixed(1)),
+                date: new Date()
+            }));
+        }
+
+        res.json({
+            stats,
+            featuredProducts: filteredFeatured,
+            categories,
+            farmers: topFarmers,
+            reviews: recentReviews,
+            trends
+        });
+    } catch (error) {
+        console.error('Home API error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 // @route   GET /api/consumer/products
 // @desc    Get all products with location data
 // @access  Public
 router.get('/products', async (req, res) => {
     try {
-        const { category, search, lat, lon, distance, city, pincode, state } = req.query;
+        const { category, search, lat, lon, distance, city, pincode, state, farmerId } = req.query;
         let query = { isAvailable: true };
         if (category && category !== '') query.category = category;
         if (search && search !== '') query.name = { $regex: search, $options: 'i' };
+        if (farmerId && farmerId !== '') query.farmer = farmerId;
 
         let products = await Product.find(query).populate('farmer', 'name location address averageRating');
         products = products.filter(p => p.farmer != null);
@@ -55,20 +154,36 @@ router.get('/farmers', async (req, res) => {
         if (city) query['address.city'] = { $regex: new RegExp(`^${city}$`, 'i') };
         if (pincode) query['address.zip'] = pincode;
 
-        let farmers = await User.find(query).select('name address location createdAt');
+        let farmers = await User.find(query).select('name address location createdAt isVerified');
+
+        let farmersWithReviews = await Promise.all(farmers.map(async (f) => {
+            const Review = require('../models/Review');
+            const reviews = await Review.find({ farmer: f._id });
+            const ratingCount = reviews.length;
+            const avgRating = ratingCount > 0 
+                ? parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / ratingCount).toFixed(1))
+                : 0;
+
+            const productsCount = await Product.countDocuments({ farmer: f._id, isAvailable: true });
+            
+            f._doc.rating = avgRating;
+            f._doc.reviewsCount = ratingCount;
+            f._doc.productsCount = productsCount;
+            return f;
+        }));
 
         if (lat && lon && distance) {
             const userLoc = [parseFloat(lon), parseFloat(lat)];
-            farmers = farmers.filter(f => {
+            farmersWithReviews = farmersWithReviews.filter(f => {
                 if (!f.location?.coordinates) return false;
                 const d = getDistanceFromLatLonInKm(userLoc[1], userLoc[0], f.location.coordinates[1], f.location.coordinates[0]);
                 f._doc.distance = parseFloat(d.toFixed(1));
                 return d <= parseFloat(distance);
             });
-            farmers.sort((a, b) => a._doc.distance - b._doc.distance);
+            farmersWithReviews.sort((a, b) => a._doc.distance - b._doc.distance);
         }
 
-        res.json(farmers);
+        res.json(farmersWithReviews);
     } catch (error) {
         console.error('Get farmers error:', error);
         res.status(500).json({ message: 'Server error' });
@@ -131,9 +246,25 @@ router.post('/orders', protect, authorize('consumer'), async (req, res) => {
                 shippingAddress,
                 deliverySchedule: new Date(deliverySchedule),
                 paymentMethod: paymentMethod || 'COD',
-                status: 'pending'
+                status: 'pending',
+                statusHistory: [{
+                    status: 'pending',
+                    timestamp: new Date(),
+                    updatedBy: req.user._id,
+                    note: 'Order placed by consumer'
+                }]
             });
             createdOrders.push(order);
+            
+            // Create notification for farmer
+            await Notification.create({
+                recipient: farmerId,
+                sender: req.user._id,
+                type: 'order_created',
+                title: 'New Order Received 📦',
+                message: `You have received a new order from ${req.user.name} for a total of ₹${data.totalAmount}.`,
+                link: '/farmer'
+            });
             
             // Optional: Reduce product quantity here
             for(let item of data.items) {
@@ -216,5 +347,55 @@ function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
 function deg2rad(deg) {
     return deg * (Math.PI / 180);
 }
+
+// @route   GET /api/consumer/notifications
+// @desc    Get user notifications
+// @access  Private
+router.get('/notifications', protect, async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 20;
+        const notifications = await Notification.find({ recipient: req.user._id })
+            .sort({ createdAt: -1 })
+            .limit(limit);
+        const unreadCount = await Notification.countDocuments({ recipient: req.user._id, read: false });
+        res.json({ notifications, unreadCount });
+    } catch (error) {
+        console.error('Get notifications error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   PUT /api/consumer/notifications/read-all
+// @desc    Mark all user notifications as read
+// @access  Private
+router.put('/notifications/read-all', protect, async (req, res) => {
+    try {
+        await Notification.updateMany({ recipient: req.user._id, read: false }, { read: true });
+        res.json({ message: 'All notifications marked as read' });
+    } catch (error) {
+        console.error('Mark all read notifications error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   PUT /api/consumer/notifications/:id/read
+// @desc    Mark a single notification as read
+// @access  Private
+router.put('/notifications/:id/read', protect, async (req, res) => {
+    try {
+        const notification = await Notification.findOneAndUpdate(
+            { _id: req.params.id, recipient: req.user._id },
+            { read: true },
+            { new: true }
+        );
+        if (!notification) {
+            return res.status(404).json({ message: 'Notification not found' });
+        }
+        res.json(notification);
+    } catch (error) {
+        console.error('Mark read notification error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 module.exports = router;

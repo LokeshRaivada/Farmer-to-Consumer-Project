@@ -5,7 +5,7 @@ import { X, Star, User, MessageSquare, CheckCircle, Send } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const ProductDetailsModal = ({ product, onClose }) => {
-    const { user } = useAuth();
+    const { user, lang } = useAuth();
     const [reviews, setReviews] = useState([]);
     const [breakdown, setBreakdown] = useState({ 5:0, 4:0, 3:0, 2:0, 1:0 });
     const [loading, setLoading] = useState(true);
@@ -85,16 +85,41 @@ const ProductDetailsModal = ({ product, onClose }) => {
             >
                 {/* Header */}
                 <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Product Reviews</h2>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{lang === 'te' ? 'పంట సమీక్షలు' : 'Product Reviews'}</h2>
                     <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }} className="hover-glow"><X size={20} /></button>
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', overflowY: 'auto' }}>
                     {/* Left Col: Product & Stats */}
                     <div style={{ flex: '1 1 300px', padding: '2rem', borderRight: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.1)' }}>
-                        <div style={{ marginBottom: '2rem' }}>
+                        <div style={{ marginBottom: '2.5rem' }}>
                             <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{product.name}</h3>
-                            <p style={{ color: 'var(--text-muted)' }}>By {product.farmer?.name || 'Local Farmer'}</p>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                              By {product.farmer?.name || 'Local Farmer'} 
+                              {product.farmer?.isVerified && <span style={{ color: 'var(--primary)', fontWeight: 'bold', marginLeft: '0.25rem' }}>🛡️ {lang === 'te' ? 'వెరిఫైడ్ రైతు' : 'Verified Farmer'}</span>}
+                            </p>
+
+                            {/* Call / WhatsApp Farmer Direct triggers */}
+                            {product.farmer?.phone && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1.5rem' }}>
+                                    <a 
+                                        href={`tel:${product.farmer.phone}`}
+                                        className="btn btn-primary"
+                                        style={{ width: '100%', padding: '0.8rem', borderRadius: '1.5rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', textTransform: 'none', fontSize: '0.95rem' }}
+                                    >
+                                        📞 {lang === 'te' ? 'రైతుకు ఫోన్ చేయి' : 'Call Farmer'}
+                                    </a>
+                                    <a 
+                                        href={`https://wa.me/${product.farmer.phone}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="btn btn-secondary"
+                                        style={{ width: '100%', padding: '0.8rem', borderRadius: '1.5rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', textTransform: 'none', fontSize: '0.95rem' }}
+                                    >
+                                        💬 {lang === 'te' ? 'వాట్సాప్ రైతు' : 'WhatsApp Farmer'}
+                                    </a>
+                                </div>
+                            )}
                         </div>
 
                         {/* Average Rating Block */}

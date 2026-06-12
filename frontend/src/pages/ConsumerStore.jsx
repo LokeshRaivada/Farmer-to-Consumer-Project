@@ -1,171 +1,165 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import { Search, MapPin, Filter, ShoppingCart, Leaf, Heart, Package, Star, LayoutGrid, List, ChevronDown, Award } from 'lucide-react';
+import { Search, MapPin, Filter, Star } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import ProductDetailsModal from '../components/ProductDetailsModal';
 
-const ProductCard = ({ product, viewMode, initialWishlisted, onClick }) => {
+const ProductCard = ({ product, onClick }) => {
     const { addToCart } = useCart();
-    const { user } = useAuth();
+    const { user, lang } = useAuth();
     const [added, setAdded] = useState(false);
-    const [wishlisted, setWishlisted] = useState(initialWishlisted);
 
-    const handleAdd = () => {
+    const handleAdd = (e) => {
+        e.stopPropagation();
         addToCart(product);
         setAdded(true);
         setTimeout(() => setAdded(false), 2000);
     };
 
-    const toggleWishlist = async () => {
-        if (!user) {
-            alert('Please login to use the wishlist!');
-            return;
-        }
-        try {
-            await axios.post(`/api/consumer/wishlist/${product._id}`);
-            setWishlisted(!wishlisted);
-        } catch (error) {
-            console.error('Wishlist error:', error);
-        }
+    const getCropEmoji = (name) => {
+        const lower = name.toLowerCase();
+        if (lower.includes('tomato')) return '🍅';
+        if (lower.includes('onion')) return '🧅';
+        if (lower.includes('potato')) return '🥔';
+        if (lower.includes('spinach') || lower.includes('green') || lower.includes('🥬') || lower.includes('కూర')) return '🥬';
+        if (lower.includes('carrot')) return '🥕';
+        if (lower.includes('chilli') || lower.includes('mirchi')) return '🌶️';
+        if (lower.includes('mango')) return '🥭';
+        if (lower.includes('banana')) return '🍌';
+        if (lower.includes('rice') || lower.includes('paddy') || lower.includes('grain') || lower.includes('ధాన్యం')) return '🌾';
+        return '🌾';
     };
 
-    const isList = viewMode === 'list';
+    const emoji = getCropEmoji(product.name);
 
     return (
-        <motion.div
-            layout
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            whileHover={{ y: -5 }}
-            className="glass"
+        <div
+            className="glass hover-glow"
             style={{ 
-                padding: '1.5rem', 
+                padding: '1.25rem', 
                 display: 'flex', 
-                flexDirection: isList ? 'row' : 'column', 
-                gap: '1.5rem', 
+                flexDirection: 'column', 
+                gap: '0.75rem', 
                 position: 'relative',
-                alignItems: isList ? 'center' : 'stretch',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                textAlign: 'left',
+                borderRadius: '1.25rem',
+                transition: 'transform 0.2s'
             }}
             onClick={onClick}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
         >
-            {/* Badges */}
-            <div style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', gap: '0.5rem', zIndex: 10 }}>
-                {product.category === 'vegetables' && <span style={{ background: 'var(--primary)', color: 'var(--bg-dark)', fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '1rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.25rem' }}><Leaf size={10}/> Fresh</span>}
-                <span style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', color: 'white', fontSize: '0.7rem', padding: '0.2rem 0.5rem', borderRadius: '1rem', fontWeight: 'bold' }}>Organic</span>
-            </div>
-
-            {/* Wishlist Button */}
-            <button 
-                onClick={(e) => { e.stopPropagation(); toggleWishlist(); }}
-                style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 10, background: 'rgba(0,0,0,0.3)', borderRadius: '50%', padding: '0.5rem', border: 'none', cursor: 'pointer', transition: 'all 0.3s' }}
-                className="hover-glow"
-            >
-                <Heart size={18} color={wishlisted ? 'var(--error)' : 'white'} fill={wishlisted ? 'var(--error)' : 'transparent'} />
-            </button>
-
-            {/* Image Placeholder */}
+            {/* Image Box */}
             <div style={{ 
-                height: isList ? '120px' : '180px', 
-                width: isList ? '120px' : '100%',
-                background: 'linear-gradient(135deg, rgba(0,255,157,0.1), rgba(0,208,132,0.05))', 
-                borderRadius: '0.5rem', 
+                height: '140px', 
+                background: 'linear-gradient(135deg, rgba(0,255,157,0.08), rgba(34,197,94,0.03))', 
+                borderRadius: '0.75rem', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
                 overflow: 'hidden',
-                flexShrink: 0
+                fontSize: '4.5rem'
             }}>
-                <Leaf color="var(--primary)" size={48} opacity={0.5} />
+                {emoji}
             </div>
 
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: '700' }}>{product.name}</h3>
-                        <p style={{ color: 'var(--primary)', fontSize: '0.85rem', textTransform: 'capitalize' }}>{product.category}</p>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#F59E0B', fontSize: '0.85rem' }}>
-                        <Star size={14} fill={product.averageRating > 0 ? "#F59E0B" : "transparent"} />
-                        <span>{product.averageRating > 0 ? product.averageRating.toFixed(1) : 'New'}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>({product.numReviews || 0})</span>
+            {/* Details */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%', margin: 0 }}>{product.name}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', color: '#eab308', fontSize: '0.85rem', fontWeight: 'bold' }}>
+                        <Star size={12} fill="#eab308" stroke="#eab308" />
+                        <span>{product.averageRating > 0 ? product.averageRating.toFixed(1) : (lang === 'te' ? 'కొత్తది' : 'New')}</span>
                     </div>
                 </div>
 
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <div style={{ width: '20px', height: '20px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Award size={12} color="var(--bg-dark)" />
-                    </div>
-                    <span>{product.farmer?.name || 'Verified Farmer'}</span>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.25rem' }}>
+                    <span>By {product.farmer?.name || 'Farmer'}</span>
+                    {product.farmer?.isVerified && (
+                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.75rem' }}>
+                            🛡️ {lang === 'te' ? 'వెరిఫైడ్' : 'Verified'}
+                        </span>
+                    )}
                 </div>
 
-                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <MapPin size={14} color="var(--primary)" /> 
-                    {product.farmer?.address?.city || 'Local Area'}, {product.farmer?.address?.state || 'District'}
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: isList ? '0' : 'auto', paddingTop: '1rem' }}>
-                    <div>
-                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: 'white' }}>
-                            ₹{product.price} <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>/ kg</span>
-                        </div>
-                        <div style={{ fontSize: '0.75rem', color: product.quantity > 5 ? 'var(--primary)' : 'var(--error)' }}>
-                            {product.quantity > 0 ? `${product.quantity} kg in stock` : 'Out of stock'}
-                        </div>
+                {product.distance !== undefined && (
+                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <MapPin size={12} /> <span>{product.distance.toFixed(1)} {lang === 'te' ? 'కి.మీ దూరం' : 'KM away'}</span>
                     </div>
-                    <button 
-                        className={`btn ${added ? 'btn-secondary' : 'btn-primary'}`} 
-                        style={{ padding: '0.6rem 1rem', borderRadius: '2rem' }}
-                        onClick={(e) => { e.stopPropagation(); handleAdd(); }}
-                        disabled={user?.role === 'farmer' || product.quantity <= 0}
-                    >
-                        {added ? <Package size={18} /> : <ShoppingCart size={18} />}
-                        <span style={{ marginLeft: '0.5rem' }}>{added ? 'Added' : 'Add'}</span>
-                    </button>
-                </div>
+                )}
             </div>
-        </motion.div>
+
+            {/* Footer / Actions */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white' }}>
+                    ₹{product.price} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>/kg</span>
+                </div>
+
+                <button 
+                    className={`btn ${added ? 'btn-secondary' : 'btn-primary'}`} 
+                    style={{ padding: '0.4rem 0.8rem', borderRadius: '1.5rem', fontSize: '0.8rem', textTransform: 'none', minHeight: '32px' }}
+                    onClick={handleAdd}
+                    disabled={user?.role === 'farmer' || product.quantity <= 0}
+                >
+                    {added ? (lang === 'te' ? 'జోడించబడింది' : 'Added') : (lang === 'te' ? 'కార్ట్' : '🛒 Add')}
+                </button>
+            </div>
+        </div>
     );
-}
+};
 
 const SkeletonCard = () => (
-    <div className="glass" style={{ padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div style={{ height: '180px', background: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', animation: 'pulse 1.5s infinite' }}></div>
-        <div style={{ height: '24px', width: '60%', background: 'rgba(255,255,255,0.05)', borderRadius: '0.25rem', animation: 'pulse 1.5s infinite' }}></div>
-        <div style={{ height: '16px', width: '40%', background: 'rgba(255,255,255,0.05)', borderRadius: '0.25rem', animation: 'pulse 1.5s infinite' }}></div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
-            <div style={{ height: '30px', width: '30%', background: 'rgba(255,255,255,0.05)', borderRadius: '0.25rem', animation: 'pulse 1.5s infinite' }}></div>
-            <div style={{ height: '36px', width: '30%', background: 'rgba(255,255,255,0.05)', borderRadius: '2rem', animation: 'pulse 1.5s infinite' }}></div>
+    <div className="glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '260px', borderRadius: '1.25rem' }}>
+        <div style={{ height: '140px', background: 'rgba(255,255,255,0.04)', borderRadius: '0.75rem', animation: 'pulse 1.5s infinite' }}></div>
+        <div style={{ height: '18px', width: '60%', background: 'rgba(255,255,255,0.04)', borderRadius: '0.2rem', animation: 'pulse 1.5s infinite' }}></div>
+        <div style={{ height: '12px', width: '40%', background: 'rgba(255,255,255,0.04)', borderRadius: '0.2rem', animation: 'pulse 1.5s infinite' }}></div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
+            <div style={{ height: '24px', width: '30%', background: 'rgba(255,255,255,0.04)', borderRadius: '0.2rem', animation: 'pulse 1.5s infinite' }}></div>
+            <div style={{ height: '28px', width: '30%', background: 'rgba(255,255,255,0.04)', borderRadius: '1.5rem', animation: 'pulse 1.5s infinite' }}></div>
         </div>
     </div>
 );
 
 const ConsumerStore = () => {
-    const { t } = useAuth();
+    const { t, user, lang } = useAuth();
     const [products, setProducts] = useState([]);
-    const [farmers, setFarmers] = useState([]);
     
-    // Search & Filter State
+    // Search & Filter States
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('');
-    const [sort, setSort] = useState('newest');
-    const [viewMode, setViewMode] = useState('grid');
+    const [maxPrice, setMaxPrice] = useState(150);
     
-    // Location State
+    // Location Filter States
     const [city, setCity] = useState('');
     const [pincode, setPincode] = useState('');
-    const [distance, setDistance] = useState(50); // km
-    const [coords, setCoords] = useState(null); // {lat, lon}
+    const [distance, setDistance] = useState(50);
+    const [coords, setCoords] = useState(null);
     const [locating, setLocating] = useState(false);
 
     const [loading, setLoading] = useState(true);
     const [selectedProduct, setSelectedProduct] = useState(null);
-    const [wishlistIds, setWishlistIds] = useState([]);
 
-    const fetchProductsAndFarmers = async () => {
+    const searchInputRef = useRef(null);
+
+    // Initial parsing of search query parameters
+    useEffect(() => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const cat = queryParams.get('category');
+        if (cat) setCategory(cat);
+        const searchQ = queryParams.get('search');
+        if (searchQ) setSearch(searchQ);
+        const focusSearch = queryParams.get('focusSearch');
+        if (focusSearch === 'true' && searchInputRef.current) {
+            setTimeout(() => {
+                searchInputRef.current?.focus();
+            }, 100);
+        }
+    }, []);
+
+    const fetchProducts = async () => {
         setLoading(true);
         try {
             const params = {};
@@ -179,38 +173,26 @@ const ConsumerStore = () => {
                 params.distance = distance;
             }
             
-            const [prodRes, farmRes] = await Promise.all([
-                axios.get('/api/consumer/products', { params }),
-                axios.get('/api/consumer/farmers', { params })
-            ]);
+            const prodRes = await axios.get('/api/consumer/products', { params });
             
-            // Client-side sorting for products
-            let sortedData = [...prodRes.data];
-            if (sort === 'price-low') sortedData.sort((a,b) => a.price - b.price);
-            if (sort === 'price-high') sortedData.sort((a,b) => b.price - a.price);
+            // Client-side filtering
+            let processedProducts = [...prodRes.data];
+            processedProducts = processedProducts.filter(p => p.price <= maxPrice);
             
-            setProducts(sortedData);
-            setFarmers(farmRes.data);
-
-            // Fetch wishlist if logged in
-            if (localStorage.getItem('token')) {
-                const { data: wishData } = await axios.get('/api/consumer/wishlist');
-                const ids = wishData.map(p => p._id || p);
-                setWishlistIds(ids);
-            }
+            setProducts(processedProducts);
         } catch (error) {
-            console.error('Fetch error:', error);
+            console.error('Fetch store error:', error);
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => { 
-        const delayDebounceFn = setTimeout(() => {
-            fetchProductsAndFarmers();
-        }, 500);
-        return () => clearTimeout(delayDebounceFn);
-    }, [search, category, sort, city, pincode, distance, coords]);
+        const delayDebounce = setTimeout(() => {
+            fetchProducts();
+        }, 300);
+        return () => clearTimeout(delayDebounce);
+    }, [search, category, city, pincode, distance, coords, maxPrice]);
 
     const handleDetectLocation = () => {
         if (!navigator.geolocation) {
@@ -225,166 +207,189 @@ const ConsumerStore = () => {
             },
             (error) => {
                 console.error(error);
-                alert('Unable to retrieve your location');
+                alert('Unable to retrieve location');
                 setLocating(false);
             }
         );
     };
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem', textAlign: 'left' }}>
             
-            {/* Header & Advanced Filters */}
-            <div className="glass" style={{ padding: '1.5rem', marginBottom: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ position: 'relative', flex: '1 1 300px' }}>
-                        <Search style={{ position: 'absolute', left: '1.25rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }} size={20} />
-                        <input 
-                            type="text" 
-                            placeholder="Search fresh vegetables, fruits, grains..."
-                            style={{ width: '100%', padding: '1rem 1rem 1rem 3.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'white', fontSize: '1rem' }}
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-                    
-                    <div style={{ display: 'flex', gap: '0.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.25rem', borderRadius: '0.5rem' }}>
-                        <button onClick={() => setViewMode('grid')} className="btn btn-ghost" style={{ padding: '0.5rem', background: viewMode === 'grid' ? 'rgba(255,255,255,0.1)' : 'transparent' }}><LayoutGrid size={20} /></button>
-                        <button onClick={() => setViewMode('list')} className="btn btn-ghost" style={{ padding: '0.5rem', background: viewMode === 'list' ? 'rgba(255,255,255,0.1)' : 'transparent' }}><List size={20} /></button>
-                    </div>
-                </div>
-
-                {/* Location Filter Panel */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', padding: '1rem', background: 'rgba(0,255,157,0.05)', borderRadius: '1rem', border: '1px dashed rgba(0,255,157,0.2)', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
-                        <MapPin size={20} /> <span style={{ fontWeight: 'bold' }}>Find Local</span>
-                    </div>
-                    
-                    <button 
-                        onClick={handleDetectLocation} 
-                        className="btn" 
-                        style={{ background: coords ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: coords ? 'var(--bg-dark)' : 'white', borderRadius: '2rem', fontSize: '0.85rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-                    >
-                        {locating ? 'Locating...' : coords ? 'Location Active' : 'Detect My Location'}
-                    </button>
-
-                    <input 
-                        type="text" placeholder="City" value={city} onChange={(e) => setCity(e.target.value)}
-                        style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '2rem', fontSize: '0.85rem', width: '120px' }}
-                    />
-                    <input 
-                        type="text" placeholder="Pincode" value={pincode} onChange={(e) => setPincode(e.target.value)}
-                        style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '2rem', fontSize: '0.85rem', width: '100px' }}
-                    />
-                    
-                    {coords && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem' }}>
-                            <span>Radius:</span>
-                            <input 
-                                type="range" min="5" max="200" value={distance} onChange={(e) => setDistance(e.target.value)}
-                                style={{ accentColor: 'var(--primary)', width: '80px' }}
-                            />
-                            <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>{distance} km</span>
-                        </div>
-                    )}
-                    
-                    {(city || pincode || coords) && (
-                        <button onClick={() => { setCity(''); setPincode(''); setCoords(null); }} style={{ background: 'transparent', border: 'none', color: 'var(--error)', fontSize: '0.85rem', cursor: 'pointer', marginLeft: 'auto' }}>
-                            Clear Location
-                        </button>
-                    )}
-                </div>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-                        {['', 'vegetables', 'fruits', 'grains'].map((cat) => (
-                            <button 
-                                key={cat}
-                                onClick={() => setCategory(cat)}
-                                className={`btn ${category === cat ? 'btn-primary' : 'btn-ghost'}`}
-                                style={{ textTransform: 'capitalize', padding: '0.5rem 1.25rem', borderRadius: '2rem', whiteSpace: 'nowrap' }}
-                            >
-                                {cat || 'All Categories'}
-                            </button>
-                        ))}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Filter size={16} color="var(--text-muted)" />
-                        <select 
-                            style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.5rem 1rem', borderRadius: '2rem', appearance: 'none', paddingRight: '2rem' }}
-                            value={sort}
-                            onChange={(e) => setSort(e.target.value)}
-                        >
-                            <option value="newest">Newest First</option>
-                            <option value="price-low">Price: Low to High</option>
-                            <option value="price-high">Price: High to Low</option>
-                            <option value="rating">Top Rated</option>
-                        </select>
-                    </div>
+            {/* Header Section */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                    <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: 'white', margin: 0 }}>
+                        {lang === 'te' ? 'పంటల మార్కెట్' : 'Marketplace'}
+                    </h1>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: '0.25rem 0 0 0' }}>
+                        {lang === 'te' ? 'నేరుగా రైతుల నుండి కొనుగోలు చేయండి' : 'Fresh crops listed directly from farm fields'}
+                    </p>
                 </div>
             </div>
 
-            {/* Nearby Farmers Spotlight (Only shown if farmers exist and user is searching by location) */}
-            {(city || pincode || coords) && farmers.length > 0 && (
-                <div style={{ marginBottom: '3rem' }}>
-                    <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Award size={24} color="var(--primary)" /> Top Farmers Near You
+            {/* Layout Wrapper */}
+            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                
+                {/* Desktop Left Sidebar Filters */}
+                <aside className="glass" style={{ flex: '1 1 280px', maxWidth: '300px', width: '100%', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'sticky', top: '7rem', borderRadius: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                        🛡️ {lang === 'te' ? 'ఫిల్టర్లు' : 'Filters'}
                     </h3>
-                    <div style={{ display: 'flex', gap: '1.5rem', overflowX: 'auto', paddingBottom: '1rem' }}>
-                        {farmers.slice(0, 5).map(farmer => (
-                            <div key={farmer._id} className="glass hover-glow" style={{ padding: '1.5rem', borderRadius: '1rem', minWidth: '250px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(0,255,157,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Leaf size={24} color="var(--primary)" />
-                                    </div>
-                                    {farmer.distance !== undefined && (
-                                        <span style={{ background: 'var(--primary)', color: 'var(--bg-dark)', fontSize: '0.75rem', fontWeight: 'bold', padding: '0.2rem 0.5rem', borderRadius: '1rem' }}>
-                                            {farmer.distance} km away
-                                        </span>
-                                    )}
-                                </div>
-                                <div>
-                                    <h4 style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>{farmer.name}</h4>
-                                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem' }}>
-                                        <MapPin size={12} /> {farmer.address?.city || 'Local Area'}
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
+
+                    {/* Search Crops */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <label style={{ fontSize: '0.9rem', color: 'var(--text-light)', fontWeight: 'bold' }}>🔍 {lang === 'te' ? 'వెతకండి' : 'Search Crops'}</label>
+                        <div style={{ position: 'relative' }}>
+                            <Search style={{ position: 'absolute', left: '0.8rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
+                            <input 
+                                ref={searchInputRef}
+                                type="text" 
+                                placeholder={lang === 'te' ? 'టమాటా, వరి, ఉల్లిపాయ...' : "Tomato, Rice, Potato..."}
+                                style={{ width: '100%', padding: '0.6rem 0.8rem 0.6rem 2.2rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'white', fontSize: '0.85rem', outline: 'none' }}
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
                     </div>
+
+                    {/* Category Select */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <label style={{ fontSize: '0.9rem', color: 'var(--text-light)', fontWeight: 'bold' }}>🥬 {lang === 'te' ? 'రకాలు' : 'Category'}</label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                            {[
+                              { key: '', labelEn: 'All Categories', labelTe: 'అన్ని రకాలు' },
+                              { key: 'vegetables', labelEn: 'Fresh Vegetables', labelTe: 'తాజా కూరగాయలు' },
+                              { key: 'fruits', labelEn: 'Fresh Fruits', labelTe: 'తాజా పండ్లు' },
+                              { key: 'grains', labelEn: 'Grains & Pulses', labelTe: 'ధాన్యాలు & పప్పులు' }
+                            ].map(cat => (
+                                <button
+                                    key={cat.key}
+                                    onClick={() => setCategory(cat.key)}
+                                    style={{
+                                        background: category === cat.key ? 'rgba(0, 255, 157, 0.1)' : 'transparent',
+                                        color: category === cat.key ? 'var(--primary)' : 'white',
+                                        border: category === cat.key ? '1px solid var(--primary)' : '1px solid transparent',
+                                        borderRadius: '0.5rem',
+                                        padding: '0.5rem 0.75rem',
+                                        fontSize: '0.85rem',
+                                        textAlign: 'left',
+                                        cursor: 'pointer',
+                                        textTransform: 'none'
+                                    }}
+                                >
+                                    {lang === 'te' ? cat.labelTe : cat.labelEn}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Nearby Farms (Location) */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', background: 'rgba(0, 255, 157, 0.03)', border: '1px dashed rgba(0, 255, 157, 0.15)', padding: '1rem', borderRadius: '1rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                            <MapPin size={16} /> <span>📍 {lang === 'te' ? 'దగ్గరి పొలాలు' : 'Nearby Farms'}</span>
+                        </div>
+                        
+                        <button 
+                            onClick={handleDetectLocation} 
+                            className="btn" 
+                            style={{ background: coords ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: coords ? 'var(--bg-darkest)' : 'white', borderRadius: '2rem', fontSize: '0.85rem', padding: '0.5rem 1rem', width: '100%', textTransform: 'none', border: 'none', cursor: 'pointer' }}
+                        >
+                            {locating 
+                              ? (lang === 'te' ? 'వెతుకుతోంది...' : 'Locating...') 
+                              : coords 
+                                ? (lang === 'te' ? 'లొకేషన్ యాక్టివ్' : 'Location Active') 
+                                : (lang === 'te' ? 'స్థానాన్ని గుర్తించు' : 'Detect Location')
+                            }
+                        </button>
+
+                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                            <input 
+                                type="text" 
+                                placeholder={lang === 'te' ? 'నగరం' : "City"} 
+                                value={city} 
+                                onChange={(e) => setCity(e.target.value)}
+                                style={{ padding: '0.5rem 0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '2rem', fontSize: '0.8rem', width: '50%', outline: 'none' }}
+                            />
+                            <input 
+                                type="text" 
+                                placeholder={lang === 'te' ? 'పిన్ కోడ్' : "Zip"} 
+                                value={pincode} 
+                                onChange={(e) => setPincode(e.target.value)}
+                                style={{ padding: '0.5rem 0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '2rem', fontSize: '0.8rem', width: '50%', outline: 'none' }}
+                            />
+                        </div>
+
+                        {coords && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                    <span>{lang === 'te' ? 'పరిధి' : 'Radius'}</span>
+                                    <span>{distance} km</span>
+                                </div>
+                                <input 
+                                    type="range" min="5" max="150" value={distance} onChange={(e) => setDistance(Number(e.target.value))}
+                                    style={{ accentColor: 'var(--primary)' }}
+                                />
+                            </div>
+                        )}
+
+                        {(city || pincode || coords) && (
+                            <button onClick={() => { setCity(''); setPincode(''); setCoords(null); }} style={{ background: 'transparent', border: 'none', color: 'var(--error)', fontSize: '0.8rem', cursor: 'pointer', textAlign: 'center', textTransform: 'none', padding: 0 }}>
+                                {lang === 'te' ? 'తీసివేయి' : 'Clear Location'}
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Price Range */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.9rem', color: 'var(--text-light)', fontWeight: 'bold' }}>
+                            <span>💰 {lang === 'te' ? 'ధర పరిధి' : 'Price Range'}</span>
+                            <span style={{ color: 'var(--primary)', fontSize: '0.85rem' }}>₹{maxPrice}/kg</span>
+                        </div>
+                        <input 
+                            type="range" 
+                            min="20" 
+                            max="200" 
+                            value={maxPrice} 
+                            onChange={(e) => setMaxPrice(Number(e.target.value))}
+                            style={{ width: '100%', accentColor: 'var(--primary)' }}
+                        />
+                    </div>
+                </aside>
+
+                {/* Product Grid Area */}
+                <div style={{ flex: '3 1 600px' }}>
+                    {loading ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
+                            {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
+                        </div>
+                    ) : products.length === 0 ? (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
+                            style={{ textAlign: 'center', padding: '6rem 2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '2rem', border: '1px dashed rgba(255,255,255,0.08)' }}
+                        >
+                            <Search size={44} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.4 }} />
+                            <h2 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: 'white' }}>No products found</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Try adjusting your search query, price ranges, or location filters.</p>
+                            <button onClick={() => { setSearch(''); setCategory(''); setCity(''); setPincode(''); setCoords(null); setMaxPrice(150); }} className="btn btn-primary" style={{ marginTop: '1.5rem', padding: '0.5rem 1.5rem', borderRadius: '2rem' }}>Reset Filters</button>
+                        </motion.div>
+                    ) : (
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
+                            <AnimatePresence>
+                                {products.map(p => (
+                                    <ProductCard 
+                                        key={p._id} 
+                                        product={p} 
+                                        onClick={() => setSelectedProduct(p)} 
+                                    />
+                                ))}
+                            </AnimatePresence>
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
 
-            {/* Product Grid / List */}
-            <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>
-                {(city || pincode || coords) ? 'Fresh Products Near You' : 'All Products'}
-            </h3>
-
-            {loading ? (
-                <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md-grid-cols-2 lg-grid-cols-4' : 'grid-cols-1'}`}>
-                    {[1,2,3,4,5,6,7,8].map(i => <SkeletonCard key={i} />)}
-                </div>
-            ) : (
-                <div className={`grid ${viewMode === 'grid' ? 'grid-cols-1 md-grid-cols-2 lg-grid-cols-4' : 'grid-cols-1 md-grid-cols-2'}`}>
-                    <AnimatePresence>
-                        {products.map(p => <ProductCard key={p._id} product={p} viewMode={viewMode} initialWishlisted={wishlistIds.includes(p._id)} onClick={() => setSelectedProduct(p)} />)}
-                    </AnimatePresence>
-                </div>
-            )}
-
-            {!loading && products.length === 0 && (
-                <motion.div 
-                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                    style={{ textAlign: 'center', padding: '6rem 2rem', background: 'rgba(255,255,255,0.02)', borderRadius: '1rem', border: '1px dashed rgba(255,255,255,0.1)' }}
-                >
-                    <Search size={48} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                    <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>No products found</h2>
-                    <p style={{ color: 'var(--text-muted)' }}>Try adjusting your search filters or browse another category.</p>
-                    <button onClick={() => { setSearch(''); setCategory(''); setCity(''); setPincode(''); setCoords(null); }} className="btn btn-primary" style={{ marginTop: '1.5rem' }}>Clear Filters</button>
-                </motion.div>
-            )}
-
+            {/* Product Details Modal */}
             <AnimatePresence>
                 {selectedProduct && (
                     <ProductDetailsModal 

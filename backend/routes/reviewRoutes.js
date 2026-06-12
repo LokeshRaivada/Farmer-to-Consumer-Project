@@ -3,6 +3,7 @@ const router = express.Router();
 const Review = require('../models/Review');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 
 // Helper to update product ratings
@@ -18,6 +19,81 @@ const updateProductRatings = async (productId) => {
         numReviews
     });
 };
+
+// @route   GET /api/reviews/page-data
+// @desc    Get aggregated reviews page data
+// @access  Public
+router.get('/page-data', async (req, res) => {
+    try {
+        // 1. Latest Reviews
+        const latestReviews = await Review.find()
+            .sort({ createdAt: -1 })
+            .limit(6)
+            .populate('user', 'name')
+            .populate('product', 'name')
+            .populate('farmer', 'name');
+
+        // 2. Highest Rated Products
+        const highestRatedProducts = await Product.find({ averageRating: { $gt: 0 } })
+            .sort({ averageRating: -1, numReviews: -1 })
+            .limit(5)
+            .populate('farmer', 'name');
+
+        // 3. Top Rated Farmers
+        const farmers = await User.find({ role: 'farmer' })
+            .select('name address location createdAt isVerified')
+            .limit(10);
+        
+        const farmersWithStats = await Promise.all(farmers.map(async (f) => {
+            const reviews = await Review.find({ farmer: f._id });
+            const ratingCount = reviews.length;
+            const avgRating = ratingCount > 0 
+                ? parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / ratingCount).toFixed(1))
+                : 0;
+            const productsCount = await Product.countDocuments({ farmer: f._id, isAvailable: true });
+            return {
+                _id: f._id,
+                name: f.name,
+                address: f.address,
+                isVerified: f.isVerified,
+                rating: avgRating,
+                productsCount,
+                reviewsCount: ratingCount
+            };
+        }));
+
+        const topFarmers = farmersWithStats
+            .sort((a, b) => b.rating - a.rating || b.reviewsCount - a.reviewsCount)
+            .slice(0, 5);
+
+        res.json({
+            latestReviews,
+            highestRatedProducts,
+            topFarmers
+        });
+    } catch (error) {
+        console.error('Get reviews page data error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   GET /api/reviews/recent
+// @desc    Get the 6 most recent reviews across all products
+// @access  Public
+router.get('/recent', async (req, res) => {
+    try {
+        const reviews = await Review.find()
+            .sort({ createdAt: -1 })
+            .limit(6)
+            .populate('user', 'name')
+            .populate('product', 'name')
+            .populate('farmer', 'name');
+        res.json(reviews);
+    } catch (error) {
+        console.error('Get recent reviews error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
 
 // @route   GET /api/reviews/product/:productId
 // @desc    Get all reviews for a product
@@ -50,7 +126,54 @@ router.get('/product/:productId', async (req, res) => {
 // @access  Private
 router.post('/', protect, async (req, res) => {
     try {
-        const { productId, rating, comment } = req.body;
+        const { productId, farmerId, rating, comment, reviewType = 'product' } = req.body;
+
+        if (reviewType === 'website') {
+            const review = await Review.create({
+                user: req.user._id,
+                rating: Number(rating),
+                comment,
+                reviewType: 'website'
+            });
+            const populatedReview = await Review.findById(review._id).populate('user', 'name');
+            return res.status(201).json(populatedReview);
+        }
+
+        if (reviewType === 'farmer') {
+            if (!farmerId) {
+                return res.status(400).json({ message: 'Farmer ID is required for a farmer review.' });
+            }
+            
+            // Check if user already reviewed this farmer
+            const existingReview = await Review.findOne({ user: req.user._id, farmer: farmerId, reviewType: 'farmer' });
+            if (existingReview) {
+                return res.status(400).json({ message: 'You have already reviewed this farmer.' });
+            }
+
+            // Check if verified purchase from this farmer
+            const order = await Order.findOne({ 
+                consumer: req.user._id, 
+                farmer: farmerId,
+                status: 'delivered' 
+            });
+
+            const review = await Review.create({
+                user: req.user._id,
+                farmer: farmerId,
+                rating: Number(rating),
+                comment,
+                reviewType: 'farmer',
+                verifiedPurchase: !!order
+            });
+
+            const populatedReview = await Review.findById(review._id).populate('user', 'name');
+            return res.status(201).json(populatedReview);
+        }
+
+        // Default: product review
+        if (!productId) {
+            return res.status(400).json({ message: 'Product ID is required for a product review.' });
+        }
 
         const product = await Product.findById(productId);
         if (!product) {
@@ -76,7 +199,8 @@ router.post('/', protect, async (req, res) => {
             farmer: product.farmer,
             rating: Number(rating),
             comment,
-            verifiedPurchase: !!order
+            verifiedPurchase: !!order,
+            reviewType: 'product'
         });
 
         await updateProductRatings(productId);
@@ -168,4 +292,20 @@ router.get('/farmer/stats', protect, async (req, res) => {
     }
 });
 
+// @route   GET /api/reviews/farmer/:farmerId
+// @desc    Get all reviews for a farmer
+// @access  Public
+router.get('/farmer/:farmerId', async (req, res) => {
+    try {
+        const reviews = await Review.find({ farmer: req.params.farmerId, reviewType: 'farmer' })
+            .populate('user', 'name')
+            .sort({ createdAt: -1 });
+        res.json(reviews);
+    } catch (error) {
+        console.error('Get farmer reviews error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 module.exports = router;
+

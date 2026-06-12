@@ -5,6 +5,7 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Review = require('../models/Review');
 const PriceTrend = require('../models/PriceTrend');
+const Notification = require('../models/Notification');
 const { protect, authorize } = require('../middleware/auth');
 
 router.use(protect);
@@ -64,6 +65,17 @@ router.put('/users/:id/verify', async (req, res) => {
         
         user.isVerified = !user.isVerified;
         await user.save();
+
+        if (user.isVerified) {
+            await Notification.create({
+                recipient: user._id,
+                type: 'farmer_verified',
+                title: 'Farmer Verified 🛡️',
+                message: 'Your farmer account has been verified successfully. You can now list and sell products!',
+                link: '/farmer'
+            });
+        }
+
         res.json({ message: `Farmer ${user.isVerified ? 'verified' : 'unverified'}`, user });
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
@@ -118,15 +130,28 @@ router.get('/reviews', async (req, res) => {
 
 router.delete('/reviews/:id', async (req, res) => {
     try {
-        const review = await Review.findByIdAndDelete(req.params.id);
-        if(review) {
-             const Product = require('../models/Product');
-             const { updateProductRatings } = require('../models/Product'); 
-             // We'd update the ratings. But for now, just delete.
-             // Best to just import updateProductRatings if available.
+        const review = await Review.findById(req.params.id);
+        if (!review) {
+            return res.status(404).json({ message: 'Review not found' });
         }
+        const productId = review.product;
+        await Review.findByIdAndDelete(req.params.id);
+
+        // Update product ratings
+        const reviews = await Review.find({ product: productId });
+        const numReviews = reviews.length;
+        const averageRating = numReviews > 0 
+            ? reviews.reduce((acc, item) => item.rating + acc, 0) / numReviews 
+            : 0;
+
+        await Product.findByIdAndUpdate(productId, {
+            averageRating: parseFloat(averageRating.toFixed(1)),
+            numReviews
+        });
+
         res.json({ message: 'Review deleted' });
     } catch (error) {
+        console.error('Admin review delete error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

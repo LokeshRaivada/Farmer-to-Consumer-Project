@@ -47,6 +47,7 @@ const ChatBox = ({ recipientId, recipientName, orderId }) => {
       room: roomName,
       senderId: user._id,
       senderName: user.name,
+      receiverId: recipientId,
       text: inputMessage,
       timestamp: new Date().toISOString()
     };

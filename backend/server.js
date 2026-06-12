@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+const Notification = require('./models/Notification');
 require('dotenv').config();
 
 const app = express();
@@ -34,8 +35,23 @@ io.on('connection', (socket) => {
         console.log(`User with ID: ${socket.id} joined room: ${data}`);
     });
 
-    socket.on('send_message', (data) => {
+    socket.on('send_message', async (data) => {
         socket.to(data.room).emit('receive_message', data);
+        
+        if (data.receiverId) {
+            try {
+                await Notification.create({
+                    recipient: data.receiverId,
+                    sender: data.senderId,
+                    type: 'message_received',
+                    title: 'New Message 💬',
+                    message: `New message from ${data.senderName || 'Farmer'}: "${data.text}"`,
+                    link: '/orders'
+                });
+            } catch (err) {
+                console.error('Socket message notification save error:', err);
+            }
+        }
     });
 
     socket.on('update_location', (data) => {

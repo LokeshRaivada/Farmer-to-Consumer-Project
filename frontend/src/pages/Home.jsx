@@ -1,43 +1,196 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Leaf, Truck, TrendingUp, Search, MapPin, ArrowRight, ShieldCheck, Sprout } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Leaf, Search, MapPin, ArrowRight, ShieldCheck, Sprout, Star, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 
-const FeatureCard = ({ icon: Icon, title, description, delay }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.6, type: 'spring' }}
-    whileHover={{ y: -10, scale: 1.02 }}
-    className="glass"
-    style={{ padding: '2.5rem', textAlign: 'center', position: 'relative', overflow: 'hidden' }}
-  >
-    <div style={{ position: 'absolute', top: '-20px', right: '-20px', opacity: 0.1 }}>
-      <Icon size={120} color="var(--primary)" />
-    </div>
-    <div style={{ width: '70px', height: '70px', margin: '0 auto 1.5rem', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', borderRadius: '1.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 20px rgba(0,255,157,0.3)' }}>
-      <Icon size={36} color="var(--bg-darkest)" />
-    </div>
-    <h3 style={{ fontSize: '1.4rem', marginBottom: '1rem', fontWeight: '700', color: 'white' }}>{title}</h3>
-    <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>{description}</p>
-  </motion.div>
-);
+const getCropEmoji = (name) => {
+  const lower = name.toLowerCase();
+  if (lower.includes('tomato')) return '🍅';
+  if (lower.includes('onion')) return '🧅';
+  if (lower.includes('potato')) return '🥔';
+  if (lower.includes('spinach') || lower.includes('green') || lower.includes('🥬') || lower.includes('కూర')) return '🥬';
+  if (lower.includes('carrot')) return '🥕';
+  if (lower.includes('chilli') || lower.includes('mirchi')) return '🌶️';
+  if (lower.includes('mango')) return '🥭';
+  if (lower.includes('banana')) return '🍌';
+  if (lower.includes('rice') || lower.includes('paddy') || lower.includes('grain') || lower.includes('ధాన్య')) return '🌾';
+  return '🌾';
+};
 
-const FloatingElement = ({ icon: Icon, delay, top, left, right, bottom, size }) => (
-  <motion.div
-    className="animate-float"
-    initial={{ opacity: 0, scale: 0 }}
-    animate={{ opacity: 0.6, scale: 1 }}
-    transition={{ delay, duration: 1 }}
-    style={{ position: 'absolute', top, left, right, bottom, zIndex: 0, filter: 'blur(2px)' }}
-  >
-    <Icon size={size} color="var(--primary)" />
-  </motion.div>
-);
+const ProductCard = ({ product, onAddToCart }) => {
+  const [added, setAdded] = useState(false);
+  const { user, lang } = useAuth();
+  
+  const handleAdd = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onAddToCart(product);
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
+
+  const emoji = getCropEmoji(product.name);
+
+  return (
+    <div
+      className="glass hover-glow"
+      style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative', textAlign: 'left', borderRadius: '1.25rem', transition: 'transform 0.2s' }}
+      onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+      onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+    >
+      {/* Crop Image as Emoji representation */}
+      <div style={{ height: '130px', background: 'linear-gradient(135deg, rgba(0, 255, 157, 0.08), rgba(34, 197, 94, 0.03))', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: '4rem' }}>
+        {emoji}
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%', margin: 0 }}>{product.name}</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', color: '#eab308', fontSize: '0.85rem', fontWeight: 'bold' }}>
+            <Star size={12} fill="#eab308" stroke="#eab308" />
+            <span>{product.averageRating > 0 ? product.averageRating.toFixed(1) : (lang === 'te' ? 'కొత్తది' : 'New')}</span>
+          </div>
+        </div>
+
+        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.25rem' }}>
+          <span>By {product.farmer?.name || 'Farmer'}</span>
+          {product.farmer?.isVerified && (
+            <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.75rem' }}>
+              🛡️ {lang === 'te' ? 'వెరిఫైడ్' : 'Verified'}
+            </span>
+          )}
+        </div>
+
+        {product.distance !== undefined && (
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+            <MapPin size={12} /> <span>{product.distance.toFixed(1)} {lang === 'te' ? 'కి.మీ దూరం' : 'KM away'}</span>
+          </div>
+        )}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white' }}>
+          ₹{product.price} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>/kg</span>
+        </div>
+
+        <button
+          onClick={handleAdd}
+          className={`btn ${added ? 'btn-secondary' : 'btn-primary'}`}
+          style={{ padding: '0.4rem 0.8rem', borderRadius: '1.5rem', fontSize: '0.8rem', textTransform: 'none', minHeight: '32px' }}
+          disabled={user?.role === 'farmer' || product.quantity <= 0}
+        >
+          {added ? (lang === 'te' ? 'జోడించబడింది' : 'Added') : (lang === 'te' ? 'కార్ట్' : '🛒 Add')}
+        </button>
+      </div>
+    </div>
+  );
+};
 
 const Home = () => {
-  const { t } = useAuth();
+  const { t, lang } = useAuth();
+  const { addToCart } = useCart();
+  
+  const [loading, setLoading] = useState(true);
+  const [allProducts, setAllProducts] = useState([]);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [farmers, setFarmers] = useState([]);
+  const [trends, setTrends] = useState([]);
+  
+  const [coords, setCoords] = useState(null);
+  const [locationEnabled, setLocationEnabled] = useState(false);
+  const [locating, setLocating] = useState(false);
+
+  useEffect(() => {
+    document.title = "FarmerDirect | Fresh Produce Direct From Farmers";
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', 'Buy fresh fruits, vegetables and grains directly from verified farmers.');
+  }, []);
+
+  useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        const [homeRes, productsRes] = await Promise.all([
+          axios.get('/api/consumer/home'),
+          axios.get('/api/consumer/products')
+        ]);
+        
+        setFeaturedProducts(homeRes.data.featuredProducts || []);
+        setFarmers(homeRes.data.farmers || []);
+        setTrends(homeRes.data.trends || []);
+        setAllProducts(productsRes.data || []);
+      } catch (err) {
+        console.error('Error fetching homepage data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchHomeData();
+  }, []);
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation is not supported by your browser');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setCoords({ lat: position.coords.latitude, lon: position.coords.longitude });
+        setLocationEnabled(true);
+        setLocating(false);
+      },
+      (error) => {
+        console.error(error);
+        alert('Location access denied. Displaying featured products instead.');
+        setLocating(false);
+        setLocationEnabled(false);
+      }
+    );
+  };
+
+  // Calculate dynamic averages for Tomato, Potato, Onion, Rice
+  const getCropAvgPrice = (nameEn, nameTe) => {
+    const matches = allProducts.filter(p => 
+      p.name.toLowerCase().includes(nameEn.toLowerCase()) || 
+      p.name.includes(nameTe)
+    );
+    if (matches.length === 0) return null;
+    const avg = matches.reduce((sum, p) => sum + p.price, 0) / matches.length;
+    return avg;
+  };
+
+  const getCropTrend = (categoryKey) => {
+    const catTrends = trends.filter(t => t.category === categoryKey);
+    if (catTrends.length < 2) return null;
+    const latest = catTrends[catTrends.length - 1].avgPrice;
+    const prev = catTrends[catTrends.length - 2].avgPrice;
+    const diff = ((latest - prev) / prev) * 100;
+    return diff;
+  };
+
+  const tomatoPrice = getCropAvgPrice('tomato', 'టమాటా');
+  const potatoPrice = getCropAvgPrice('potato', 'బంగాళాదుంప');
+  const onionPrice = getCropAvgPrice('onion', 'ఉల్లిపాయ');
+  const ricePrice = getCropAvgPrice('rice', 'వరి');
+
+  const vegetableTrend = getCropTrend('vegetables');
+  const grainTrend = getCropTrend('grains');
+
+  const priceItems = [
+    { nameEn: 'Tomatoes', nameTe: 'టమాటాలు', price: tomatoPrice, icon: '🍅', trend: vegetableTrend },
+    { nameEn: 'Potatoes', nameTe: 'బంగాళాదుంపలు', price: potatoPrice, icon: '🥔', trend: vegetableTrend },
+    { nameEn: 'Onions', nameTe: 'ఉల్లిపాయలు', price: onionPrice, icon: '🧅', trend: vegetableTrend },
+    { nameEn: 'Rice / Grains', nameTe: 'బియ్యం / వరి', price: ricePrice, icon: '🌾', trend: grainTrend }
+  ];
+
+  const hasAnyPriceData = tomatoPrice !== null || potatoPrice !== null || onionPrice !== null || ricePrice !== null;
 
   return (
     <div style={{ position: 'relative' }}>
@@ -45,153 +198,290 @@ const Home = () => {
       
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', paddingBottom: '6rem' }}>
         
-        {/* Advanced Hero Section */}
-        <section style={{ minHeight: '90vh', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'relative' }}>
+        {/* 1. HERO SECTION */}
+        <section style={{ minHeight: '60vh', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '2rem', padding: '3rem 0', position: 'relative' }}>
           
-          <FloatingElement icon={Leaf} delay={0.2} top="15%" left="-5%" size={60} />
-          <FloatingElement icon={Sprout} delay={0.5} bottom="25%" left="40%" size={40} />
-          
-          <div style={{ maxWidth: '650px', zIndex: 10 }}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0,255,157,0.1)', border: '1px solid var(--primary)', padding: '0.5rem 1rem', borderRadius: '2rem', marginBottom: '2rem', color: 'var(--primary)', fontWeight: '600', fontSize: '0.9rem' }}
+          <div style={{ flex: '1 1 500px', zIndex: 10, textAlign: 'left' }}>
+            <div
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0,255,157,0.08)', border: '1px solid var(--primary)', padding: '0.4rem 1rem', borderRadius: '2rem', marginBottom: '1.5rem', color: 'var(--primary)', fontWeight: '600', fontSize: '0.85rem' }}
             >
-              <ShieldCheck size={16} /> Verified Organic Farmers Network
-            </motion.div>
+              <ShieldCheck size={14} /> {lang === 'te' ? 'రైతు నెట్‌వర్క్' : 'Verified Farmers Network'}
+            </div>
             
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              style={{ fontSize: '4.5rem', lineHeight: '1.1', marginBottom: '1.5rem', fontWeight: '700', textShadow: '0 0 40px rgba(0,255,157,0.3)' }}
+            <h1
+              style={{ fontSize: '2.8rem', lineHeight: '1.2', marginBottom: '1.25rem', fontWeight: '800', letterSpacing: '-1px' }}
             >
-              The Future of <span style={{ background: 'linear-gradient(to right, var(--primary), var(--accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Agriculture</span> Marketplace.
-            </motion.h1>
+              {lang === 'te' ? 'తాజా పంటలు నేరుగా రైతుల నుండి' : 'Fresh Produce Direct From Farmers'}
+            </h1>
             
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              style={{ fontSize: '1.25rem', color: 'var(--text-muted)', marginBottom: '3rem', maxWidth: '500px', lineHeight: '1.7' }}
+            <p
+              style={{ fontSize: '1.1rem', color: 'var(--text-muted)', marginBottom: '2rem', maxWidth: '520px', lineHeight: '1.6' }}
             >
-              Connect directly with verified local farmers. Get fresh, organic produce delivered straight to your door with real-time tracking and fair pricing.
-            </motion.p>
+              {lang === 'te' 
+                ? 'మీ రాష్ట్రంలోని వెరిఫైడ్ లోకల్ రైతులతో నేరుగా కనెక్ట్ అవ్వండి. మధ్యవర్తులు లేకుండా తక్కువ ధరకు కొనుగోలు చేయండి.'
+                : 'Connect directly with verified local farmers. Purchase freshly harvested vegetables, fruits, and grains at transparent farm-gate prices.'}
+            </p>
             
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}
-            >
-              <Link to="/store" className="btn btn-primary" style={{ fontSize: '1.1rem', padding: '1rem 2.5rem' }}>
-                Explore Market <Search size={20} />
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <Link to="/store" className="btn btn-primary" style={{ padding: '0.8rem 2rem', borderRadius: '2rem' }}>
+                {lang === 'te' ? 'మార్కెట్ చూడండి' : 'Explore Market'} <Search size={18} style={{ marginLeft: '0.5rem' }} />
               </Link>
-              <Link to="/signup" className="btn btn-secondary" style={{ fontSize: '1.1rem', padding: '1rem 2.5rem' }}>
-                Join as Farmer <ArrowRight size={20} />
+              <Link to="/signup" className="btn btn-secondary" style={{ padding: '0.8rem 2rem', borderRadius: '2rem' }}>
+                {lang === 'te' ? 'రైతుగా చేరండి' : 'Become a Farmer'} <ArrowRight size={18} style={{ marginLeft: '0.5rem' }} />
               </Link>
-            </motion.div>
+            </div>
           </div>
           
-          {/* Futuristic Hero Graphic */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5, duration: 0.8, type: 'spring' }}
-            className="animate-float"
-            style={{ width: '450px', height: '550px', position: 'relative', zIndex: 10, display: 'block' }} // Hide on mobile, show on desktop via CSS normally, using inline for quick fix
-          >
-            {/* Main Glass Card */}
-            <div className="glass" style={{ width: '100%', height: '100%', borderRadius: '2rem', display: 'flex', flexDirection: 'column', padding: '2rem', position: 'relative', overflow: 'hidden', border: '1px solid rgba(0,255,157,0.4)', boxShadow: '0 0 50px rgba(0,255,157,0.2)' }}>
+          {/* Live Market Card */}
+          <div style={{ flex: '0 1 420px', width: '100%', position: 'relative', zIndex: 10 }}>
+            <div className="glass" style={{ width: '100%', borderRadius: '2rem', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', border: '1px solid rgba(0,255,157,0.25)', boxShadow: '0 15px 30px rgba(0,0,0,0.4)' }}>
               
-              <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'conic-gradient(transparent, transparent, transparent, var(--primary))', animation: 'spin 4s linear infinite', opacity: 0.1 }}></div>
-              
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', zIndex: 1 }}>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ff5f56' }}></div>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ffbd2e' }}></div>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#27c93f' }}></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '0.4rem' }}>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }}></div>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#eab308' }}></div>
+                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e' }}></div>
                 </div>
-                <div style={{ background: 'rgba(0,255,157,0.2)', color: 'var(--primary)', padding: '0.2rem 0.8rem', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 'bold' }}>LIVE MARKET</div>
+                <div style={{ background: 'rgba(0,255,157,0.12)', color: 'var(--primary)', padding: '0.2rem 0.75rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.5px' }}>
+                  {lang === 'te' ? 'లైవ్ మార్కెట్' : 'LIVE MARKET'}
+                </div>
               </div>
 
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1rem', zIndex: 1 }}>
-                {/* Realistic Market Rows */}
+              {/* Rows */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {[
-                  { name: 'Organic Tomatoes', farm: 'Green Valley Farm', price: '₹40/kg', trend: '+12%', icon: '🍅' },
-                  { name: 'Fresh Spinach', farm: 'Sunrise Organics', price: '₹25/bunch', trend: '+5%', icon: '🥬' },
-                  { name: 'Local Potatoes', farm: 'Heritage Farms', price: '₹30/kg', trend: '-2%', icon: '🥔' }
-                ].map((item, i) => (
-                  <div key={i} style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '1rem', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease', cursor: 'pointer' }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.background = 'rgba(0,255,157,0.05)'; e.currentTarget.style.borderColor = 'rgba(0,255,157,0.3)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.background = 'rgba(0,0,0,0.4)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)'; }}>
-                    <div style={{ width: '50px', height: '50px', borderRadius: '0.5rem', background: 'rgba(0,255,157,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-                      {item.icon}
+                  { name: lang === 'te' ? 'తాజా కూరగాయలు' : 'Fresh Vegetables', key: 'vegetables', icon: '🥬' },
+                  { name: lang === 'te' ? 'తాజా పండ్లు' : 'Fresh Fruits', key: 'fruits', icon: '🍎' },
+                  { name: lang === 'te' ? 'స్థానిక ధాన్యాలు' : 'Local Grains', key: 'grains', icon: '🌾' }
+                ].map((item, i) => {
+                  const catTrends = trends.filter(t => t.category === item.key);
+                  const latest = catTrends.length > 0 ? catTrends[catTrends.length - 1].avgPrice : null;
+                  const diff = getCropTrend(item.key);
+                  const trendStr = diff !== null ? `${diff >= 0 ? '+' : ''}${diff.toFixed(1)}%` : '--';
+                  
+                  return (
+                    <div 
+                      key={i} 
+                      style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '1rem', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid rgba(255,255,255,0.03)' }}
+                    >
+                      <div style={{ width: '42px', height: '42px', borderRadius: '0.5rem', background: 'rgba(0,255,157,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.35rem' }}>
+                        {item.icon}
+                      </div>
+                      <div style={{ flex: 1, textAlign: 'left' }}>
+                        <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.85rem' }}>{item.name}</div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{lang === 'te' ? 'సగటు ధర' : 'Average Price'}</div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                          {latest ? `₹${latest}/kg` : '--'}
+                        </div>
+                        {diff !== null && (
+                          <div style={{ color: diff >= 0 ? 'var(--primary)' : '#ef4444', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                            {trendStr}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.95rem', marginBottom: '0.2rem' }}>{item.name}</div>
-                      <div style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{item.farm}</div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ color: 'white', fontWeight: 'bold' }}>{item.price}</div>
-                      <div style={{ color: item.trend.startsWith('+') ? 'var(--primary)' : '#ff5f56', fontSize: '0.8rem', fontWeight: 'bold' }}>{item.trend}</div>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
-
-              <div style={{ marginTop: 'auto', zIndex: 1 }}>
-                <div style={{ width: '100%', height: '120px', background: 'linear-gradient(to top, rgba(0,255,157,0.2), transparent)', borderRadius: '1rem', borderBottom: '2px solid var(--primary)', position: 'relative', overflow: 'hidden' }}>
-                   {/* Animated Graph Area */}
-                   <svg viewBox="0 0 100 40" style={{ width: '100%', height: '100%', position: 'absolute', bottom: 0 }} preserveAspectRatio="none">
-                     <defs>
-                       <linearGradient id="graphGradient" x1="0" y1="0" x2="0" y2="1">
-                         <stop offset="0%" stopColor="var(--primary)" stopOpacity="0.4" />
-                         <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.0" />
-                       </linearGradient>
-                     </defs>
-                     <path d="M0 40 L 0 35 L 20 25 L 40 28 L 60 15 L 80 18 L 100 5 L 100 40 Z" fill="url(#graphGradient)" />
-                     <path d="M0 35 L 20 25 L 40 28 L 60 15 L 80 18 L 100 5" fill="none" stroke="var(--primary)" strokeWidth="2.5" vectorEffect="non-scaling-stroke" style={{ filter: 'drop-shadow(0px 4px 6px rgba(0,255,157,0.5))' }} />
-                   </svg>
-                   <div style={{ position: 'absolute', top: '10px', left: '15px', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
-                     <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold', letterSpacing: '1px' }}>MARKET TREND</span>
-                   </div>
-                </div>
-              </div>
-
             </div>
-
-            {/* Floating Badges */}
-            <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 3, repeat: Infinity, delay: 1 }} className="glass" style={{ position: 'absolute', bottom: '-20px', left: '-40px', padding: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', borderRadius: '1rem', zIndex: 20 }}>
-              <div style={{ background: 'var(--primary)', borderRadius: '50%', padding: '0.5rem' }}><MapPin color="var(--bg-darkest)" size={20} /></div>
-              <div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Nearest Farm</div>
-                <div style={{ fontWeight: 'bold' }}>1.2 km away</div>
-              </div>
-            </motion.div>
-
-          </motion.div>
+          </div>
         </section>
 
-        {/* Features Showcase */}
-        <section className="grid grid-cols-1 md-grid-cols-3" style={{ marginTop: '2rem' }}>
-          <FeatureCard 
-              icon={Leaf} 
-              title="100% Organic Verified" 
-              description="Every farmer undergoes strict quality checks to ensure chemical-free, fresh produce." 
-              delay={0.1}
-          />
-          <FeatureCard 
-              icon={MapPin} 
-              title="Hyper-Local Sourcing" 
-              description="Discover farmers in your exact district. Lower carbon footprint, higher freshness." 
-              delay={0.2}
-          />
-          <FeatureCard 
-              icon={TrendingUp} 
-              title="Fair Trade Pricing" 
-              description="Cut out the middlemen. Farmers earn more, you pay less. Transparent market rates." 
-              delay={0.3}
-          />
+        {/* 2. TODAY'S PRICES */}
+        <section style={{ margin: '3rem 0', textAlign: 'left' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+            📊 {lang === 'te' ? 'ఈరోజు పంటల ధరలు' : "Today's Crop Prices"}
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+            {lang === 'te' ? 'రైతులు విక్రయిస్తున్న తాజా పంటల సగటు మార్కెట్ ధరలు' : 'Real-time average prices calculated from active local listings'}
+          </p>
+
+          {loading ? (
+            <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.1rem', padding: '1rem 0' }}>
+              ⏳ {lang === 'te' ? 'ధరలను లోడ్ చేస్తున్నాము...' : 'Loading market prices...'}
+            </div>
+          ) : !hasAnyPriceData ? (
+            <div className="glass" style={{ padding: '2rem', borderRadius: '1rem', border: '1px dashed rgba(255,255,255,0.1)', color: 'var(--text-muted)', textAlign: 'center' }}>
+              📢 {lang === 'te' ? 'ఇంకా మార్కెట్ ధరలు అందుబాటులో లేవు. రైతులు పంటలను జోడించినప్పుడు ఇక్కడ కనిపిస్తాయి.' : 'No market data available yet. Prices will appear when farmers list products.'}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+              {priceItems.map((item, idx) => (
+                <div key={idx} className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                    <span style={{ fontSize: '2rem' }}>{item.icon}</span>
+                    {item.trend !== null && item.price !== null && (
+                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', padding: '0.2rem 0.5rem', borderRadius: '1rem', background: item.trend >= 0 ? 'rgba(0,255,157,0.08)' : 'rgba(239,68,68,0.08)', color: item.trend >= 0 ? 'var(--primary)' : '#ef4444' }}>
+                        {item.trend >= 0 ? '▲' : '▼'} {Math.abs(item.trend).toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'white', margin: 0 }}>
+                    {lang === 'te' ? item.nameTe : item.nameEn}
+                  </h3>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', marginTop: '0.5rem' }}>
+                    {item.price !== null ? `₹${item.price.toFixed(1)}` : '--'}
+                    {item.price !== null && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}> / kg</span>}
+                  </div>
+                  {item.price === null && (
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {lang === 'te' ? 'పంట అందుబాటులో లేదు' : 'No active listings'}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* 3. POPULAR CATEGORIES */}
+        <section style={{ margin: '4rem 0', textAlign: 'left' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+            🥬 {lang === 'te' ? 'ప్రముఖ రకాలు' : 'Popular Categories'}
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+            {lang === 'te' ? 'సులభమైన నావిగేషన్ కోసం పంటల రకాలు' : 'Find crops quickly by category'}
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+            {[
+              { nameEn: 'Vegetables', nameTe: 'కూరగాయలు', key: 'vegetables', icon: '🥬', descEn: 'Fresh tomatoes, onions, greens', descTe: 'తాజా టమాటాలు, ఉల్లిపాయలు, ఆకుకూరలు' },
+              { nameEn: 'Fruits', nameTe: 'పండ్లు', key: 'fruits', icon: '🍎', descEn: 'Sweet mangoes, bananas, seasonal fruits', descTe: 'మామిడి పండ్లు, అరటిపండ్లు, సీజనల్ పండ్లు' },
+              { nameEn: 'Grains', nameTe: 'ధాన్యాలు', key: 'grains', icon: '🌾', descEn: 'Paddy rice, wheat, local pulses', descTe: 'వరి బియ్యం, గోధుమలు, పప్పు ధాన్యాలు' }
+            ].map((cat, idx) => (
+              <Link key={idx} to={`/store?category=${cat.key}`} style={{ textDecoration: 'none' }}>
+                <div 
+                  className="glass hover-glow"
+                  style={{ padding: '2rem 1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', transition: 'transform 0.2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{cat.icon}</div>
+                  <h3 style={{ fontSize: '1.3rem', fontWeight: 'bold', color: 'white', margin: '0 0 0.5rem 0' }}>
+                    {lang === 'te' ? cat.nameTe : cat.nameEn}
+                  </h3>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                    {lang === 'te' ? cat.descTe : cat.descEn}
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* 4. NEARBY CROPS */}
+        <section style={{ margin: '4rem 0', textAlign: 'left' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white' }}>
+                🌾 {locationEnabled ? (lang === 'te' ? 'మీకు దగ్గరలో ఉన్న పంటలు' : 'Products Near You') : (lang === 'te' ? 'మార్కెట్ లోని పంటలు' : 'Trending Crops')}
+              </h2>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                {locationEnabled 
+                  ? (lang === 'te' ? '50 కిలోమీటర్ల లోపు రైతులు పండించిన తాజా పంటలు' : 'Showing crops listed by local farmers within 50 km') 
+                  : (lang === 'te' ? 'దగ్గరి పొలాలను గుర్తించడానికి లొకేషన్ ఎనేబుల్ చేయండి' : 'Enable location permissions to find crops near you')}
+              </p>
+            </div>
+            
+            {!locationEnabled && (
+              <button 
+                onClick={requestLocation}
+                disabled={locating}
+                className="btn btn-secondary" 
+                style={{ borderRadius: '2rem', fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}
+              >
+                {locating ? (lang === 'te' ? 'గుర్తిస్తోంది...' : 'Locating...') : `📍 ${lang === 'te' ? 'లొకేషన్ ఆన్ చేయండి' : 'Enable Location'}`}
+              </button>
+            )}
+          </div>
+
+          {loading ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
+              {[1, 2, 3, 4].map(i => <div key={i} className="glass" style={{ height: '260px', borderRadius: '1.25rem', opacity: 0.4 }} />)}
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
+              {featuredProducts.slice(0, 8).map(p => (
+                <ProductCard key={p._id} product={p} onAddToCart={addToCart} />
+              ))}
+              {featuredProducts.length === 0 && (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                  {lang === 'te' ? 'ఏ పంటలు అందుబాటులో లేవు.' : 'No products listed on the marketplace yet.'}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* 5. VERIFIED FARMERS */}
+        <section style={{ margin: '4rem 0', textAlign: 'left' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+            🛡️ {lang === 'te' ? 'వెరిఫైడ్ రైతులు' : 'Verified Farmers'}
+          </h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+            {lang === 'te' ? 'ప్రభుత్వ గుర్తింపు పొందిన విశ్వసనీయ రైతులు' : 'Shop with confidence from verified local producers'}
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+            {loading ? (
+              [1, 2, 3].map(i => <div key={i} className="glass" style={{ height: '90px', borderRadius: '1rem', opacity: 0.4 }} />)
+            ) : farmers.length === 0 ? (
+              <div style={{ color: 'var(--text-muted)' }}>
+                {lang === 'te' ? 'రైతులు నమోదు చేసుకోలేదు.' : 'No verified farmers registered yet.'}
+              </div>
+            ) : (
+              farmers.slice(0, 6).map((farmer, idx) => (
+                <div 
+                  key={farmer._id || idx}
+                  className="glass" 
+                  style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}
+                >
+                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--bg-darkest)' }}>
+                    {farmer.name ? farmer.name.charAt(0).toUpperCase() : 'F'}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <h4 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'white', margin: 0 }}>{farmer.name}</h4>
+                      {farmer.isVerified && (
+                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.75rem' }}>🛡️</span>
+                      )}
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.2rem', margin: '0.2rem 0 0 0' }}>
+                      <MapPin size={11} /> {farmer.address?.city || 'Local Area'}, {farmer.address?.state || 'District'}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+
+        {/* 6. HOW IT WORKS */}
+        <section style={{ margin: '4rem 0', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white', marginBottom: '2.5rem' }}>
+            ❓ {lang === 'te' ? 'ఫార్మర్‌డైరెక్ట్ ఎలా పనిచేస్తుంది?' : 'How FarmerDirect Works'}
+          </h2>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
+            {[
+              { step: '🔍', titleEn: 'Browse', titleTe: 'వెతకండి', descEn: 'Find fresh crops listed by local farmers near you.', descTe: 'మీకు దగ్గరలో ఉన్న రైతులు పండించిన తాజా పంటలను వెతకండి.' },
+              { step: '🛒', titleEn: 'Order', titleTe: 'ఆర్డర్ చేయండి', descEn: 'Pay securely online or choose cash on delivery.', descTe: 'ఆన్‌లైన్ ద్వారా లేదా డెలివరీ సమయంలో సురక్షితంగా నగదు చెల్లించండి.' },
+              { step: '📦', titleEn: 'Receive', titleTe: 'పొందండి', descEn: 'Receive fresh harvest directly at your doorstep.', descTe: 'తాజా పంటలను నేరుగా మీ ఇంటి వద్ద పొందండి.' }
+            ].map((s, idx) => (
+              <div key={idx} className="glass" style={{ flex: '1 1 280px', maxWidth: '320px', padding: '2rem 1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.04)' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+                  {s.step}
+                </div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+                  {lang === 'te' ? s.titleTe : s.titleEn}
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.5', margin: 0 }}>
+                  {lang === 'te' ? s.descTe : s.descEn}
+                </p>
+              </div>
+            ))}
+          </div>
         </section>
 
       </div>
