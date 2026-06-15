@@ -17,14 +17,10 @@ const Login = () => {
         setLoading(true);
         try {
             const user = await login(credentials);
-            if (user.role === 'admin') {
-                await logout();
-                setError('Administrators must log in via the admin portal.');
-                return;
-            }
             const params = new URLSearchParams(window.location.search);
             const redirect = params.get('redirect');
             if (user.role === 'farmer') navigate('/farmer');
+            else if (user.role === 'admin') navigate('/admin');
             else if (redirect) navigate(`/${redirect}`);
             else navigate('/store');
         } catch (err) {
@@ -36,23 +32,19 @@ const Login = () => {
 
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '80vh', padding: '2rem 1rem', position: 'relative', overflow: 'hidden' }}>
-            {/* Background glowing blobs */}
-            <div style={{ position: 'absolute', top: '20%', left: '30%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(0, 255, 157, 0.15) 0%, transparent 70%)', filter: 'blur(50px)', zIndex: 0 }}></div>
-            <div style={{ position: 'absolute', bottom: '20%', right: '30%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(0, 229, 255, 0.1) 0%, transparent 70%)', filter: 'blur(50px)', zIndex: 0 }}></div>
-
             <motion.div 
                 initial={{ opacity: 0, y: 30 }} 
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
                 className="glass" 
-                style={{ width: '100%', maxWidth: '420px', padding: '3rem 2.5rem', borderRadius: '1.5rem', border: '1px solid rgba(0, 255, 157, 0.2)', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)', zIndex: 1, position: 'relative' }}
+                style={{ width: '100%', maxWidth: '420px', padding: '3rem 2.5rem', borderRadius: '1.5rem', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow-card)', zIndex: 1, position: 'relative', background: 'var(--bg-darkest)' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-                    <div style={{ width: '60px', height: '60px', borderRadius: '1rem', background: 'rgba(0, 255, 157, 0.1)', border: '1px solid var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--primary)', boxShadow: '0 0 20px rgba(0, 255, 157, 0.2)' }}>
+                    <div style={{ width: '60px', height: '60px', borderRadius: '1rem', background: 'rgba(22, 163, 74, 0.1)', border: '1px solid var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--primary)' }}>
                         <LogIn size={28} />
                     </div>
-                    <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>{t('welcome')}</h2>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.5rem' }}>Sign in to continue to FarmerDirect</p>
+                    <h2 style={{ fontSize: '1.75rem', fontWeight: '800', color: 'var(--text-light)', letterSpacing: '-0.5px' }}>{t('welcome')}</h2>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '0.5rem' }}>Sign in to continue to FarmerDirect</p>
                 </div>
                 
                 {error && (
@@ -67,21 +59,19 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <div style={{ position: 'relative' }}>
-                        <Mail style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
+                        <Mail style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 5 }} size={18} />
                         <input 
                             type="email" placeholder="Email Address" required
-                            style={{ width: '100%', padding: '1rem 1rem 1rem 3rem', background: 'rgba(0, 0, 0, 0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem', transition: 'all 0.3s' }} 
+                            style={{ width: '100%', padding: '1rem 1rem 1rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem', transition: 'all 0.3s' }} 
                             onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
-                            className="input-focus-glow"
                         />
                     </div>
                     <div style={{ position: 'relative' }}>
-                        <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
+                        <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 5 }} size={18} />
                         <input 
                             type="password" placeholder="Password" required
-                            style={{ width: '100%', padding: '1rem 1rem 1rem 3rem', background: 'rgba(0, 0, 0, 0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem', transition: 'all 0.3s' }} 
+                            style={{ width: '100%', padding: '1rem 1rem 1rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem', transition: 'all 0.3s' }} 
                             onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-                            className="input-focus-glow"
                         />
                     </div>
                     
@@ -92,7 +82,7 @@ const Login = () => {
                         style={{ width: '100%', justifyContent: 'center', padding: '1rem', borderRadius: '0.75rem', fontSize: '0.95rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}
                     >
                         {loading ? (
-                            <div className="loading" style={{ width: '20px', height: '20px', borderTopColor: 'var(--bg-darkest)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                            <div className="loading" style={{ width: '20px', height: '20px', borderTopColor: 'var(--white)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                         ) : (
                             <>
                                 Login <ArrowRight size={18} />

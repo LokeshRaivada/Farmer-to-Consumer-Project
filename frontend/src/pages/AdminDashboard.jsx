@@ -24,7 +24,7 @@ const StatCard = ({ title, value, icon: Icon, color, trend }) => (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 1 }}>
             <div>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>{title}</p>
-                <h3 style={{ fontSize: '1.85rem', fontWeight: '800', marginTop: '0.4rem', color: 'white', letterSpacing: '-0.5px' }}>{value}</h3>
+                <h3 style={{ fontSize: '1.85rem', fontWeight: '800', marginTop: '0.4rem', color: 'var(--text-light)', letterSpacing: '-0.5px' }}>{value}</h3>
             </div>
             <div style={{ width: '46px', height: '46px', borderRadius: '0.85rem', background: `rgba(${color}, 0.1)`, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `inset 0 0 10px rgba(${color}, 0.15)` }}>
                 <Icon size={20} color={`rgb(${color})`} />
@@ -51,7 +51,7 @@ const ChartSkeleton = () => (
 );
 
 const TableRowSkeleton = ({ cols = 5 }) => (
-    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+    <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
         {[...Array(cols)].map((_, idx) => (
             <td key={idx} style={{ padding: '1.25rem 1rem' }}>
                 <div className="skeleton-glow" style={{ height: '16px', width: idx === 0 ? '120px' : idx === 1 ? '160px' : '80px', borderRadius: '4px', opacity: 0.2 }} />
@@ -77,8 +77,8 @@ const TabSkeleton = ({ tab }) => {
                     <div><ChartSkeleton /></div>
                 </div>
                 <div className="grid grid-cols-1 lg-grid-cols-3" style={{ gap: '2rem' }}>
-                    <div className="lg-col-span-2 skeleton-glow" style={{ height: '250px', background: 'rgba(255,255,255,0.02)', borderRadius: '1.25rem' }} />
-                    <div style={{ height: '250px', background: 'rgba(255,255,255,0.02)', borderRadius: '1.25rem' }} className="skeleton-glow" />
+                    <div className="lg-col-span-2 skeleton-glow" style={{ height: '250px', background: 'var(--bg-darker)', borderRadius: '1.25rem' }} />
+                    <div style={{ height: '250px', background: 'var(--bg-darker)', borderRadius: '1.25rem' }} className="skeleton-glow" />
                 </div>
             </div>
         );
@@ -99,7 +99,7 @@ const TabSkeleton = ({ tab }) => {
             <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
-                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                        <tr style={{ borderBottom: '1px solid var(--glass-border)' }}>
                             {[...Array(5)].map((_, i) => (
                                 <th key={i} style={{ padding: '1rem' }}>
                                     <div className="skeleton-glow" style={{ height: '14px', width: '70px', borderRadius: '4px', opacity: 0.15 }} />
@@ -119,10 +119,10 @@ const TabSkeleton = ({ tab }) => {
 // Premium empty states
 const EmptyState = ({ message, subtitle, icon: Icon }) => (
     <div className="glass" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 2rem', textAlign: 'center', borderStyle: 'dashed', borderWidth: '1px', borderColor: 'rgba(255,255,255,0.1)' }}>
-        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', marginBottom: '1.25rem', border: '1px solid rgba(0, 255, 157, 0.15)' }}>
+        <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--bg-darker)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', marginBottom: '1.25rem', border: '1px solid rgba(0, 255, 157, 0.15)' }}>
             <Icon size={24} />
         </div>
-        <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'white', marginBottom: '0.4rem' }}>{message}</h3>
+        <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '0.4rem' }}>{message}</h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', maxWidth: '320px' }}>{subtitle}</p>
     </div>
 );
@@ -353,7 +353,7 @@ const AdminDashboard = () => {
 
     const SidebarItem = ({ id, icon: Icon, label }) => (
         <motion.button 
-            whileHover={{ x: 6, background: 'rgba(0, 255, 157, 0.06)' }}
+            whileHover={{ x: 6, background: 'rgba(22, 163, 74, 0.08)' }}
             whileTap={{ scale: 0.98 }}
             onClick={() => { handleTabChange(id); if(window.innerWidth < 768) setSidebarOpen(false); }}
             style={{ 
@@ -362,7 +362,7 @@ const AdminDashboard = () => {
                 alignItems: 'center', 
                 gap: '1rem', 
                 padding: '1rem 1.5rem', 
-                background: activeTab === id ? 'rgba(0,255,157,0.1)' : 'transparent', 
+                background: activeTab === id ? 'rgba(22, 163, 74, 0.12)' : 'transparent', 
                 border: 'none', 
                 borderLeft: activeTab === id ? '4px solid var(--primary)' : '4px solid transparent', 
                 color: activeTab === id ? 'var(--primary)' : 'var(--text-muted)',
@@ -392,8 +392,8 @@ const AdminDashboard = () => {
                         exit={{ x: -250 }}
                         style={{ 
                             width: '260px', 
-                            background: 'rgba(3, 27, 20, 0.8)', 
-                            borderRight: '1px solid rgba(0, 255, 157, 0.15)', 
+                            background: 'var(--bg-dark)', 
+                            borderRight: '1px solid var(--glass-border)', 
                             backdropFilter: 'var(--glass-blur)', 
                             zIndex: 100, 
                             display: 'flex', 
@@ -404,8 +404,8 @@ const AdminDashboard = () => {
                             paddingTop: '1.5rem'
                         }}
                     >
-                        <div style={{ padding: '0 1.5rem 1.5rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '1.5rem' }}>
-                            <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>Admin<span style={{ color: 'var(--primary)' }}>Panel</span></h2>
+                        <div style={{ padding: '0 1.5rem 1.5rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', marginBottom: '1.5rem' }}>
+                            <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-light)', letterSpacing: '-0.5px' }}>Admin<span style={{ color: 'var(--primary)' }}>Panel</span></h2>
                             {window.innerWidth < 768 && <button className="btn-ghost" onClick={() => setSidebarOpen(false)}><X size={20} /></button>}
                         </div>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -424,7 +424,7 @@ const AdminDashboard = () => {
             <div style={{ flex: 1, padding: '2.5rem 2rem', overflowX: 'hidden', minHeight: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
                     {!sidebarOpen && <button className="btn btn-ghost" style={{ padding: '0.5rem', borderRadius: '50%' }} onClick={() => setSidebarOpen(true)}><Menu size={24} /></button>}
-                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800', textTransform: 'capitalize', color: 'white', letterSpacing: '-0.5px' }}>
+                    <h1 style={{ fontSize: '1.75rem', fontWeight: '800', textTransform: 'capitalize', color: 'var(--text-light)', letterSpacing: '-0.5px' }}>
                         {activeTab === 'farmers' ? 'Farmer Verification' : activeTab} Dashboard
                     </h1>
                 </div>
@@ -453,7 +453,7 @@ const AdminDashboard = () => {
                                     {/* Charts Section */}
                                     <div className="grid grid-cols-1 lg-grid-cols-3" style={{ gap: '2rem' }}>
                                         <div className="glass lg-col-span-2" style={{ padding: '2rem' }}>
-                                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'white' }}>Revenue Growth</h3>
+                                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Revenue Growth</h3>
                                             <div style={{ height: '300px' }}>
                                                 <ResponsiveContainer width="100%" height="100%">
                                                     <AreaChart data={revenueData}>
@@ -463,7 +463,7 @@ const AdminDashboard = () => {
                                                                 <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
                                                             </linearGradient>
                                                         </defs>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
                                                         <XAxis dataKey="name" stroke="var(--text-muted)" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickLine={false} axisLine={false} />
                                                         <YAxis stroke="var(--text-muted)" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickLine={false} axisLine={false} tickFormatter={(v) => `₹${v}`} />
                                                         <Tooltip contentStyle={{ background: 'var(--bg-dark)', borderColor: 'var(--glass-border)', borderRadius: '8px' }} />
@@ -473,14 +473,14 @@ const AdminDashboard = () => {
                                             </div>
                                         </div>
                                         <div className="glass" style={{ padding: '2rem' }}>
-                                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'white' }}>Order Status Overview</h3>
+                                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Order Status Overview</h3>
                                             <div style={{ height: '300px' }}>
                                                 <ResponsiveContainer width="100%" height="100%">
                                                     <BarChart data={analytics?.ordersByStatus || []}>
-                                                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                                                        <CartesianGrid strokeDasharray="3 3" stroke="var(--glass-border)" vertical={false} />
                                                         <XAxis dataKey="_id" stroke="var(--text-muted)" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickLine={false} axisLine={false} />
                                                         <YAxis stroke="var(--text-muted)" tick={{ fill: 'var(--text-muted)', fontSize: 11 }} tickLine={false} axisLine={false} />
-                                                        <Tooltip cursor={{ fill: 'rgba(255,255,255,0.02)' }} contentStyle={{ background: 'var(--bg-dark)', borderColor: 'var(--glass-border)' }} />
+                                                        <Tooltip cursor={{ fill: 'var(--bg-darker)' }} contentStyle={{ background: 'var(--bg-dark)', borderColor: 'var(--glass-border)' }} />
                                                         <Bar dataKey="count" fill="var(--primary)" radius={[4, 4, 0, 0]} />
                                                     </BarChart>
                                                 </ResponsiveContainer>
@@ -491,7 +491,7 @@ const AdminDashboard = () => {
                                     {/* Verification Queue & Recent Users Section */}
                                     <div className="grid grid-cols-1 lg-grid-cols-3" style={{ gap: '2rem' }}>
                                         <div className="glass lg-col-span-2" style={{ padding: '2rem' }}>
-                                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                 <Award size={18} color="var(--primary)" /> Farmer Verification Queue
                                             </h3>
                                             
@@ -502,9 +502,9 @@ const AdminDashboard = () => {
                                             ) : (
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                                     {pendingFarmers.slice(0, 5).map(f => (
-                                                        <div key={f._id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'rgba(0,0,0,0.15)', border: '1px dashed rgba(255,255,255,0.06)', borderRadius: '0.75rem', gap: '1rem' }}>
+                                                        <div key={f._id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: 'var(--bg-dark)', border: '1px dashed var(--glass-border)', borderRadius: '0.75rem', gap: '1rem' }}>
                                                             <div>
-                                                                <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'white' }}>{f?.name || 'Anonymous'}</h4>
+                                                                <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)' }}>{f?.name || 'Anonymous'}</h4>
                                                                 <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.1rem' }}>
                                                                     {f?.address?.city || 'City unspecified'} • {f?.phone || 'No phone'} • {f?.email || 'No email'}
                                                                 </p>
@@ -531,18 +531,18 @@ const AdminDashboard = () => {
                                         </div>
 
                                         <div className="glass" style={{ padding: '2rem' }}>
-                                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'white' }}>Recent Registrations</h3>
+                                            <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Recent Registrations</h3>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                                 {(analytics?.recentUsers || []).map(u => (
-                                                    <div key={u._id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '0.75rem' }}>
+                                                    <div key={u._id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem' }}>
                                                         <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(0,255,157,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.8rem' }}>
                                                             {(u?.name || 'U').charAt(0).toUpperCase()}
                                                         </div>
                                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u?.name || 'Anonymous'}</div>
+                                                            <div style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u?.name || 'Anonymous'}</div>
                                                             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{u?.email || 'No email'}</div>
                                                         </div>
-                                                        <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'rgba(255,255,255,0.05)', borderRadius: '1rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                                                        <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.5rem', background: 'var(--bg-darker)', borderRadius: '1rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
                                                             {u?.role}
                                                         </span>
                                                     </div>
@@ -557,7 +557,7 @@ const AdminDashboard = () => {
                             {activeTab === 'users' && (
                                 <div className="glass" style={{ padding: '2rem' }}>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white' }}>Registered Users ({filteredUsers.length})</h3>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Registered Users ({filteredUsers.length})</h3>
                                         <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
                                             <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
                                             <input 
@@ -565,7 +565,7 @@ const AdminDashboard = () => {
                                                 placeholder="Search users..." 
                                                 value={searchQuery} 
                                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
-                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'white', fontSize: '0.85rem' }} 
+                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'var(--text-light)', fontSize: '0.85rem' }} 
                                             />
                                         </div>
                                     </div>
@@ -577,7 +577,7 @@ const AdminDashboard = () => {
                                             <div style={{ overflowX: 'auto' }}>
                                                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
                                                     <thead>
-                                                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                                        <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                                             <th style={{ padding: '1rem' }}>Name</th>
                                                             <th style={{ padding: '1rem' }}>Email</th>
                                                             <th style={{ padding: '1rem' }}>Role</th>
@@ -587,11 +587,11 @@ const AdminDashboard = () => {
                                                     </thead>
                                                     <tbody>
                                                         {paginatedUsers.map(u => (
-                                                            <tr key={u._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s' }} className="hover-row">
-                                                                <td style={{ padding: '1rem', fontWeight: '600', color: 'white' }}>{u?.name || 'Anonymous'}</td>
+                                                            <tr key={u._id} style={{ borderBottom: '1px solid var(--glass-border)', transition: 'background 0.2s' }} className="hover-row">
+                                                                <td style={{ padding: '1rem', fontWeight: '600', color: 'var(--text-light)' }}>{u?.name || 'Anonymous'}</td>
                                                                 <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{u?.email || 'No email'}</td>
                                                                 <td style={{ padding: '1rem' }}>
-                                                                    <span style={{ padding: '0.2rem 0.6rem', background: u?.role === 'farmer' ? 'rgba(0,255,157,0.06)' : 'rgba(255,255,255,0.05)', color: u?.role === 'farmer' ? 'var(--primary)' : 'white', borderRadius: '1rem', fontSize: '0.75rem', textTransform: 'capitalize', fontWeight: 'bold' }}>
+                                                                    <span style={{ padding: '0.2rem 0.6rem', background: u?.role === 'farmer' ? 'rgba(22, 163, 74, 0.08)' : 'var(--bg-darker)', color: u?.role === 'farmer' ? 'var(--primary)' : 'var(--text-light)', borderRadius: '1rem', fontSize: '0.75rem', textTransform: 'capitalize', fontWeight: 'bold' }}>
                                                                         {u?.role}
                                                                     </span>
                                                                 </td>
@@ -641,7 +641,7 @@ const AdminDashboard = () => {
                             {activeTab === 'farmers' && (
                                 <div className="glass" style={{ padding: '2rem' }}>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white' }}>Farmer Profiles ({filteredFarmers.length})</h3>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Farmer Profiles ({filteredFarmers.length})</h3>
                                         <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
                                             <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
                                             <input 
@@ -649,7 +649,7 @@ const AdminDashboard = () => {
                                                 placeholder="Search by city/name..." 
                                                 value={searchQuery} 
                                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
-                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'white', fontSize: '0.85rem' }} 
+                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'var(--text-light)', fontSize: '0.85rem' }} 
                                             />
                                         </div>
                                     </div>
@@ -660,17 +660,17 @@ const AdminDashboard = () => {
                                         <>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                                                 {paginatedFarmers.map(f => (
-                                                    <div key={f._id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '1rem', border: f?.isVerified ? '1px solid rgba(0,255,157,0.2)' : '1px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                                    <div key={f._id} style={{ background: 'var(--bg-darkest)', padding: '1.5rem', borderRadius: '1rem', border: f?.isVerified ? '1px solid rgba(0,255,157,0.2)' : '1px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                                         <div>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                                                 <div>
-                                                                    <h4 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'white' }}>{f?.name || 'Anonymous'}</h4>
+                                                                    <h4 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--text-light)' }}>{f?.name || 'Anonymous'}</h4>
                                                                     <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.15rem' }}>{f?.address?.city || 'No city registered'}</p>
                                                                 </div>
                                                                 {f?.isVerified ? (
                                                                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(0,255,157,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}><Award size={16} /></div>
                                                                 ) : (
-                                                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}><Clock size={16} /></div>
+                                                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-darker)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}><Clock size={16} /></div>
                                                                 )}
                                                             </div>
                                                             <div style={{ marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
@@ -698,7 +698,7 @@ const AdminDashboard = () => {
                             {activeTab === 'products' && (
                                 <div className="glass" style={{ padding: '2rem' }}>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white' }}>Crops Listings ({filteredProducts.length})</h3>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Crops Listings ({filteredProducts.length})</h3>
                                         <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
                                             <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
                                             <input 
@@ -706,7 +706,7 @@ const AdminDashboard = () => {
                                                 placeholder="Search crops..." 
                                                 value={searchQuery} 
                                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
-                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'white', fontSize: '0.85rem' }} 
+                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'var(--text-light)', fontSize: '0.85rem' }} 
                                             />
                                         </div>
                                     </div>
@@ -718,7 +718,7 @@ const AdminDashboard = () => {
                                             <div style={{ overflowX: 'auto' }}>
                                                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
                                                     <thead>
-                                                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                                        <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                                             <th style={{ padding: '1rem' }}>Crop</th>
                                                             <th style={{ padding: '1rem' }}>Farmer</th>
                                                             <th style={{ padding: '1rem' }}>Category</th>
@@ -728,8 +728,8 @@ const AdminDashboard = () => {
                                                     </thead>
                                                     <tbody>
                                                         {paginatedProducts.map(p => (
-                                                            <tr key={p._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s' }} className="hover-row">
-                                                                <td style={{ padding: '1rem', fontWeight: '600', color: 'white' }}>{p?.name || 'No name'}</td>
+                                                            <tr key={p._id} style={{ borderBottom: '1px solid var(--glass-border)', transition: 'background 0.2s' }} className="hover-row">
+                                                                <td style={{ padding: '1rem', fontWeight: '600', color: 'var(--text-light)' }}>{p?.name || 'No name'}</td>
                                                                 <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{p?.farmer?.name || 'Unknown Farmer'}</td>
                                                                 <td style={{ padding: '1rem', textTransform: 'capitalize', fontSize: '0.85rem' }}>{p?.category}</td>
                                                                 <td style={{ padding: '1rem', fontWeight: '600' }}>₹{p?.price} <span style={{ color: 'var(--text-muted)', fontWeight: 'normal', fontSize: '0.75rem' }}>/ {p?.quantity}kg</span></td>
@@ -758,7 +758,7 @@ const AdminDashboard = () => {
                             {activeTab === 'reviews' && (
                                 <div className="glass" style={{ padding: '2rem' }}>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white' }}>Moderation Feed ({filteredReviews.length})</h3>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Moderation Feed ({filteredReviews.length})</h3>
                                         <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
                                             <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
                                             <input 
@@ -766,7 +766,7 @@ const AdminDashboard = () => {
                                                 placeholder="Search reviews..." 
                                                 value={searchQuery} 
                                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
-                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'white', fontSize: '0.85rem' }} 
+                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'var(--text-light)', fontSize: '0.85rem' }} 
                                             />
                                         </div>
                                     </div>
@@ -777,18 +777,18 @@ const AdminDashboard = () => {
                                         <>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
                                                 {paginatedReviews.map(r => (
-                                                    <div key={r._id} style={{ background: 'rgba(0,0,0,0.2)', padding: '1.5rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                    <div key={r._id} style={{ background: 'var(--bg-darkest)', padding: '1.5rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid rgba(255,255,255,0.03)' }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                             <div>
                                                                 <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem' }}>{r?.user?.name || 'Anonymous'}</span>
                                                                 <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}> reviewed </span>
-                                                                <strong style={{ color: 'white', fontSize: '0.9rem' }}>{r?.product?.name || 'Unknown Crop'}</strong>
+                                                                <strong style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{r?.product?.name || 'Unknown Crop'}</strong>
                                                             </div>
                                                             <div style={{ display: 'flex', color: '#F59E0B', flexShrink: 0 }}>
                                                                 {[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < r.rating ? "#F59E0B" : "transparent"} stroke={i < r.rating ? "#F59E0B" : "rgba(255,255,255,0.3)"} />)}
                                                             </div>
                                                         </div>
-                                                        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontStyle: 'italic', background: 'rgba(255,255,255,0.02)', padding: '0.75rem 1rem', borderRadius: '0.5rem', borderLeft: '3px solid var(--primary)', margin: 0 }}>
+                                                        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontStyle: 'italic', background: 'var(--bg-darker)', padding: '0.75rem 1rem', borderRadius: '0.5rem', borderLeft: '3px solid var(--primary)', margin: 0 }}>
                                                             "{r?.comment || 'No comment text'}"
                                                         </p>
                                                         <button 
@@ -811,7 +811,7 @@ const AdminDashboard = () => {
                             {activeTab === 'orders' && (
                                 <div className="glass" style={{ padding: '2rem' }}>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white' }}>Global Orders List ({filteredOrders.length})</h3>
+                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Global Orders List ({filteredOrders.length})</h3>
                                         <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
                                             <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
                                             <input 
@@ -819,7 +819,7 @@ const AdminDashboard = () => {
                                                 placeholder="Search orders..." 
                                                 value={searchQuery} 
                                                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
-                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'white', fontSize: '0.85rem' }} 
+                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'var(--text-light)', fontSize: '0.85rem' }} 
                                             />
                                         </div>
                                     </div>
@@ -831,7 +831,7 @@ const AdminDashboard = () => {
                                             <div style={{ overflowX: 'auto' }}>
                                                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
                                                     <thead>
-                                                        <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                                        <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                                             <th style={{ padding: '1rem' }}>Order ID</th>
                                                             <th style={{ padding: '1rem' }}>Consumer</th>
                                                             <th style={{ padding: '1rem' }}>Farmer</th>
@@ -841,13 +841,13 @@ const AdminDashboard = () => {
                                                     </thead>
                                                     <tbody>
                                                         {paginatedOrders.map(o => (
-                                                            <tr key={o._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', transition: 'background 0.2s' }} className="hover-row">
-                                                                <td style={{ padding: '1rem', fontWeight: 'bold', color: 'white' }}>#{(o?._id || '').slice(-6).toUpperCase()}</td>
+                                                            <tr key={o._id} style={{ borderBottom: '1px solid var(--glass-border)', transition: 'background 0.2s' }} className="hover-row">
+                                                                <td style={{ padding: '1rem', fontWeight: 'bold', color: 'var(--text-light)' }}>#{(o?._id || '').slice(-6).toUpperCase()}</td>
                                                                 <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{o?.consumer?.name || 'Local Customer'}</td>
                                                                 <td style={{ padding: '1rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{o?.farmer?.name || 'Farmer Account'}</td>
                                                                 <td style={{ padding: '1rem', color: 'var(--primary)', fontWeight: 'bold' }}>₹{o?.totalAmount || 0}</td>
                                                                 <td style={{ padding: '1rem' }}>
-                                                                    <span style={{ padding: '0.2rem 0.6rem', background: o?.status === 'delivered' ? 'rgba(0,255,157,0.06)' : 'rgba(255,255,255,0.05)', color: o?.status === 'delivered' ? 'var(--primary)' : 'white', borderRadius: '1rem', fontSize: '0.75rem', textTransform: 'capitalize', fontWeight: 'bold', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                    <span style={{ padding: '0.2rem 0.6rem', background: o?.status === 'delivered' ? 'rgba(22, 163, 74, 0.08)' : 'var(--bg-darker)', color: o?.status === 'delivered' ? 'var(--primary)' : 'var(--text-light)', borderRadius: '1rem', fontSize: '0.75rem', textTransform: 'capitalize', fontWeight: 'bold', border: '1px solid var(--glass-border)' }}>
                                                                         {o?.status || 'pending'}
                                                                     </span>
                                                                 </td>

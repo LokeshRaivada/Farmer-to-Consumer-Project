@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Reviews = () => {
-    const { user } = useAuth();
+    const { user, lang } = useAuth();
     
     const [data, setData] = useState({
         latestReviews: [],
@@ -58,7 +58,6 @@ const Reviews = () => {
             setComment('');
             setRating(5);
 
-            // Insert new review into the local list immediately
             setData(prev => ({
                 ...prev,
                 latestReviews: [newReview, ...prev.latestReviews].slice(0, 6)
@@ -80,7 +79,7 @@ const Reviews = () => {
                     key={i} 
                     size={14} 
                     fill={i <= floor ? '#eab308' : 'transparent'} 
-                    color={i <= floor ? '#eab308' : 'rgba(255, 255, 255, 0.2)'} 
+                    color={i <= floor ? '#eab308' : 'var(--glass-border)'} 
                 />
             );
         }
@@ -106,33 +105,33 @@ const Reviews = () => {
     }
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1rem', textAlign: 'left' }}>
+        <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1rem', paddingBottom: '6rem', textAlign: 'left' }}>
             {/* Header & Website Review Form Split Section */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', marginBottom: '3rem', alignItems: 'center' }}>
                 <div style={{ flex: '1 1 400px' }}>
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                        <MessageSquare size={36} color="var(--primary)" /> Community Hub
+                    <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                        <MessageSquare size={36} color="var(--primary)" /> {lang === 'te' ? 'కమ్యూనిటీ హబ్' : 'Community Hub'}
                     </h1>
                     <p style={{ color: 'var(--text-muted)', fontSize: '1rem', margin: 0, lineHeight: 1.5 }}>
-                        Read transparent reviews from fellow consumers and discover top-rated fresh produce and farmers. Help us improve by submitting website feedback!
+                        {lang === 'te' ? 'సహచర వినియోగదారుల నుండి పారదర్శక సమీక్షలను చదవండి మరియు అత్యుత్తమ రేటింగ్ పొందిన పంటలు మరియు రైతులను కనుగొనండి. మా వేదిక మెరుగుపరచడానికి మీ అభిప్రాయాన్ని అందించండి!' : 'Read transparent reviews from fellow consumers and discover top-rated fresh produce and farmers. Help us improve by submitting website feedback!'}
                     </p>
                 </div>
 
                 {/* Website Feedback Form Card */}
                 <div style={{ flex: '1 1 350px' }}>
                     <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid var(--glass-border)' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'white', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                            💬 Rate Our Website & Platform
+                        <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', textAlign: 'left' }}>
+                            💬 {lang === 'te' ? 'మా ప్లాట్‌ఫారమ్‌ను రేట్ చేయండి' : 'Rate Our Website & Platform'}
                         </h3>
 
                         {submitError && <div style={{ color: 'var(--error)', fontSize: '0.8rem', marginBottom: '0.5rem' }}>{submitError}</div>}
                         {submitSuccess && <div style={{ color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{submitSuccess}</div>}
 
                         {user ? (
-                            <form onSubmit={handleWebsiteReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            <form onSubmit={handleWebsiteReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'flex-start' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                     <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rating:</span>
-                                    <div style={{ display: 'flex', gap: '0.2rem' }}>
+                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <button
                                                 key={star} type="button" onClick={() => setRating(star)}
@@ -141,7 +140,7 @@ const Reviews = () => {
                                                 <Star 
                                                     size={18} 
                                                     fill={star <= rating ? '#eab308' : 'transparent'} 
-                                                    color={star <= rating ? '#eab308' : 'rgba(255, 255, 255, 0.2)'} 
+                                                    color={star <= rating ? '#eab308' : 'var(--glass-border)'} 
                                                 />
                                             </button>
                                         ))}
@@ -150,7 +149,7 @@ const Reviews = () => {
                                 <textarea
                                     rows={2} required value={comment} onChange={(e) => setComment(e.target.value)}
                                     placeholder="Write website feedback..."
-                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.15)', background: 'rgba(255,255,255,0.02)', color: 'white', outline: 'none', fontSize: '0.8rem', resize: 'none' }}
+                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', outline: 'none', fontSize: '0.85rem', resize: 'none' }}
                                 />
                                 <button 
                                     type="submit" disabled={submitting} className="btn btn-primary"
@@ -172,11 +171,11 @@ const Reviews = () => {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', lg: 'repeat(3, 1fr)', gap: '2rem' }} className="reviews-grid">
                 {/* Column 1: Latest Reviews */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'white', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <MessageSquare size={18} color="var(--primary)" /> Latest Feedback
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <MessageSquare size={18} color="var(--primary)" /> {lang === 'te' ? 'ఇటీవలి సమీక్షలు' : 'Latest Feedback'}
                     </h2>
                     {data.latestReviews.length === 0 ? (
-                        <div className="glass" style={{ padding: '3rem 1.5rem', textAlign: 'center', borderRadius: '1rem' }}>
+                        <div className="glass" style={{ padding: '3rem 1.5rem', textAlign: 'center', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>No reviews submitted yet.</p>
                         </div>
                     ) : (
@@ -185,11 +184,11 @@ const Reviews = () => {
                                 key={r._id}
                                 whileHover={{ y: -2 }}
                                 className="glass"
-                                style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}
+                                style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', border: '1px solid var(--glass-border)' }}
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div>
-                                        <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'white', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                    <div style={{ textAlign: 'left' }}>
+                                        <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                             <User size={12} color="var(--text-muted)" /> {r.user?.name || 'Anonymous User'}
                                         </div>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
@@ -206,10 +205,10 @@ const Reviews = () => {
                                         {renderStars(r.rating)}
                                     </div>
                                 </div>
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, fontStyle: 'italic', lineHeight: '1.4' }}>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, fontStyle: 'italic', lineHeight: '1.4', textAlign: 'left' }}>
                                     "{r.comment}"
                                 </p>
-                                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     {r.verifiedPurchase && <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓ Verified Purchase</span>}
                                     <span>{new Date(r.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
                                 </div>
@@ -220,11 +219,11 @@ const Reviews = () => {
 
                 {/* Column 2: Highest Rated Products */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'white', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Leaf size={18} color="var(--primary)" /> Top Crop Selection
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Leaf size={18} color="var(--primary)" /> {lang === 'te' ? 'టాప్ పంటల ఎంపిక' : 'Top Crop Selection'}
                     </h2>
                     {data.highestRatedProducts.length === 0 ? (
-                        <div className="glass" style={{ padding: '3rem 1.5rem', textAlign: 'center', borderRadius: '1rem' }}>
+                        <div className="glass" style={{ padding: '3rem 1.5rem', textAlign: 'center', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>No highly rated crops available yet.</p>
                         </div>
                     ) : (
@@ -233,14 +232,14 @@ const Reviews = () => {
                                 key={p._id}
                                 whileHover={{ y: -2 }}
                                 className="glass"
-                                style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}
+                                style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', border: '1px solid var(--glass-border)' }}
                             >
-                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(0,255,157,0.05)', border: '1px solid rgba(0,255,157,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--bg-darker)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <Leaf size={24} color="var(--primary)" />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <h3 style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'white', margin: 0 }}>{p.name}</h3>
+                                        <h3 style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>{p.name}</h3>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#eab308', fontSize: '0.8rem', fontWeight: '600' }}>
                                             <Star size={12} fill="#eab308" color="#eab308" />
                                             <span>{p.averageRating.toFixed(1)}</span>
@@ -251,7 +250,7 @@ const Reviews = () => {
                                         <span>({p.numReviews} review{p.numReviews !== 1 ? 's' : ''})</span>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                                        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'white' }}>₹{p.price}/kg</span>
+                                        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-light)' }}>₹{p.price}/kg</span>
                                         <Link to="/store" style={{ fontSize: '0.75rem', color: 'var(--primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '2px' }}>
                                             Shop Crop <ArrowUpRight size={12} />
                                         </Link>
@@ -264,11 +263,11 @@ const Reviews = () => {
 
                 {/* Column 3: Top Rated Farmers */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'white', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Award size={18} color="var(--primary)" /> Top Ranked Farmers
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Award size={18} color="var(--primary)" /> {lang === 'te' ? 'టాప్ రేటెడ్ రైతులు' : 'Top Ranked Farmers'}
                     </h2>
                     {data.topFarmers.length === 0 ? (
-                        <div className="glass" style={{ padding: '3rem 1.5rem', textAlign: 'center', borderRadius: '1rem' }}>
+                        <div className="glass" style={{ padding: '3rem 1.5rem', textAlign: 'center', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>No verified farmer rankings yet.</p>
                         </div>
                     ) : (
@@ -277,14 +276,14 @@ const Reviews = () => {
                                 key={f._id}
                                 whileHover={{ y: -2 }}
                                 className="glass"
-                                style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}
+                                style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', border: '1px solid var(--glass-border)' }}
                             >
-                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(0,255,157,0.1)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(22, 163, 74, 0.08)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.1rem' }}>
                                     {f.name.charAt(0).toUpperCase()}
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <h3 style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        <h3 style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                             {f.name}
                                             {f.isVerified && <span style={{ color: 'var(--primary)', fontSize: '0.8rem' }} title="Verified profile">🛡️</span>}
                                         </h3>
@@ -293,7 +292,7 @@ const Reviews = () => {
                                             <span>{f.rating.toFixed(1)}</span>
                                         </div>
                                     </div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'left' }}>
                                         {f.address?.city || 'Local Area'}, {f.address?.state || 'India'}
                                     </div>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', marginTop: '0.25rem' }}>

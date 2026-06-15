@@ -35,19 +35,19 @@ const ProductCard = ({ product, onAddToCart }) => {
 
   return (
     <div
-      className="glass hover-glow"
-      style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative', textAlign: 'left', borderRadius: '1.25rem', transition: 'transform 0.2s' }}
+      className="glass"
+      style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative', textAlign: 'left', borderRadius: '1.25rem', transition: 'transform 0.2s', background: 'var(--bg-darkest)' }}
       onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
       onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
     >
       {/* Crop Image as Emoji representation */}
-      <div style={{ height: '130px', background: 'linear-gradient(135deg, rgba(0, 255, 157, 0.08), rgba(34, 197, 94, 0.03))', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: '4rem' }}>
+      <div style={{ height: '130px', background: 'var(--bg-darker)', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontSize: '4rem' }}>
         {emoji}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%', margin: 0 }}>{product.name}</h3>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%', margin: 0 }}>{product.name}</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', color: '#eab308', fontSize: '0.85rem', fontWeight: 'bold' }}>
             <Star size={12} fill="#eab308" stroke="#eab308" />
             <span>{product.averageRating > 0 ? product.averageRating.toFixed(1) : (lang === 'te' ? 'కొత్తది' : 'New')}</span>
@@ -70,8 +70,8 @@ const ProductCard = ({ product, onAddToCart }) => {
         )}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', paddingTop: '0.5rem', borderTop: '1px solid var(--glass-border)' }}>
+        <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-light)' }}>
           ₹{product.price} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>/kg</span>
         </div>
 
@@ -199,23 +199,22 @@ const Home = () => {
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 1rem', paddingBottom: '6rem' }}>
         
         {/* 1. HERO SECTION */}
-        <section style={{ minHeight: '60vh', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '2rem', padding: '3rem 0', position: 'relative' }}>
-          
+        <section style={{ minHeight: '45vh', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '2rem', padding: '2rem 0', position: 'relative' }}>
           <div style={{ flex: '1 1 500px', zIndex: 10, textAlign: 'left' }}>
             <div
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(0,255,157,0.08)', border: '1px solid var(--primary)', padding: '0.4rem 1rem', borderRadius: '2rem', marginBottom: '1.5rem', color: 'var(--primary)', fontWeight: '600', fontSize: '0.85rem' }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(22, 163, 74, 0.1)', border: '1px solid var(--primary)', padding: '0.4rem 1rem', borderRadius: '2rem', marginBottom: '1rem', color: 'var(--primary)', fontWeight: '600', fontSize: '0.85rem' }}
             >
               <ShieldCheck size={14} /> {lang === 'te' ? 'రైతు నెట్‌వర్క్' : 'Verified Farmers Network'}
             </div>
             
             <h1
-              style={{ fontSize: '2.8rem', lineHeight: '1.2', marginBottom: '1.25rem', fontWeight: '800', letterSpacing: '-1px' }}
+              style={{ fontSize: '2.4rem', lineHeight: '1.2', marginBottom: '1rem', fontWeight: '800', letterSpacing: '-1px', color: 'var(--text-light)' }}
             >
               {lang === 'te' ? 'తాజా పంటలు నేరుగా రైతుల నుండి' : 'Fresh Produce Direct From Farmers'}
             </h1>
             
             <p
-              style={{ fontSize: '1.1rem', color: 'var(--text-muted)', marginBottom: '2rem', maxWidth: '520px', lineHeight: '1.6' }}
+              style={{ fontSize: '1.05rem', color: 'var(--text-muted)', marginBottom: '1.5rem', maxWidth: '520px', lineHeight: '1.6' }}
             >
               {lang === 'te' 
                 ? 'మీ రాష్ట్రంలోని వెరిఫైడ్ లోకల్ రైతులతో నేరుగా కనెక్ట్ అవ్వండి. మధ్యవర్తులు లేకుండా తక్కువ ధరకు కొనుగోలు చేయండి.'
@@ -223,32 +222,30 @@ const Home = () => {
             </p>
             
             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <Link to="/store" className="btn btn-primary" style={{ padding: '0.8rem 2rem', borderRadius: '2rem' }}>
-                {lang === 'te' ? 'మార్కెట్ చూడండి' : 'Explore Market'} <Search size={18} style={{ marginLeft: '0.5rem' }} />
+              <Link to="/store" className="btn btn-primary" style={{ padding: '0.6rem 1.5rem', borderRadius: '2rem' }}>
+                {lang === 'te' ? 'మార్కెట్ చూడండి' : 'Explore Market'} <Search size={18} />
               </Link>
-              <Link to="/signup" className="btn btn-secondary" style={{ padding: '0.8rem 2rem', borderRadius: '2rem' }}>
-                {lang === 'te' ? 'రైతుగా చేరండి' : 'Become a Farmer'} <ArrowRight size={18} style={{ marginLeft: '0.5rem' }} />
+              <Link to="/signup" className="btn btn-secondary" style={{ padding: '0.6rem 1.5rem', borderRadius: '2rem' }}>
+                {lang === 'te' ? 'రైతుగా చేరండి' : 'Become a Farmer'} <ArrowRight size={18} />
               </Link>
             </div>
           </div>
           
           {/* Live Market Card */}
-          <div style={{ flex: '0 1 420px', width: '100%', position: 'relative', zIndex: 10 }}>
-            <div className="glass" style={{ width: '100%', borderRadius: '2rem', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', border: '1px solid rgba(0,255,157,0.25)', boxShadow: '0 15px 30px rgba(0,0,0,0.4)' }}>
-              
+          <div style={{ flex: '0 1 400px', width: '100%', position: 'relative', zIndex: 10 }}>
+            <div className="glass" style={{ width: '100%', borderRadius: '1.5rem', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid var(--glass-border)', background: 'var(--bg-darkest)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ display: 'flex', gap: '0.4rem' }}>
-                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444' }}></div>
-                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#eab308' }}></div>
-                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e' }}></div>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }}></div>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#eab308' }}></div>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e' }}></div>
                 </div>
-                <div style={{ background: 'rgba(0,255,157,0.12)', color: 'var(--primary)', padding: '0.2rem 0.75rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: '700', letterSpacing: '0.5px' }}>
+                <div style={{ background: 'rgba(22, 163, 74, 0.1)', color: 'var(--primary)', padding: '0.2rem 0.6rem', borderRadius: '1rem', fontSize: '0.7rem', fontWeight: '700', letterSpacing: '0.5px' }}>
                   {lang === 'te' ? 'లైవ్ మార్కెట్' : 'LIVE MARKET'}
                 </div>
               </div>
 
-              {/* Rows */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {[
                   { name: lang === 'te' ? 'తాజా కూరగాయలు' : 'Fresh Vegetables', key: 'vegetables', icon: '🥬' },
                   { name: lang === 'te' ? 'తాజా పండ్లు' : 'Fresh Fruits', key: 'fruits', icon: '🍎' },
@@ -262,24 +259,22 @@ const Home = () => {
                   return (
                     <div 
                       key={i} 
-                      style={{ background: 'rgba(0,0,0,0.35)', borderRadius: '1rem', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid rgba(255,255,255,0.03)' }}
+                      style={{ background: 'var(--bg-darker)', borderRadius: '0.75rem', padding: '0.6rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.75rem', border: '1px solid var(--glass-border)' }}
                     >
-                      <div style={{ width: '42px', height: '42px', borderRadius: '0.5rem', background: 'rgba(0,255,157,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.35rem' }}>
+                      <div style={{ width: '36px', height: '36px', borderRadius: '0.5rem', background: 'rgba(22, 163, 74, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>
                         {item.icon}
                       </div>
                       <div style={{ flex: 1, textAlign: 'left' }}>
-                        <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.85rem' }}>{item.name}</div>
+                        <div style={{ color: 'var(--text-light)', fontWeight: 'bold', fontSize: '0.85rem' }}>{item.name}</div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{lang === 'te' ? 'సగటు ధర' : 'Average Price'}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ color: 'white', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                          {latest ? `₹${latest}/kg` : '--'}
+                        <div style={{ color: 'var(--text-light)', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                          {latest ? `₹${latest.toFixed(1)}/kg` : '--'}
                         </div>
-                        {diff !== null && (
-                          <div style={{ color: diff >= 0 ? 'var(--primary)' : '#ef4444', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                            {trendStr}
-                          </div>
-                        )}
+                        <div style={{ color: diff !== null && diff >= 0 ? 'var(--primary)' : '#ef4444', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                          {trendStr}
+                        </div>
                       </div>
                     </div>
                   );
@@ -290,43 +285,43 @@ const Home = () => {
         </section>
 
         {/* 2. TODAY'S PRICES */}
-        <section style={{ margin: '3rem 0', textAlign: 'left' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+        <section style={{ margin: '2rem 0', textAlign: 'left' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '0.25rem' }}>
             📊 {lang === 'te' ? 'ఈరోజు పంటల ధరలు' : "Today's Crop Prices"}
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
             {lang === 'te' ? 'రైతులు విక్రయిస్తున్న తాజా పంటల సగటు మార్కెట్ ధరలు' : 'Real-time average prices calculated from active local listings'}
           </p>
 
           {loading ? (
-            <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.1rem', padding: '1rem 0' }}>
+            <div style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1rem', padding: '0.5rem 0' }}>
               ⏳ {lang === 'te' ? 'ధరలను లోడ్ చేస్తున్నాము...' : 'Loading market prices...'}
             </div>
           ) : !hasAnyPriceData ? (
-            <div className="glass" style={{ padding: '2rem', borderRadius: '1rem', border: '1px dashed rgba(255,255,255,0.1)', color: 'var(--text-muted)', textAlign: 'center' }}>
+            <div className="glass" style={{ padding: '1.5rem', borderRadius: '1rem', border: '1px dashed var(--glass-border)', color: 'var(--text-muted)', textAlign: 'center', background: 'var(--bg-darkest)' }}>
               📢 {lang === 'te' ? 'ఇంకా మార్కెట్ ధరలు అందుబాటులో లేవు. రైతులు పంటలను జోడించినప్పుడు ఇక్కడ కనిపిస్తాయి.' : 'No market data available yet. Prices will appear when farmers list products.'}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
               {priceItems.map((item, idx) => (
-                <div key={idx} className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
-                    <span style={{ fontSize: '2rem' }}>{item.icon}</span>
+                <div key={idx} className="glass" style={{ padding: '1rem', borderRadius: '1rem', border: '1px solid var(--glass-border)', background: 'var(--bg-darkest)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                    <span style={{ fontSize: '1.75rem' }}>{item.icon}</span>
                     {item.trend !== null && item.price !== null && (
-                      <span style={{ fontSize: '0.75rem', fontWeight: 'bold', padding: '0.2rem 0.5rem', borderRadius: '1rem', background: item.trend >= 0 ? 'rgba(0,255,157,0.08)' : 'rgba(239,68,68,0.08)', color: item.trend >= 0 ? 'var(--primary)' : '#ef4444' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 'bold', padding: '0.15rem 0.4rem', borderRadius: '1rem', background: item.trend >= 0 ? 'rgba(22, 163, 74, 0.1)' : 'rgba(239,68,68,0.1)', color: item.trend >= 0 ? 'var(--primary)' : '#ef4444' }}>
                         {item.trend >= 0 ? '▲' : '▼'} {Math.abs(item.trend).toFixed(1)}%
                       </span>
                     )}
                   </div>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'white', margin: 0 }}>
+                  <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>
                     {lang === 'te' ? item.nameTe : item.nameEn}
                   </h3>
-                  <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--primary)', marginTop: '0.5rem' }}>
+                  <div style={{ fontSize: '1.35rem', fontWeight: '800', color: 'var(--primary)', marginTop: '0.25rem' }}>
                     {item.price !== null ? `₹${item.price.toFixed(1)}` : '--'}
-                    {item.price !== null && <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}> / kg</span>}
+                    {item.price !== null && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'normal' }}> / kg</span>}
                   </div>
                   {item.price === null && (
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
                       {lang === 'te' ? 'పంట అందుబాటులో లేదు' : 'No active listings'}
                     </span>
                   )}
@@ -337,32 +332,46 @@ const Home = () => {
         </section>
 
         {/* 3. POPULAR CATEGORIES */}
-        <section style={{ margin: '4rem 0', textAlign: 'left' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+        <section style={{ margin: '2.5rem 0', textAlign: 'left' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '0.25rem' }}>
             🥬 {lang === 'te' ? 'ప్రముఖ రకాలు' : 'Popular Categories'}
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
             {lang === 'te' ? 'సులభమైన నావిగేషన్ కోసం పంటల రకాలు' : 'Find crops quickly by category'}
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1rem' }}>
             {[
               { nameEn: 'Vegetables', nameTe: 'కూరగాయలు', key: 'vegetables', icon: '🥬', descEn: 'Fresh tomatoes, onions, greens', descTe: 'తాజా టమాటాలు, ఉల్లిపాయలు, ఆకుకూరలు' },
               { nameEn: 'Fruits', nameTe: 'పండ్లు', key: 'fruits', icon: '🍎', descEn: 'Sweet mangoes, bananas, seasonal fruits', descTe: 'మామిడి పండ్లు, అరటిపండ్లు, సీజనల్ పండ్లు' },
-              { nameEn: 'Grains', nameTe: 'ధాన్యాలు', key: 'grains', icon: '🌾', descEn: 'Paddy rice, wheat, local pulses', descTe: 'వరి బియ్యం, గోధుమలు, పప్పు ధాన్యాలు' }
+              { nameEn: 'Grains', nameTe: 'ధాన్యాలు', key: 'grains', icon: '🌾', descEn: 'Rice, wheat, pulses', descTe: 'బియ్యం, గోధుమలు, పప్పుధాన్యాలు' }
             ].map((cat, idx) => (
-              <Link key={idx} to={`/store?category=${cat.key}`} style={{ textDecoration: 'none' }}>
-                <div 
-                  className="glass hover-glow"
-                  style={{ padding: '2rem 1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'center', transition: 'transform 0.2s' }}
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                >
-                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{cat.icon}</div>
-                  <h3 style={{ fontSize: '1.3rem', fontWeight: 'bold', color: 'white', margin: '0 0 0.5rem 0' }}>
+              <Link
+                key={idx}
+                to={`/store?category=${cat.key}`}
+                className="glass"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.75rem',
+                  padding: '1rem',
+                  borderRadius: '1rem',
+                  textDecoration: 'none',
+                  border: '1px solid var(--glass-border)',
+                  background: 'var(--bg-darkest)',
+                  transition: 'transform 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <div style={{ fontSize: '1.75rem', width: '44px', height: '44px', borderRadius: '50%', background: 'var(--bg-darker)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {cat.icon}
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>
                     {lang === 'te' ? cat.nameTe : cat.nameEn}
                   </h3>
-                  <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.1rem 0 0 0' }}>
                     {lang === 'te' ? cat.descTe : cat.descEn}
                   </p>
                 </div>
@@ -372,13 +381,13 @@ const Home = () => {
         </section>
 
         {/* 4. NEARBY CROPS */}
-        <section style={{ margin: '4rem 0', textAlign: 'left' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <section style={{ margin: '2.5rem 0', textAlign: 'left' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
             <div>
-              <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white' }}>
+              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)' }}>
                 🌾 {locationEnabled ? (lang === 'te' ? 'మీకు దగ్గరలో ఉన్న పంటలు' : 'Products Near You') : (lang === 'te' ? 'మార్కెట్ లోని పంటలు' : 'Trending Crops')}
               </h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
                 {locationEnabled 
                   ? (lang === 'te' ? '50 కిలోమీటర్ల లోపు రైతులు పండించిన తాజా పంటలు' : 'Showing crops listed by local farmers within 50 km') 
                   : (lang === 'te' ? 'దగ్గరి పొలాలను గుర్తించడానికి లొకేషన్ ఎనేబుల్ చేయండి' : 'Enable location permissions to find crops near you')}
@@ -390,7 +399,7 @@ const Home = () => {
                 onClick={requestLocation}
                 disabled={locating}
                 className="btn btn-secondary" 
-                style={{ borderRadius: '2rem', fontSize: '0.85rem', padding: '0.5rem 1.25rem' }}
+                style={{ borderRadius: '2rem', fontSize: '0.8rem', padding: '0.4rem 1rem', minHeight: '36px' }}
               >
                 {locating ? (lang === 'te' ? 'గుర్తిస్తోంది...' : 'Locating...') : `📍 ${lang === 'te' ? 'లొకేషన్ ఆన్ చేయండి' : 'Enable Location'}`}
               </button>
@@ -398,16 +407,16 @@ const Home = () => {
           </div>
 
           {loading ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
-              {[1, 2, 3, 4].map(i => <div key={i} className="glass" style={{ height: '260px', borderRadius: '1.25rem', opacity: 0.4 }} />)}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
+              {[1, 2, 3, 4].map(i => <div key={i} className="glass" style={{ height: '240px', borderRadius: '1rem', opacity: 0.4 }} />)}
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1.25rem' }}>
               {featuredProducts.slice(0, 8).map(p => (
                 <ProductCard key={p._id} product={p} onAddToCart={addToCart} />
               ))}
               {featuredProducts.length === 0 && (
-                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
                   {lang === 'te' ? 'ఏ పంటలు అందుబాటులో లేవు.' : 'No products listed on the marketplace yet.'}
                 </div>
               )}
@@ -416,17 +425,17 @@ const Home = () => {
         </section>
 
         {/* 5. VERIFIED FARMERS */}
-        <section style={{ margin: '4rem 0', textAlign: 'left' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+        <section style={{ margin: '2.5rem 0', textAlign: 'left' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '0.25rem' }}>
             🛡️ {lang === 'te' ? 'వెరిఫైడ్ రైతులు' : 'Verified Farmers'}
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>
             {lang === 'te' ? 'ప్రభుత్వ గుర్తింపు పొందిన విశ్వసనీయ రైతులు' : 'Shop with confidence from verified local producers'}
           </p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem' }}>
             {loading ? (
-              [1, 2, 3].map(i => <div key={i} className="glass" style={{ height: '90px', borderRadius: '1rem', opacity: 0.4 }} />)
+              [1, 2, 3].map(i => <div key={i} className="glass" style={{ height: '80px', borderRadius: '1rem', opacity: 0.4 }} />)
             ) : farmers.length === 0 ? (
               <div style={{ color: 'var(--text-muted)' }}>
                 {lang === 'te' ? 'రైతులు నమోదు చేసుకోలేదు.' : 'No verified farmers registered yet.'}
@@ -436,22 +445,36 @@ const Home = () => {
                 <div 
                   key={farmer._id || idx}
                   className="glass" 
-                  style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}
+                  style={{ padding: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', borderRadius: '1rem', border: '1px solid var(--glass-border)', background: 'var(--bg-darkest)' }}
                 >
-                  <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--bg-darkest)' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--white)', flexShrink: 0 }}>
                     {farmer.name ? farmer.name.charAt(0).toUpperCase() : 'F'}
                   </div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                      <h4 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'white', margin: 0 }}>{farmer.name}</h4>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{farmer.name}</h4>
                       {farmer.isVerified && (
-                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.75rem' }}>🛡️</span>
+                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.7rem' }}>🛡️</span>
                       )}
                     </div>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.2rem', margin: '0.2rem 0 0 0' }}>
-                      <MapPin size={11} /> {farmer.address?.city || 'Local Area'}, {farmer.address?.state || 'District'}
-                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.1rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', color: '#eab308', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                        <Star size={10} fill="#eab308" stroke="#eab308" />
+                        <span>{farmer.rating || '4.8'}</span>
+                      </div>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.15rem' }}>
+                        <MapPin size={10} /> {farmer.address?.city || 'Local Area'}
+                      </span>
+                    </div>
                   </div>
+                  
+                  <Link 
+                    to={`/store?farmerId=${farmer._id}`} 
+                    className="btn btn-secondary" 
+                    style={{ padding: '0.3rem 0.6rem', borderRadius: '1.5rem', fontSize: '0.75rem', minHeight: '30px' }}
+                  >
+                    {lang === 'te' ? 'చూడండి' : 'View Crops'}
+                  </Link>
                 </div>
               ))
             )}
@@ -459,24 +482,24 @@ const Home = () => {
         </section>
 
         {/* 6. HOW IT WORKS */}
-        <section style={{ margin: '4rem 0', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '1.8rem', fontWeight: 'bold', color: 'white', marginBottom: '2.5rem' }}>
+        <section style={{ margin: '3rem 0', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '1.5rem' }}>
             ❓ {lang === 'te' ? 'ఫార్మర్‌డైరెక్ట్ ఎలా పనిచేస్తుంది?' : 'How FarmerDirect Works'}
           </h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', justifyContent: 'center' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.25rem', justifyContent: 'center' }}>
             {[
-              { step: '🔍', titleEn: 'Browse', titleTe: 'వెతకండి', descEn: 'Find fresh crops listed by local farmers near you.', descTe: 'మీకు దగ్గరలో ఉన్న రైతులు పండించిన తాజా పంటలను వెతకండి.' },
-              { step: '🛒', titleEn: 'Order', titleTe: 'ఆర్డర్ చేయండి', descEn: 'Pay securely online or choose cash on delivery.', descTe: 'ఆన్‌లైన్ ద్వారా లేదా డెలివరీ సమయంలో సురక్షితంగా నగదు చెల్లించండి.' },
-              { step: '📦', titleEn: 'Receive', titleTe: 'పొందండి', descEn: 'Receive fresh harvest directly at your doorstep.', descTe: 'తాజా పంటలను నేరుగా మీ ఇంటి వద్ద పొందండి.' }
+              { step: '🛒', titleEn: 'Browse Crops', titleTe: 'పంటలను వెతకండి', descEn: 'Find fresh crops listed by local farmers near you.', descTe: 'మీకు దగ్గరలో ఉన్న రైతులు పండించిన తాజా పంటలను వెతకండి.' },
+              { step: '📦', titleEn: 'Place Order', titleTe: 'ఆర్డర్ చేయండి', descEn: 'Pay securely online or choose cash on delivery.', descTe: 'ఆన్‌లైన్ ద్వారా లేదా డెలివరీ సమయంలో సురక్షితంగా నగదు చెల్లించండి.' },
+              { step: '🚚', titleEn: 'Get Fresh Delivery', titleTe: 'డెలివరీ పొందండి', descEn: 'Receive fresh harvest directly at your doorstep.', descTe: 'తాజా పంటలను నేరుగా మీ ఇంటి వద్ద పొందండి.' }
             ].map((s, idx) => (
-              <div key={idx} className="glass" style={{ flex: '1 1 280px', maxWidth: '320px', padding: '2rem 1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(255,255,255,0.04)' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
+              <div key={idx} className="glass" style={{ flex: '1 1 260px', maxWidth: '300px', padding: '1.5rem 1.25rem', borderRadius: '1rem', border: '1px solid var(--glass-border)', background: 'var(--bg-darkest)' }}>
+                <div style={{ fontSize: '2.2rem', marginBottom: '0.5rem' }}>
                   {s.step}
                 </div>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white', marginBottom: '0.5rem' }}>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '0.3rem' }}>
                   {lang === 'te' ? s.titleTe : s.titleEn}
                 </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.5', margin: 0 }}>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', lineHeight: '1.5', margin: 0 }}>
                   {lang === 'te' ? s.descTe : s.descEn}
                 </p>
               </div>

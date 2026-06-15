@@ -195,7 +195,7 @@ router.get('/farmers', async (req, res) => {
 // @access  Private/Consumer
 router.get('/orders', protect, authorize('consumer'), async (req, res) => {
     try {
-        const orders = await Order.find({ consumer: req.user._id }).populate('items.product');
+        const orders = await Order.find({ consumer: req.user._id }).populate('items.product').populate('farmer');
         res.json(orders);
     } catch (error) {
         console.error('Order history error:', error);

@@ -74,29 +74,29 @@ const ProductDetailsModal = ({ product, onClose }) => {
     return (
         <motion.div 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', overflowY: 'auto' }}
             onClick={onClose}
         >
             <motion.div 
                 initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
                 className="glass" 
-                style={{ maxWidth: '900px', width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}
+                style={{ maxWidth: '900px', width: '100%', maxHeight: '90vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: '1px solid var(--glass-border)' }}
             >
                 {/* Header */}
-                <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{lang === 'te' ? 'పంట సమీక్షలు' : 'Product Reviews'}</h2>
-                    <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer' }} className="hover-glow"><X size={20} /></button>
+                <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-dark)' }}>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>{lang === 'te' ? 'పంట సమీక్షలు' : 'Product Reviews'}</h2>
+                    <button onClick={onClose} style={{ background: 'var(--bg-darker)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-light)', cursor: 'pointer', minHeight: 'auto', padding: 0 }} className="hover-glow"><X size={20} /></button>
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', overflowY: 'auto' }}>
                     {/* Left Col: Product & Stats */}
-                    <div style={{ flex: '1 1 300px', padding: '2rem', borderRight: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.1)' }}>
+                    <div style={{ flex: '1 1 300px', padding: '2rem', borderRight: '1px solid var(--glass-border)', background: 'var(--bg-dark)', textAlign: 'left' }}>
                         <div style={{ marginBottom: '2.5rem' }}>
-                            <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{product.name}</h3>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+                            <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--text-light)' }}>{product.name}</h3>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0 }}>
                               By {product.farmer?.name || 'Local Farmer'} 
-                              {product.farmer?.isVerified && <span style={{ color: 'var(--primary)', fontWeight: 'bold', marginLeft: '0.25rem' }}>🛡️ {lang === 'te' ? 'వెరిఫైడ్ రైతు' : 'Verified Farmer'}</span>}
+                              {product.farmer?.isVerified && <span style={{ color: 'var(--primary)', fontWeight: 'bold', marginLeft: '0.25rem' }}>🛡️ {lang === 'te' ? 'వెరిఫైడ్ రైతు' : 'Verified'}</span>}
                             </p>
 
                             {/* Call / WhatsApp Farmer Direct triggers */}
@@ -110,7 +110,7 @@ const ProductDetailsModal = ({ product, onClose }) => {
                                         📞 {lang === 'te' ? 'రైతుకు ఫోన్ చేయి' : 'Call Farmer'}
                                     </a>
                                     <a 
-                                        href={`https://wa.me/${product.farmer.phone}`}
+                                        href={`https://wa.me/${product.farmer.phone.replace(/[^0-9]/g, '')}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="btn btn-secondary"
@@ -123,7 +123,7 @@ const ProductDetailsModal = ({ product, onClose }) => {
                         </div>
 
                         {/* Average Rating Block */}
-                        <div style={{ textAlign: 'center', marginBottom: '2.5rem', padding: '1.5rem', background: 'rgba(255,255,255,0.03)', borderRadius: '1rem', border: '1px dashed rgba(0,255,157,0.2)' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '2.5rem', padding: '1.5rem', background: 'var(--bg-darker)', borderRadius: '1rem', border: '1px dashed var(--primary)' }}>
                             <div style={{ fontSize: '4rem', fontWeight: 'bold', color: 'var(--primary)', lineHeight: 1 }}>{avgRating.toFixed(1)}</div>
                             <div style={{ display: 'flex', justifyContent: 'center', gap: '0.25rem', margin: '0.5rem 0' }}>
                                 {[1,2,3,4,5].map(star => (
@@ -140,8 +140,8 @@ const ProductDetailsModal = ({ product, onClose }) => {
                                 const percentage = totalReviews > 0 ? (count / totalReviews) * 100 : 0;
                                 return (
                                     <div key={star} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', width: '40px', fontSize: '0.85rem' }}>{star} <Star size={12} fill="var(--text-muted)" color="var(--text-muted)" /></div>
-                                        <div style={{ flex: 1, height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', width: '40px', fontSize: '0.85rem', color: 'var(--text-muted)' }}>{star} <Star size={12} fill="var(--text-muted)" color="var(--text-muted)" /></div>
+                                        <div style={{ flex: 1, height: '6px', background: 'var(--bg-darker)', borderRadius: '3px', overflow: 'hidden' }}>
                                             <div style={{ width: `${percentage}%`, height: '100%', background: 'var(--primary)', borderRadius: '3px' }} />
                                         </div>
                                         <div style={{ width: '30px', textAlign: 'right', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{count}</div>
@@ -152,17 +152,17 @@ const ProductDetailsModal = ({ product, onClose }) => {
                     </div>
 
                     {/* Right Col: Reviews & Form */}
-                    <div style={{ flex: '2 1 400px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    <div style={{ flex: '2 1 400px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '2rem', textAlign: 'left' }}>
                         
                         {/* Write Review Form */}
                         {user && user.role === 'consumer' && (
-                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <h4 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ background: 'var(--bg-dark)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
+                                <h4 style={{ fontSize: '1.1rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--text-light)', margin: '0 0 1rem' }}>
                                     <MessageSquare size={18} color="var(--primary)" /> Write a Review
                                 </h4>
                                 {error && <div style={{ color: 'var(--error)', fontSize: '0.85rem', marginBottom: '1rem', padding: '0.5rem', background: 'rgba(239,68,68,0.1)', borderRadius: '0.5rem' }}>{error}</div>}
-                                <form onSubmit={handleSubmit}>
-                                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'flex-start' }}>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
                                         {[1,2,3,4,5].map(star => (
                                             <Star 
                                                 key={star} 
@@ -180,7 +180,7 @@ const ProductDetailsModal = ({ product, onClose }) => {
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
                                         placeholder="Share your experience with this product..."
-                                        style={{ width: '100%', padding: '1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.5rem', resize: 'vertical', minHeight: '100px', marginBottom: '1rem' }}
+                                        style={{ width: '100%', padding: '1rem', borderRadius: '0.5rem', resize: 'vertical', minHeight: '100px' }}
                                     />
                                     <button type="submit" disabled={submitLoading} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                         {submitLoading ? 'Submitting...' : <><Send size={16} /> Submit Review</>}
@@ -192,11 +192,11 @@ const ProductDetailsModal = ({ product, onClose }) => {
                         {/* Review List */}
                         <div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                <h4 style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>Customer Reviews</h4>
+                                <h4 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>Customer Reviews</h4>
                                 <select 
                                     value={sortBy} 
                                     onChange={(e) => setSortBy(e.target.value)}
-                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', padding: '0.5rem', borderRadius: '0.5rem', fontSize: '0.85rem' }}
+                                    style={{ width: 'auto', minHeight: 'auto', padding: '0.4rem 0.8rem !important' }}
                                 >
                                     <option value="newest">Latest</option>
                                     <option value="highest">Highest Rating</option>
@@ -207,21 +207,21 @@ const ProductDetailsModal = ({ product, onClose }) => {
                             {loading ? (
                                 <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>Loading reviews...</div>
                             ) : reviews.length === 0 ? (
-                                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem', background: 'rgba(0,0,0,0.1)', borderRadius: '1rem' }}>
-                                    <Star size={40} opacity={0.2} style={{ margin: '0 auto 1rem' }} />
-                                    <p>No reviews yet. Be the first to review this product!</p>
+                                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '3rem', background: 'var(--bg-dark)', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
+                                    <Star size={40} opacity={0.2} style={{ margin: '0 auto 1rem' }} color="var(--text-muted)" />
+                                    <p style={{ margin: 0 }}>No reviews yet. Be the first to review this product!</p>
                                 </div>
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                                     {reviews.map(review => (
-                                        <div key={review._id} style={{ paddingBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div key={review._id} style={{ paddingBottom: '1.5rem', borderBottom: '1px solid var(--glass-border)' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--bg-darker)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-light)' }}>
                                                         <User size={18} />
                                                     </div>
                                                     <div>
-                                                        <div style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{review.user?.name || 'User'}</div>
+                                                        <div style={{ fontWeight: 'bold', fontSize: '0.95rem', color: 'var(--text-light)' }}>{review.user?.name || 'User'}</div>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                                                             {new Date(review.createdAt).toLocaleDateString()}
                                                             {review.verifiedPurchase && <span style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><CheckCircle size={10} /> Verified Purchase</span>}
@@ -230,14 +230,14 @@ const ProductDetailsModal = ({ product, onClose }) => {
                                                 </div>
                                                 <div style={{ display: 'flex' }}>
                                                     {[...Array(5)].map((_, i) => (
-                                                        <Star key={i} size={14} fill={i < review.rating ? "#F59E0B" : "transparent"} color={i < review.rating ? "#F59E0B" : "rgba(255,255,255,0.2)"} />
+                                                        <Star key={i} size={14} fill={i < review.rating ? "#F59E0B" : "transparent"} color={i < review.rating ? "#F59E0B" : "var(--glass-border)"} />
                                                     ))}
                                                 </div>
                                             </div>
-                                            <p style={{ fontSize: '0.95rem', lineHeight: 1.5, color: 'rgba(255,255,255,0.9)' }}>{review.comment}</p>
+                                            <p style={{ fontSize: '0.95rem', lineHeight: 1.5, color: 'var(--text-light)', margin: 0 }}>{review.comment}</p>
                                             
                                             {user && user._id === review.user?._id && (
-                                                <button onClick={() => handleDelete(review._id)} style={{ background: 'transparent', border: 'none', color: 'var(--error)', fontSize: '0.8rem', cursor: 'pointer', marginTop: '0.5rem', padding: 0 }}>Delete Review</button>
+                                                <button onClick={() => handleDelete(review._id)} style={{ background: 'transparent', border: 'none', color: 'var(--error)', fontSize: '0.8rem', cursor: 'pointer', marginTop: '0.5rem', padding: 0, minHeight: 'auto' }}>Delete Review</button>
                                             )}
                                         </div>
                                     ))}

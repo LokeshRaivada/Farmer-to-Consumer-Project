@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { useAuth } from '../context/AuthContext';
-import { MessageCircle, X, Send, User } from 'lucide-react';
+import { MessageCircle, X, Send } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const ChatBox = ({ recipientId, recipientName, orderId }) => {
-  const { user } = useAuth();
+  const { user, lang } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -35,7 +36,6 @@ const ChatBox = ({ recipientId, recipientName, orderId }) => {
   }, [isOpen, user, roomName]);
 
   useEffect(() => {
-    // Scroll to bottom
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -57,74 +57,171 @@ const ChatBox = ({ recipientId, recipientName, orderId }) => {
     setInputMessage('');
   };
 
+  const formatMessageTime = (isoString) => {
+    if (!isoString) return '';
+    try {
+      const date = new Date(isoString);
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return '';
+    }
+  };
+
   if (!user) return null;
 
   return (
-    <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+    <div style={{ position: 'fixed', bottom: '5rem', right: '1.5rem', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
       
       {/* Chat Window */}
-      {isOpen && (
-        <div className="glass" style={{ width: '350px', height: '450px', marginBottom: '1rem', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '1rem' }}>
-          
-          {/* Header */}
-          <div style={{ padding: '1rem', background: 'var(--primary)', color: 'var(--bg-darkest)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
-              <User size={18} /> {recipientName || 'Chat'}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            className="glass" 
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            style={{ width: '330px', height: '480px', marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '1rem', border: '1px solid var(--glass-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
+          >
+            
+            {/* WhatsApp Header */}
+            <div style={{ padding: '0.75rem 1rem', background: 'var(--primary-dark)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                  {(recipientName || 'C').charAt(0).toUpperCase()}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '0.95rem' }}>{recipientName || 'Chat'}</span>
+                  <span style={{ fontSize: '0.65rem', opacity: 0.85 }}>{lang === 'te' ? 'ఆన్‌లైన్' : 'online'}</span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsOpen(false)} 
+                style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <X size={20} />
+              </button>
             </div>
-            <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}>
-              <X size={20} />
-            </button>
-          </div>
 
-          {/* Messages Area */}
-          <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(0,0,0,0.2)' }}>
-            {messages.length === 0 ? (
-              <p style={{ textAlign: 'center', color: 'var(--text-muted)', marginTop: '2rem' }}>Start a conversation</p>
-            ) : (
-              messages.map((msg, idx) => {
-                const isMe = msg.senderId === user._id;
-                return (
-                  <div key={idx} style={{ alignSelf: isMe ? 'flex-end' : 'flex-start', maxWidth: '80%' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textAlign: isMe ? 'right' : 'left' }}>
-                      {msg.senderName}
+            {/* WhatsApp Message Logs Container */}
+            <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'var(--whatsapp-bg)' }}>
+              {messages.length === 0 ? (
+                <div style={{ margin: 'auto', textAlign: 'center', maxWidth: '200px' }}>
+                  <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', background: 'var(--whatsapp-their-bubble)', padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', margin: 0 }}>
+                    💬 {lang === 'te' ? 'సంభాషణను ప్రారంభించండి' : 'Start a conversation'}
+                  </p>
+                </div>
+              ) : (
+                messages.map((msg, idx) => {
+                  const isMe = msg.senderId === user._id;
+                  return (
+                    <div 
+                      key={idx} 
+                      style={{ 
+                        alignSelf: isMe ? 'flex-end' : 'flex-start', 
+                        maxWidth: '80%', 
+                        textAlign: 'left',
+                        position: 'relative'
+                      }}
+                    >
+                      <div style={{ 
+                        padding: '0.5rem 0.75rem 0.85rem 0.75rem', 
+                        borderRadius: isMe ? '7px 0px 7px 7px' : '0px 7px 7px 7px',
+                        background: isMe ? 'var(--whatsapp-my-bubble)' : 'var(--whatsapp-their-bubble)',
+                        color: 'var(--whatsapp-text)',
+                        boxShadow: '0 1px 1px rgba(0,0,0,0.08)',
+                        fontSize: '0.9rem',
+                        lineHeight: '1.35',
+                        position: 'relative'
+                      }}>
+                        {msg.text}
+                        <span style={{ 
+                          position: 'absolute', 
+                          bottom: '2px', 
+                          right: '6px', 
+                          fontSize: '0.6rem', 
+                          color: 'var(--text-muted)', 
+                          opacity: 0.8,
+                          display: 'block',
+                          textAlign: 'right'
+                        }}>
+                          {formatMessageTime(msg.timestamp)}
+                        </span>
+                      </div>
                     </div>
-                    <div style={{ 
-                      padding: '0.75rem 1rem', 
-                      borderRadius: isMe ? '1rem 0 1rem 1rem' : '0 1rem 1rem 1rem',
-                      background: isMe ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-                      color: isMe ? 'var(--bg-darkest)' : 'var(--text-light)',
-                      border: isMe ? 'none' : '1px solid rgba(255,255,255,0.2)'
-                    }}>
-                      {msg.text}
-                    </div>
-                  </div>
-                );
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+                  );
+                })
+              )}
+              <div ref={messagesEndRef} />
+            </div>
 
-          {/* Input Area */}
-          <form onSubmit={sendMessage} style={{ padding: '1rem', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '0.5rem', background: 'var(--bg-darkest)' }}>
-            <input 
-              type="text" 
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              placeholder="Type a message..."
-              style={{ flex: 1, padding: '0.75rem', borderRadius: '2rem', border: '1px solid var(--glass-border)', background: 'rgba(255,255,255,0.05)', color: 'var(--text-light)' }}
-            />
-            <button type="submit" className="btn-primary" style={{ padding: '0.75rem', borderRadius: '50%', minWidth: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Send size={18} />
-            </button>
-          </form>
+            {/* WhatsApp Chat Send Pill Input */}
+            <form onSubmit={sendMessage} style={{ padding: '0.75rem', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '0.5rem', background: 'var(--bg-darkest)', alignItems: 'center' }}>
+              <input 
+                type="text" 
+                value={inputMessage}
+                onChange={(e) => setInputMessage(e.target.value)}
+                placeholder={lang === 'te' ? 'సందేశాన్ని టైప్ చేయండి...' : 'Type a message...'}
+                style={{ 
+                  flex: 1, 
+                  padding: '0.6rem 1rem', 
+                  borderRadius: '2rem', 
+                  border: '1px solid var(--glass-border)', 
+                  background: 'var(--bg-darker)', 
+                  color: 'var(--text-light)',
+                  fontSize: '0.9rem',
+                  outline: 'none',
+                  minHeight: '38px'
+                }}
+              />
+              <button 
+                type="submit" 
+                className="btn btn-primary" 
+                style={{ 
+                  padding: 0, 
+                  borderRadius: '50%', 
+                  width: '38px', 
+                  height: '38px', 
+                  minWidth: '38px', 
+                  minHeight: '38px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  background: 'var(--primary)',
+                  border: 'none',
+                  color: 'white',
+                  cursor: 'pointer'
+                }}
+              >
+                <Send size={16} />
+              </button>
+            </form>
 
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Toggle Button */}
+      {/* Floating Toggle Button */}
       {!isOpen && (
-        <button onClick={() => setIsOpen(true)} className="btn-primary" style={{ width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(0,255,157,0.4)' }}>
-          <MessageCircle size={28} />
+        <button 
+          onClick={() => setIsOpen(true)} 
+          className="btn btn-primary" 
+          style={{ 
+            width: '56px', 
+            height: '56px', 
+            minWidth: '56px', 
+            minHeight: '56px', 
+            borderRadius: '50%', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+            padding: 0,
+            cursor: 'pointer',
+            border: 'none'
+          }}
+        >
+          <MessageCircle size={24} />
         </button>
       )}
 

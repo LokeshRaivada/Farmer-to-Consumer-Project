@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { CartProvider, useCart } from './context/CartContext';
 import { ShoppingCart, LogOut, Menu, X, Leaf, Search, Bell, Heart, ChevronDown } from 'lucide-react';
@@ -9,7 +9,6 @@ import axios from 'axios';
 // Lazy loading pages
 const Home = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Login'));
-const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Signup = lazy(() => import('./pages/Signup'));
 const ConsumerStore = lazy(() => import('./pages/ConsumerStore'));
 const FarmerDashboard = lazy(() => import('./pages/FarmerDashboard'));
@@ -147,15 +146,15 @@ const Navbar = () => {
           <span className="desktop-menu">{lang === 'te' ? 'వెతకండి' : 'Search'}</span>
         </Link>
 
-        {/* Permanent Language Toggle (Desktop only) */}
-        <div className="desktop-menu" style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '2rem', padding: '2px', border: '1px solid rgba(0,255,157,0.15)', alignItems: 'center', height: '32px', flexShrink: 0 }}>
+        {/* Permanent Language Toggle (Desktop & Mobile) */}
+        <div style={{ display: 'flex', background: 'var(--bg-darker)', borderRadius: '2rem', padding: '2px', border: '1px solid var(--glass-border)', alignItems: 'center', height: '32px', flexShrink: 0 }}>
           <button 
             onClick={() => lang !== 'en' && toggleLang()} 
             className="lang-toggle-btn"
             style={{ 
               background: lang === 'en' ? 'var(--primary)' : 'transparent', 
-              color: lang === 'en' ? 'var(--bg-darkest)' : 'var(--text-light)',
-              border: 'none', borderRadius: '1.5rem', padding: '0.2rem 0.6rem', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' 
+              color: lang === 'en' ? 'var(--white)' : 'var(--text-light)',
+              border: 'none', borderRadius: '1.5rem', padding: '0.1rem 0.5rem', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' 
             }}
           >
             EN
@@ -165,8 +164,8 @@ const Navbar = () => {
             className="lang-toggle-btn"
             style={{ 
               background: lang === 'te' ? 'var(--primary)' : 'transparent', 
-              color: lang === 'te' ? 'var(--bg-darkest)' : 'var(--text-light)',
-              border: 'none', borderRadius: '1.5rem', padding: '0.2rem 0.6rem', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' 
+              color: lang === 'te' ? 'var(--white)' : 'var(--text-light)',
+              border: 'none', borderRadius: '1.5rem', padding: '0.1rem 0.5rem', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' 
             }}
           >
             తెలుగు
@@ -313,33 +312,7 @@ const Navbar = () => {
       {/* Mobile Menu Dropdown Panel */}
       {mobileMenuOpen && (
         <div className="glass mobile-menu-panel" style={{ position: 'absolute', top: '5rem', left: '1rem', right: '1rem', padding: '1.5rem', borderRadius: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', zIndex: 999, background: 'var(--bg-dark)' }}>
-          {/* Mobile Language Toggle Switch */}
-          <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', borderRadius: '2rem', padding: '2px', border: '1px solid rgba(255,255,255,0.1)', alignItems: 'center', height: '36px', width: '100%' }}>
-            <button 
-              onClick={() => lang !== 'en' && toggleLang()} 
-              className="lang-toggle-btn"
-              style={{ 
-                flex: 1,
-                background: lang === 'en' ? 'var(--primary)' : 'transparent', 
-                color: lang === 'en' ? 'var(--bg-darkest)' : 'var(--text-light)',
-                border: 'none', borderRadius: '1.5rem', padding: '0.3rem 0.75rem', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' 
-              }}
-            >
-              English
-            </button>
-            <button 
-              onClick={() => lang !== 'te' && toggleLang()} 
-              className="lang-toggle-btn"
-              style={{ 
-                flex: 1,
-                background: lang === 'te' ? 'var(--primary)' : 'transparent', 
-                color: lang === 'te' ? 'var(--bg-darkest)' : 'var(--text-light)',
-                border: 'none', borderRadius: '1.5rem', padding: '0.3rem 0.75rem', fontSize: '0.85rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' 
-              }}
-            >
-              తెలుగు
-            </button>
-          </div>
+
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', textAlign: 'left' }}>
             <NavLink to="/">🏠 {t('home')}</NavLink>
@@ -415,8 +388,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   if (!token) {
-    const isAdminPath = window.location.pathname.startsWith('/admin');
-    return <Navigate to={isAdminPath ? "/admin/login" : "/login"} replace />;
+    return <Navigate to="/login" replace />;
   }
 
   if (allowedRoles && (!user || !allowedRoles.includes(user.role))) {
@@ -426,17 +398,103 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   return children;
 };
 
+const HelpModal = ({ isOpen, onClose, path, lang }) => {
+  if (!isOpen) return null;
+
+  let titleEn = "❓ Help Guide";
+  let titleTe = "❓ సహాయ మార్గదర్శి";
+  
+  let content = [];
+
+  if (path.startsWith('/farmer')) {
+    content = [
+      {
+        q: lang === 'te' ? "పంటను ఎలా జోడించాలి?" : "How to add a crop?",
+        a: lang === 'te' ? "మధ్యలో ఉన్న '➕ పంటను జోడించు' బటన్ క్లిక్ చేయండి, పంట పేరు, కేజీ ధర, మరియు అందుబాటులో ఉన్న పరిమాణం టైప్ చేసి సబ్మిట్ చేయండి." : "Click the '➕ Add Crop' action card, fill out the simple fields (Name, Price, Quantity, Photo), and list your crop instantly."
+      },
+      {
+        q: lang === 'te' ? "ఆర్డర్ డెలివరీ స్థితిని ఎలా మార్చాలి?" : "How to update order status?",
+        a: lang === 'te' ? "'📋 కస్టమర్ ఆర్డర్లు' విభాగంలోకి వెళ్లి, ఆర్డర్ కింద ఉన్న బటన్ల సహాయంతో Accepted, Packed, లేదా Delivered కు మార్చండి." : "Go to '📋 Customer Orders', view details, and click the appropriate button (Accept, Packed, On the Way, Delivered) as you process the delivery."
+      },
+      {
+        q: lang === 'te' ? "డబ్బు ఎలా అందుతుంది?" : "How do I view earnings?",
+        a: lang === 'te' ? "'💰 సంపాదించిన డబ్బు' విభాగంలో మీ మొత్తం ఆదాయం మరియు విక్రయాల సారాంశం చూడవచ్చు." : "Open '💰 Money Earned' to view your total earnings, dynamic revenue charts, and active sales logs."
+      }
+    ];
+  } else if (path === '/store') {
+    content = [
+      {
+        q: lang === 'te' ? "పంటను ఎలా కొనాలి?" : "How to buy crops?",
+        a: lang === 'te' ? "పంట కార్డు కింద ఉన్న 'Add' బటన్ క్లిక్ చేయండి. అది కార్ట్ లోకి వెళ్తుంది. పైన ఉన్న కార్ట్ చిహ్నాన్ని నొక్కి చెక్అవుట్ చేయండి." : "Click the 'Add' button on any crop card to place it in your cart, then tap the Cart icon in the navbar/bottom menu to proceed to checkout."
+      },
+      {
+        q: lang === 'te' ? "రైతుకు ఫోన్ చేయడం ఎలా?" : "How to call a farmer?",
+        a: lang === 'te' ? "పంట పై క్లిక్ చేసి 'వివరాలు' చూడండి. అక్కడ '📞 రైతుకు ఫోన్ చేయి' బటన్ ఉంటుంది." : "Tap on any crop to open its detailed description. Tap the '📞 Call Farmer' button to call them directly."
+      }
+    ];
+  } else if (path === '/orders') {
+    content = [
+      {
+        q: lang === 'te' ? "డెలివరీని ఎలా ట్రాక్ చేయాలి?" : "How to track my order?",
+        a: lang === 'te' ? "'నా ఆర్డర్లు' విభాగంలో మీ క్రియాశీల ఆర్డర్ల రంగుల ఆధారంగా (Placed, Accepted, Delivered) స్థితిని ట్రాక్ చేయవచ్చు." : "In your Orders dashboard, active order cards show color-coded status badges reflecting where your crop is in transit."
+      },
+      {
+        q: lang === 'te' ? "రివ్యూ ఎలా రాయాలి?" : "How to write a review?",
+        a: lang === 'te' ? "పంట విజయవంతంగా డెలివరీ అయిన తర్వాత, ఆర్డర్ కింద 'రివ్యూ రాయండి' బటన్ కనిపిస్తుంది. దానిపై నొక్కి మీ అనుభవాన్ని రేట్ చేయండి." : "Once your crop has been delivered, an option to review will appear on the order card, allowing you to leave a rating and comment."
+      }
+    ];
+  } else {
+    content = [
+      {
+        q: lang === 'te' ? "ఫార్మర్‌డైరెక్ట్ ఎలా పనిచేస్తుంది?" : "How does FarmerDirect work?",
+        a: lang === 'te' ? "రైతులు తమ పంటలను నేరుగా జోడిస్తారు. వినియోగదారులు మధ్యవర్తులు లేకుండా తాజా పంటలను తక్కువ ధరకే కొనుగోలు చేస్తారు." : "Verified local farmers list crops directly, allowing consumers to purchase fresh harvest at transparent gate prices without middleman markups."
+      },
+      {
+        q: lang === 'te' ? "ల్యాంగ్వేజ్ ఎలా మార్చాలి?" : "How do I switch languages?",
+        a: lang === 'te' ? "పైన కుడి వైపున ఉన్న 'EN | తెలుగు' బటన్ ద్వారా ఎప్పుడైనా భాషను మార్చవచ్చు." : "Use the permanently visible toggle 'EN | తెలుగు' at the top of the screen to change languages instantly."
+      }
+    ];
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 10001, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+      <div className="glass" style={{ width: '100%', maxWidth: '480px', padding: '2rem', background: 'var(--bg-darkest)', position: 'relative', border: '1px solid var(--glass-border)' }}>
+        <button onClick={onClose} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'var(--bg-darker)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-light)', cursor: 'pointer', minHeight: 'auto' }}>✕</button>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', color: 'var(--primary)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', textTransform: 'none' }}>
+          {lang === 'te' ? titleTe : titleEn}
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', textAlign: 'left' }}>
+          {content.map((item, idx) => (
+            <div key={idx} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <h4 style={{ fontWeight: 'bold', fontSize: '1rem', color: 'var(--text-light)', display: 'flex', alignItems: 'flex-start', gap: '0.25rem', textTransform: 'none' }}>
+                <span>💡</span> <span>{item.q}</span>
+              </h4>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: '1.5', margin: 0, paddingLeft: '1.5rem' }}>{item.a}</p>
+            </div>
+          ))}
+        </div>
+        <button className="btn btn-primary" onClick={onClose} style={{ width: '100%', marginTop: '1.5rem', padding: '0.8rem' }}>
+          {lang === 'te' ? 'సరే' : 'Got it'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const AppContent = () => {
   const { user, lang, largeText, t } = useAuth();
+  const location = useLocation();
+  const path = location.pathname;
+  const [helpOpen, setHelpOpen] = React.useState(false);
+
   return (
     <div className={`${lang === 'te' ? 'lang-te' : ''} ${largeText ? 'large-mode' : ''}`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
-      <main style={{ flex: 1, padding: '0 1rem' }}>
+      <main style={{ flex: 1, padding: '0 1rem', paddingBottom: '80px' }}>
         <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}><div className="loading" style={{ width: '40px', height: '40px', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>}>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/store" element={<ConsumerStore />} />
             <Route path="/farmer/*" element={<ProtectedRoute allowedRoles={['farmer']}><FarmerDashboard /></ProtectedRoute>} />
@@ -452,13 +510,49 @@ const AppContent = () => {
       </main>
       
       <ChatBox recipientName="Support / Seller" />
+
+      {/* Floating Help Button */}
+      <button 
+        className="floating-help-btn"
+        onClick={() => setHelpOpen(true)}
+        title={lang === 'te' ? 'సహాయం' : 'Help'}
+      >
+        ❓
+      </button>
+
+      {/* Help Modal Popup */}
+      <HelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} path={path} lang={lang} />
+
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="mobile-bottom-nav">
+        <Link to="/" className={`mobile-bottom-nav-item ${path === '/' ? 'active' : ''}`}>
+          <span style={{ fontSize: '1.25rem' }}>🏠</span>
+          <span>{lang === 'te' ? 'హోమ్' : 'Home'}</span>
+        </Link>
+        <Link to="/store" className={`mobile-bottom-nav-item ${path === '/store' ? 'active' : ''}`}>
+          <span style={{ fontSize: '1.25rem' }}>🛒</span>
+          <span>{lang === 'te' ? 'షాప్' : 'Shop'}</span>
+        </Link>
+        <Link to={user ? (user.role === 'farmer' ? '/farmer' : '/orders') : '/login'} className={`mobile-bottom-nav-item ${path === '/orders' || path.startsWith('/farmer') ? 'active' : ''}`}>
+          <span style={{ fontSize: '1.25rem' }}>📦</span>
+          <span>{lang === 'te' ? 'ఆర్డర్లు' : 'Orders'}</span>
+        </Link>
+        <Link to="/wishlist" className={`mobile-bottom-nav-item ${path === '/wishlist' ? 'active' : ''}`}>
+          <span style={{ fontSize: '1.25rem' }}>❤️</span>
+          <span>{lang === 'te' ? 'విష్‌లిస్ట్' : 'Wishlist'}</span>
+        </Link>
+        <Link to="/settings" className={`mobile-bottom-nav-item ${path === '/settings' ? 'active' : ''}`}>
+          <span style={{ fontSize: '1.25rem' }}>👤</span>
+          <span>{lang === 'te' ? 'ప్రొఫైల్' : 'Profile'}</span>
+        </Link>
+      </div>
       
       {/* Simplified Footer */}
-      <footer className="glass" style={{ margin: '2px', maxWidth: '1500px', padding: '2rem', borderRadius: '2rem', border: '1px solid rgba(0, 255, 157, 0.1)', textAlign: 'left' }}>
+      <footer className="glass" style={{ margin: '2px', maxWidth: '1500px', padding: '2rem', borderRadius: '2rem', border: '1px solid var(--glass-border)', textAlign: 'left' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2.5rem' }}>
           {/* Column 1: About */}
           <div>
-            <h3 style={{ color: 'white', fontWeight: '700', fontSize: '1.1rem', marginBottom: '1rem' }}>{lang === 'te' ? 'పరిచయం' : 'About FarmerDirect'}</h3>
+            <h3 style={{ color: 'var(--text-light)', fontWeight: '700', fontSize: '1.1rem', marginBottom: '1rem', textTransform: 'none' }}>{lang === 'te' ? 'పరిచయం' : 'About FarmerDirect'}</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6', margin: 0, opacity: 0.8 }}>
               {lang === 'te' 
                 ? 'రైతులను నేరుగా వినియోగదారులతో అనుసంధానించే సురక్షితమైన మరియు సులభమైన వేదిక. తాజా పంటలను నేరుగా కస్టమర్ల ఇళ్లకు చేరవేస్తాము.' 
@@ -468,7 +562,7 @@ const AppContent = () => {
 
           {/* Column 2: Quick Links */}
           <div>
-            <h3 style={{ color: 'white', fontWeight: '700', fontSize: '1.1rem', marginBottom: '1rem' }}>{lang === 'te' ? 'లింకులు' : 'Quick Links'}</h3>
+            <h3 style={{ color: 'var(--text-light)', fontWeight: '700', fontSize: '1.1rem', marginBottom: '1rem', textTransform: 'none' }}>{lang === 'te' ? 'లింకులు' : 'Quick Links'}</h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
               <li><Link to="/" style={{ textDecoration: 'none', color: 'var(--text-muted)' }}>🏠 {t('home')}</Link></li>
               <li><Link to="/store" style={{ textDecoration: 'none', color: 'var(--text-muted)' }}>🛒 {t('shop')}</Link></li>
@@ -479,7 +573,7 @@ const AppContent = () => {
 
           {/* Column 3: Contact */}
           <div>
-            <h3 style={{ color: 'white', fontWeight: '700', fontSize: '1.1rem', marginBottom: '1rem' }}>{lang === 'te' ? 'సంప్రదించండి' : 'Contact Us'}</h3>
+            <h3 style={{ color: 'var(--text-light)', fontWeight: '700', fontSize: '1.1rem', marginBottom: '1rem', textTransform: 'none' }}>{lang === 'te' ? 'సంప్రదించండి' : 'Contact Us'}</h3>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6', margin: '0 0 0.5rem', opacity: 0.8 }}>
               📍 Rajam Main Road, Andhra Pradesh, India
             </p>
@@ -493,7 +587,7 @@ const AppContent = () => {
 
           {/* Column 4: Support */}
           <div>
-            <h3 style={{ color: 'white', fontWeight: '700', fontSize: '1.1rem', marginBottom: '1rem' }}>{lang === 'te' ? 'సహాయం' : 'Support'}</h3>
+            <h3 style={{ color: 'var(--text-light)', fontWeight: '700', fontSize: '1.1rem', marginBottom: '1rem', textTransform: 'none' }}>{lang === 'te' ? 'సహాయం' : 'Support'}</h3>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.85rem' }}>
               <li><Link to="/login" style={{ textDecoration: 'none', color: 'var(--text-muted)' }}>🌾 {lang === 'te' ? 'అమ్మకం ప్రారంభించండి' : 'Start Selling (Farmer)'}</Link></li>
               <li><Link to="/signup" style={{ textDecoration: 'none', color: 'var(--text-muted)' }}>📝 {lang === 'te' ? 'రిజిస్ట్రేషన్ చేసుకోండి' : 'Register Account'}</Link></li>
@@ -501,7 +595,7 @@ const AppContent = () => {
           </div>
         </div>
         
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: '2.5rem', paddingTop: '1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.6 }}>
+        <div style={{ borderTop: '1px solid var(--glass-border)', marginTop: '2.5rem', paddingTop: '1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.6 }}>
            <p>&copy; {new Date().getFullYear()} FarmerDirect. All rights reserved.</p>
            <p>Empowering farming communities across India 🚜</p>
         </div>

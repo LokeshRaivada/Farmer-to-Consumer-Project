@@ -36,7 +36,7 @@ const ProductCard = ({ product, onClick }) => {
 
     return (
         <div
-            className="glass hover-glow"
+            className="glass"
             style={{ 
                 padding: '1.25rem', 
                 display: 'flex', 
@@ -46,7 +46,8 @@ const ProductCard = ({ product, onClick }) => {
                 cursor: 'pointer',
                 textAlign: 'left',
                 borderRadius: '1.25rem',
-                transition: 'transform 0.2s'
+                transition: 'transform 0.2s',
+                background: 'var(--bg-darkest)'
             }}
             onClick={onClick}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
@@ -55,7 +56,7 @@ const ProductCard = ({ product, onClick }) => {
             {/* Image Box */}
             <div style={{ 
                 height: '140px', 
-                background: 'linear-gradient(135deg, rgba(0,255,157,0.08), rgba(34,197,94,0.03))', 
+                background: 'var(--bg-darker)', 
                 borderRadius: '0.75rem', 
                 display: 'flex', 
                 alignItems: 'center', 
@@ -69,7 +70,7 @@ const ProductCard = ({ product, onClick }) => {
             {/* Details */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', flex: 1 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%', margin: 0 }}>{product.name}</h3>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-light)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%', margin: 0 }}>{product.name}</h3>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', color: '#eab308', fontSize: '0.85rem', fontWeight: 'bold' }}>
                         <Star size={12} fill="#eab308" stroke="#eab308" />
                         <span>{product.averageRating > 0 ? product.averageRating.toFixed(1) : (lang === 'te' ? 'కొత్తది' : 'New')}</span>
@@ -93,8 +94,8 @@ const ProductCard = ({ product, onClick }) => {
             </div>
 
             {/* Footer / Actions */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: 'auto' }}>
-                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.5rem', borderTop: '1px solid var(--glass-border)', marginTop: 'auto' }}>
+                <div style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-light)' }}>
                     ₹{product.price} <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'normal' }}>/kg</span>
                 </div>
 
@@ -112,13 +113,13 @@ const ProductCard = ({ product, onClick }) => {
 };
 
 const SkeletonCard = () => (
-    <div className="glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '260px', borderRadius: '1.25rem' }}>
-        <div style={{ height: '140px', background: 'rgba(255,255,255,0.04)', borderRadius: '0.75rem', animation: 'pulse 1.5s infinite' }}></div>
-        <div style={{ height: '18px', width: '60%', background: 'rgba(255,255,255,0.04)', borderRadius: '0.2rem', animation: 'pulse 1.5s infinite' }}></div>
-        <div style={{ height: '12px', width: '40%', background: 'rgba(255,255,255,0.04)', borderRadius: '0.2rem', animation: 'pulse 1.5s infinite' }}></div>
+    <div className="glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', height: '260px', borderRadius: '1.25rem', background: 'var(--bg-darkest)' }}>
+        <div style={{ height: '140px', background: 'var(--bg-darker)', borderRadius: '0.75rem', animation: 'pulse 1.5s infinite' }}></div>
+        <div style={{ height: '18px', width: '60%', background: 'var(--bg-darker)', borderRadius: '0.2rem', animation: 'pulse 1.5s infinite' }}></div>
+        <div style={{ height: '12px', width: '40%', background: 'var(--bg-darker)', borderRadius: '0.2rem', animation: 'pulse 1.5s infinite' }}></div>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 'auto' }}>
-            <div style={{ height: '24px', width: '30%', background: 'rgba(255,255,255,0.04)', borderRadius: '0.2rem', animation: 'pulse 1.5s infinite' }}></div>
-            <div style={{ height: '28px', width: '30%', background: 'rgba(255,255,255,0.04)', borderRadius: '1.5rem', animation: 'pulse 1.5s infinite' }}></div>
+            <div style={{ height: '24px', width: '30%', background: 'var(--bg-darker)', borderRadius: '0.2rem', animation: 'pulse 1.5s infinite' }}></div>
+            <div style={{ height: '28px', width: '30%', background: 'var(--bg-darker)', borderRadius: '1.5rem', animation: 'pulse 1.5s infinite' }}></div>
         </div>
     </div>
 );
@@ -219,7 +220,7 @@ const ConsumerStore = () => {
             {/* Header Section */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                    <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: 'white', margin: 0 }}>
+                    <h1 style={{ fontSize: '2.25rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>
                         {lang === 'te' ? 'పంటల మార్కెట్' : 'Marketplace'}
                     </h1>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: '0.25rem 0 0 0' }}>
@@ -232,8 +233,8 @@ const ConsumerStore = () => {
             <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 
                 {/* Desktop Left Sidebar Filters */}
-                <aside className="glass" style={{ flex: '1 1 280px', maxWidth: '300px', width: '100%', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'sticky', top: '7rem', borderRadius: '1.5rem' }}>
-                    <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'white', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                <aside className="glass" style={{ flex: '1 1 280px', maxWidth: '300px', width: '100%', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'sticky', top: '7rem', borderRadius: '1.5rem', background: 'var(--bg-darkest)' }}>
+                    <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                         🛡️ {lang === 'te' ? 'ఫిల్టర్లు' : 'Filters'}
                     </h3>
 
@@ -246,7 +247,7 @@ const ConsumerStore = () => {
                                 ref={searchInputRef}
                                 type="text" 
                                 placeholder={lang === 'te' ? 'టమాటా, వరి, ఉల్లిపాయ...' : "Tomato, Rice, Potato..."}
-                                style={{ width: '100%', padding: '0.6rem 0.8rem 0.6rem 2.2rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'white', fontSize: '0.85rem', outline: 'none' }}
+                                style={{ width: '100%', padding: '0.6rem 0.8rem 0.6rem 2.2rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'var(--text-light)', fontSize: '0.85rem', outline: 'none' }}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                             />
@@ -267,15 +268,16 @@ const ConsumerStore = () => {
                                     key={cat.key}
                                     onClick={() => setCategory(cat.key)}
                                     style={{
-                                        background: category === cat.key ? 'rgba(0, 255, 157, 0.1)' : 'transparent',
-                                        color: category === cat.key ? 'var(--primary)' : 'white',
+                                        background: category === cat.key ? 'rgba(22, 163, 74, 0.1)' : 'transparent',
+                                        color: category === cat.key ? 'var(--primary)' : 'var(--text-light)',
                                         border: category === cat.key ? '1px solid var(--primary)' : '1px solid transparent',
                                         borderRadius: '0.5rem',
                                         padding: '0.5rem 0.75rem',
                                         fontSize: '0.85rem',
                                         textAlign: 'left',
                                         cursor: 'pointer',
-                                        textTransform: 'none'
+                                        textTransform: 'none',
+                                        minHeight: '36px'
                                     }}
                                 >
                                     {lang === 'te' ? cat.labelTe : cat.labelEn}
@@ -285,7 +287,7 @@ const ConsumerStore = () => {
                     </div>
 
                     {/* Nearby Farms (Location) */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', background: 'rgba(0, 255, 157, 0.03)', border: '1px dashed rgba(0, 255, 157, 0.15)', padding: '1rem', borderRadius: '1rem' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', background: 'rgba(22, 163, 74, 0.05)', border: '1px dashed var(--primary)', padding: '1rem', borderRadius: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontSize: '0.9rem', fontWeight: 'bold' }}>
                             <MapPin size={16} /> <span>📍 {lang === 'te' ? 'దగ్గరి పొలాలు' : 'Nearby Farms'}</span>
                         </div>
@@ -293,7 +295,7 @@ const ConsumerStore = () => {
                         <button 
                             onClick={handleDetectLocation} 
                             className="btn" 
-                            style={{ background: coords ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: coords ? 'var(--bg-darkest)' : 'white', borderRadius: '2rem', fontSize: '0.85rem', padding: '0.5rem 1rem', width: '100%', textTransform: 'none', border: 'none', cursor: 'pointer' }}
+                            style={{ background: coords ? 'var(--primary)' : 'var(--bg-darker)', color: coords ? 'var(--white)' : 'var(--text-light)', borderRadius: '2rem', fontSize: '0.85rem', padding: '0.5rem 1rem', width: '100%', textTransform: 'none', border: 'none', cursor: 'pointer', minHeight: '36px' }}
                         >
                             {locating 
                               ? (lang === 'te' ? 'వెతుకుతోంది...' : 'Locating...') 
@@ -309,14 +311,14 @@ const ConsumerStore = () => {
                                 placeholder={lang === 'te' ? 'నగరం' : "City"} 
                                 value={city} 
                                 onChange={(e) => setCity(e.target.value)}
-                                style={{ padding: '0.5rem 0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '2rem', fontSize: '0.8rem', width: '50%', outline: 'none' }}
+                                style={{ padding: '0.5rem 0.75rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '2rem', fontSize: '0.8rem', width: '50%', outline: 'none' }}
                             />
                             <input 
                                 type="text" 
                                 placeholder={lang === 'te' ? 'పిన్ కోడ్' : "Zip"} 
                                 value={pincode} 
                                 onChange={(e) => setPincode(e.target.value)}
-                                style={{ padding: '0.5rem 0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '2rem', fontSize: '0.8rem', width: '50%', outline: 'none' }}
+                                style={{ padding: '0.5rem 0.75rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '2rem', fontSize: '0.8rem', width: '50%', outline: 'none' }}
                             />
                         </div>
 
@@ -366,10 +368,10 @@ const ConsumerStore = () => {
                     ) : products.length === 0 ? (
                         <motion.div 
                             initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
-                            style={{ textAlign: 'center', padding: '6rem 2rem', background: 'rgba(255,255,255,0.01)', borderRadius: '2rem', border: '1px dashed rgba(255,255,255,0.08)' }}
+                            style={{ textAlign: 'center', padding: '6rem 2rem', background: 'var(--bg-darker)', borderRadius: '2rem', border: '1px dashed var(--glass-border)' }}
                         >
                             <Search size={44} color="var(--text-muted)" style={{ margin: '0 auto 1rem', opacity: 0.4 }} />
-                            <h2 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: 'white' }}>No products found</h2>
+                            <h2 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: 'var(--text-light)' }}>No products found</h2>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>Try adjusting your search query, price ranges, or location filters.</p>
                             <button onClick={() => { setSearch(''); setCategory(''); setCity(''); setPincode(''); setCoords(null); setMaxPrice(150); }} className="btn btn-primary" style={{ marginTop: '1.5rem', padding: '0.5rem 1.5rem', borderRadius: '2rem' }}>Reset Filters</button>
                         </motion.div>

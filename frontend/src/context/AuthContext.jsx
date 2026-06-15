@@ -15,7 +15,16 @@ export const AuthProvider = ({ children }) => {
     });
     const [lang, setLang] = useState(localStorage.getItem('lang') || 'en');
     const [largeText, setLargeText] = useState(localStorage.getItem('largeText') === 'true');
+    const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
     const [loading, setLoading] = useState(false); // We initialize synchronously so no loading needed
+
+    useEffect(() => {
+        if (darkMode) {
+            document.documentElement.classList.add('dark-mode');
+        } else {
+            document.documentElement.classList.remove('dark-mode');
+        }
+    }, [darkMode]);
 
     useEffect(() => {
         // Any async checks can go here, like verifying token with backend
@@ -55,10 +64,16 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('largeText', String(newLarge));
     };
 
+    const toggleDarkMode = () => {
+        const newDark = !darkMode;
+        setDarkMode(newDark);
+        localStorage.setItem('darkMode', String(newDark));
+    };
+
     const t = (key) => {
         const translations = {
             en: {
-                welcome: 'Welcome back, Farmer',
+                welcome: 'Welcome back',
                 home: 'Home',
                 store: 'Store',
                 dashboard: 'Dashboard',
@@ -108,7 +123,7 @@ export const AuthProvider = ({ children }) => {
                 only_left: 'Only {count} KG Left'
             },
             te: {
-                welcome: 'స్వాగతం, రైతు',
+                welcome: 'మళ్లీ స్వాగతం',
                 home: 'హోమ్',
                 store: 'షాప్',
                 dashboard: 'నా పొలం',
@@ -162,7 +177,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, lang, toggleLang, t, login, register, logout, loading, largeText, toggleLargeText }}>
+        <AuthContext.Provider value={{ user, lang, toggleLang, t, login, register, logout, loading, largeText, toggleLargeText, darkMode, toggleDarkMode }}>
             {children}
           </AuthContext.Provider>
     );

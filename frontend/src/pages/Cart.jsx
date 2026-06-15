@@ -71,7 +71,6 @@ const Cart = () => {
                     return;
                 }
 
-                // Create Razorpay order on backend
                 const orderRes = await axios.post('/api/payments/create-razorpay-order', {
                     orderId: response.data[0]._id,
                     amount: cartTotal
@@ -80,14 +79,13 @@ const Cart = () => {
                 const { id: order_id, currency, amount } = orderRes.data;
 
                 const options = {
-                    key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_SxFAW9YORDUfza', // Enter the Key ID generated from the Dashboard
+                    key: import.meta.env.VITE_RAZORPAY_KEY_ID || 'rzp_test_SxFAW9YORDUfza',
                     amount: amount,
                     currency: currency,
                     name: 'FarmerDirect',
                     description: 'Fresh Farm Produce',
                     order_id: order_id,
                     handler: async function (paymentResponse) {
-                        // After successful payment, notify backend to trigger notification
                         try {
                             await axios.post('/api/payments/success', {
                                 orderId: response.data[0]._id,
@@ -106,7 +104,7 @@ const Cart = () => {
                         contact: user.phone || '9999999999'
                     },
                     theme: {
-                        color: '#00ff9d'
+                        color: '#16A34A'
                     }
                 };
 
@@ -138,13 +136,13 @@ const Cart = () => {
             >
                 <div style={{ padding: '4rem' }}>
                     <div style={{ width: '80px', height: '80px', background: 'var(--primary)', borderRadius: '50%', margin: '0 auto 2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <CheckCircle size={40} color="white" />
+                        <CheckCircle size={40} color="var(--white)" />
                     </div>
-                    <h1 style={{ marginBottom: '1rem' }}>Order Placed Successfully!</h1>
+                    <h1 style={{ marginBottom: '1rem', color: 'var(--text-light)' }}>{lang === 'te' ? 'ఆర్డర్ విజయవంతమైంది!' : 'Order Placed Successfully!'}</h1>
                     <p style={{ color: 'var(--text-muted)', marginBottom: '3rem' }}>
-                        Your order has been sent to the farmers. You can track its status in your dashboard.
+                        {lang === 'te' ? 'మీ ఆర్డర్ రైతులకు పంపబడింది. మీరు దాని స్థితిని మీ ప్రొఫైల్‌లో ట్రాక్ చేయవచ్చు.' : 'Your order has been sent to the farmers. You can track its status in your dashboard.'}
                     </p>
-                    <Link to="/store" className="btn btn-primary">Continue Shopping</Link>
+                    <Link to="/store" className="btn btn-primary" style={{ textDecoration: 'none' }}>{lang === 'te' ? 'షాపింగ్ కొనసాగించండి' : 'Continue Shopping'}</Link>
                 </div>
             </motion.div>
         );
@@ -153,16 +151,14 @@ const Cart = () => {
     if (cartItems.length === 0) {
         return (
             <div style={{ maxWidth: '800px', margin: '4rem auto', padding: '0 1rem' }}>
-                <div className="glass" style={{ padding: '3rem', textAlign: 'center' }}>
-                    <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', margin: '0 auto 2rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <ShoppingCart size={40} opacity={0.5} />
-                    </div>
-                    <h1 style={{ marginBottom: '1rem' }}>Your Cart is Empty</h1>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '3rem' }}>
-                        Fresh products from nearby farmers are waiting for you!
+                <div className="empty-state">
+                    <div className="empty-state-icon">🛒</div>
+                    <h3 className="empty-state-title">{lang === 'te' ? 'మీ కార్ట్ ఖాళీగా ఉంది' : 'Your Cart is Empty'}</h3>
+                    <p className="empty-state-desc">
+                        {lang === 'te' ? 'స్థానిక రైతుల నుండి తాజా పంటలు మీ కోసం సిద్ధంగా ఉన్నాయి!' : 'Fresh products from nearby farmers are waiting for you!'}
                     </p>
-                    <Link to="/store" className="btn btn-primary">
-                        Start Shopping <ArrowRight size={20} />
+                    <Link to="/store" className="btn btn-primary" style={{ borderRadius: '2rem', textDecoration: 'none', marginTop: '0.5rem' }}>
+                        {lang === 'te' ? 'షాపింగ్ ప్రారంభించండి' : 'Start Shopping'} <ArrowRight size={20} />
                     </Link>
                 </div>
             </div>
@@ -170,8 +166,8 @@ const Cart = () => {
     }
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1rem' }}>
-            <h1 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1rem', paddingBottom: '6rem' }}>
+            <h1 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '1rem', color: 'var(--text-light)' }}>
                 <ShoppingCart /> {t('cart')}
             </h1>
 
@@ -187,31 +183,31 @@ const Cart = () => {
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
                                 className="glass" 
-                                style={{ padding: '1.5rem', display: 'flex', gap: '1.5rem', alignItems: 'center' }}
+                                style={{ padding: '1.5rem', display: 'flex', gap: '1.5rem', alignItems: 'center', border: '1px solid var(--glass-border)' }}
                             >
-                                <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.05)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ width: '80px', height: '80px', background: 'var(--bg-darker)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                     <Package color="var(--primary)" />
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <h3 style={{ fontSize: '1.1rem' }}>{item.product.name}</h3>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>By {item.product.farmer?.name || 'Local Farmer'}</p>
-                                    <div style={{ marginTop: '0.5rem', fontWeight: 'bold', color: 'var(--secondary)' }}>₹{item.price} / kg</div>
+                                <div style={{ flex: 1, textAlign: 'left' }}>
+                                    <h3 style={{ fontSize: '1.1rem', color: 'var(--text-light)', margin: '0 0 0.25rem' }}>{item.product.name}</h3>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '0 0 0.5rem' }}>By {item.product.farmer?.name || 'Local Farmer'}</p>
+                                    <div style={{ fontWeight: 'bold', color: 'var(--primary)' }}>₹{item.price} / kg</div>
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '2rem', padding: '0.25rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', padding: '0.25rem' }}>
                                         <button 
                                             onClick={() => updateQuantity(item.product._id, item.quantity - 1)}
-                                            style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'transparent', color: 'white' }}
+                                            style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'transparent', color: 'var(--text-light)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'auto', padding: 0 }}
                                         >-</button>
-                                        <span style={{ width: '40px', textAlign: 'center' }}>{item.quantity}</span>
+                                        <span style={{ width: '40px', textAlign: 'center', color: 'var(--text-light)' }}>{item.quantity}</span>
                                         <button 
                                             onClick={() => updateQuantity(item.product._id, item.quantity + 1)}
-                                            style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'transparent', color: 'white' }}
+                                            style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'transparent', color: 'var(--text-light)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 'auto', padding: 0 }}
                                         >+</button>
                                     </div>
                                     <button 
                                         onClick={() => removeFromCart(item.product._id)}
-                                        style={{ background: 'transparent', color: 'var(--error)', padding: '0.5rem' }}
+                                        style={{ background: 'transparent', color: 'var(--error)', padding: '0.5rem', border: 'none', cursor: 'pointer', minHeight: 'auto' }}
                                     >
                                         <Trash size={20} />
                                     </button>
@@ -222,34 +218,33 @@ const Cart = () => {
                 </div>
 
                 {/* Summary */}
-                <div className="glass" style={{ padding: '2rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Order Summary</h2>
+                <div className="glass" style={{ padding: '2rem', border: '1px solid var(--glass-border)' }}>
+                    <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', color: 'var(--text-light)', textAlign: 'left' }}>Order Summary</h2>
                     
-                    <div style={{ display: 'grid', gap: '1rem', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                    <div style={{ display: 'grid', gap: '1rem', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid var(--glass-border)', textAlign: 'left' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span style={{ color: 'var(--text-muted)' }}>Subtotal</span>
-                            <span>₹{cartTotal}</span>
+                            <span style={{ color: 'var(--text-light)', fontWeight: '600' }}>₹{cartTotal}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                             <span style={{ color: 'var(--text-muted)' }}>Delivery Fee</span>
-                            <span style={{ color: 'var(--primary)' }}>FREE</span>
+                            <span style={{ color: 'var(--primary)', fontWeight: '600' }}>FREE</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: 'bold' }}>
-                            <span>Total</span>
-                            <span style={{ color: 'var(--secondary)' }}>₹{cartTotal}</span>
+                            <span style={{ color: 'var(--text-light)' }}>Total</span>
+                            <span style={{ color: 'var(--primary)' }}>₹{cartTotal}</span>
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gap: '1.25rem', marginBottom: '2rem' }}>
+                    <div style={{ display: 'grid', gap: '1.25rem', marginBottom: '2rem', textAlign: 'left' }}>
                         <div className="form-group">
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: 'white' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: 'var(--text-light)' }}>
                                 <MapPin size={16} color="var(--primary)" /> {lang === 'te' ? 'పూర్తి డెలివరీ చిరునామా' : 'Full Shipping Address'}
                             </label>
                             <textarea 
                                 value={address}
                                 onChange={(e) => setAddress(e.target.value)}
                                 placeholder={lang === 'te' ? 'ఇంటి నెంబర్, వీధి, గ్రామం లేదా పట్టణం పేరు నమోదు చేయండి...' : 'Enter your full house number, street name, village or town name...'}
-                                style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', resize: 'none', fontSize: '1rem', lineHeight: '1.5' }}
                                 rows={3}
                             />
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '0.4rem', opacity: 0.8 }}>
@@ -261,7 +256,7 @@ const Cart = () => {
                         </div>
                         
                         <div className="form-group">
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: 'white' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: 'var(--text-light)' }}>
                                 <Calendar size={16} color="var(--primary)" /> {lang === 'te' ? 'డెలివరీ తేదీ' : 'Preferred Delivery Date'}
                             </label>
                             <input 
@@ -269,20 +264,19 @@ const Cart = () => {
                                 value={deliveryDate}
                                 onChange={(e) => setDeliveryDate(e.target.value)}
                                 min={new Date().toISOString().split('T')[0]}
-                                style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '1rem' }}
                             />
                         </div>
 
                         <div className="form-group">
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: 'white' }}>
+                            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: 'bold', color: 'var(--text-light)' }}>
                                 💳 {lang === 'te' ? 'డబ్బులు చెల్లించే విధానం' : 'Payment Method'}
                             </label>
                             <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                                <label style={{ flex: 1, minWidth: '140px', padding: '1.2rem 1rem', border: `2px solid ${paymentMethod === 'COD' ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '0.75rem', background: paymentMethod === 'COD' ? 'rgba(0,255,157,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', fontWeight: 'bold' }}>
+                                <label style={{ flex: 1, minWidth: '140px', padding: '1.2rem 1rem', border: `2px solid ${paymentMethod === 'COD' ? 'var(--primary)' : 'var(--glass-border)'}`, borderRadius: '0.75rem', background: paymentMethod === 'COD' ? 'rgba(22, 163, 74, 0.08)' : 'var(--bg-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-light)' }}>
                                     <input type="radio" name="payment" value="COD" checked={paymentMethod === 'COD'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }} />
                                     {lang === 'te' ? 'చేతికి డబ్బులు ఇవ్వడం (COD)' : 'Cash on Delivery'}
                                 </label>
-                                <label style={{ flex: 1, minWidth: '140px', padding: '1.2rem 1rem', border: `2px solid ${paymentMethod === 'Online' ? 'var(--primary)' : 'rgba(255,255,255,0.1)'}`, borderRadius: '0.75rem', background: paymentMethod === 'Online' ? 'rgba(0,255,157,0.1)' : 'rgba(255,255,255,0.02)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', fontWeight: 'bold' }}>
+                                <label style={{ flex: 1, minWidth: '140px', padding: '1.2rem 1rem', border: `2px solid ${paymentMethod === 'Online' ? 'var(--primary)' : 'var(--glass-border)'}`, borderRadius: '0.75rem', background: paymentMethod === 'Online' ? 'rgba(22, 163, 74, 0.08)' : 'var(--bg-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-light)' }}>
                                     <input type="radio" name="payment" value="Online" checked={paymentMethod === 'Online'} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }} />
                                     {lang === 'te' ? 'ఆన్‌లైన్ పేమెంట్' : 'Online (Razorpay)'}
                                 </label>
@@ -298,7 +292,7 @@ const Cart = () => {
                     >
                         {loading ? 'Processing...' : user ? 'Place Order' : 'Login to Checkout'}
                     </button>
-                    {!user && <p style={{ fontSize: '0.8rem', textAlign: 'center', marginTop: '1rem', opacity: 0.7 }}>You'll need an account to place orders.</p>}
+                    {!user && <p style={{ fontSize: '0.8rem', textAlign: 'center', marginTop: '1rem', color: 'var(--text-muted)' }}>You'll need an account to place orders.</p>}
                 </div>
             </div>
         </div>

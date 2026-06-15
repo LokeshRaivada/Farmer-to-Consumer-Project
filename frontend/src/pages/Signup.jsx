@@ -72,22 +72,18 @@ const Signup = () => {
 
     return (
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '85vh', padding: '2rem 1rem', position: 'relative', overflow: 'hidden' }}>
-            {/* Background glowing blobs */}
-            <div style={{ position: 'absolute', top: '10%', right: '20%', width: '350px', height: '350px', background: 'radial-gradient(circle, rgba(0, 255, 157, 0.1) 0%, transparent 70%)', filter: 'blur(60px)', zIndex: 0 }}></div>
-            <div style={{ position: 'absolute', bottom: '10%', left: '20%', width: '350px', height: '350px', background: 'radial-gradient(circle, rgba(0, 229, 255, 0.08) 0%, transparent 70%)', filter: 'blur(60px)', zIndex: 0 }}></div>
-
             <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }} 
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
                 className="glass" 
-                style={{ width: '100%', maxWidth: '480px', padding: '3rem 2.5rem', borderRadius: '1.5rem', border: '1px solid rgba(0, 255, 157, 0.2)', boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)', zIndex: 1 }}
+                style={{ width: '100%', maxWidth: '480px', padding: '3rem 2.5rem', borderRadius: '1.5rem', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow-card)', zIndex: 1, background: 'var(--bg-darkest)' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '1rem', background: 'rgba(0, 255, 157, 0.1)', border: '1px solid var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--primary)' }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '1rem', background: 'rgba(22, 163, 74, 0.1)', border: '1px solid var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--primary)' }}>
                         <UserPlus size={26} />
                     </div>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white' }}>Create Account</h2>
+                    <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-light)' }}>Create Account</h2>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.25rem' }}>Step {step} of 2 - {step === 1 ? 'Credentials' : 'Location & Details'}</p>
                 </div>
                 
@@ -114,12 +110,12 @@ const Signup = () => {
                             {/* Role selector */}
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.5rem', fontWeight: '600' }}>Select Account Type</label>
-                                <div style={{ display: 'flex', gap: '0.5rem', padding: '0.25rem', background: 'rgba(0,0,0,0.3)', borderRadius: '0.75rem', border: '1px solid var(--glass-border)' }}>
+                                <div style={{ display: 'flex', gap: '0.5rem', padding: '0.25rem', background: 'var(--bg-darker)', borderRadius: '0.75rem', border: '1px solid var(--glass-border)' }}>
                                     {['consumer', 'farmer'].map(r => (
                                         <button 
                                             key={r} type="button" 
                                             className={`btn ${userData.role === r ? 'btn-primary' : 'btn-ghost'}`}
-                                            style={{ flex: 1, textTransform: 'capitalize', padding: '0.6rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.9rem', border: 'none', transition: 'all 0.3s' }}
+                                            style={{ flex: 1, textTransform: 'capitalize', padding: '0.6rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.9rem', border: 'none', transition: 'all 0.3s', color: userData.role === r ? 'var(--white)' : 'var(--text-light)', background: userData.role === r ? 'var(--primary)' : 'transparent', minHeight: '36px' }}
                                             onClick={() => setUserData({ ...userData, role: r })}
                                         >
                                             {r}
@@ -133,7 +129,7 @@ const Signup = () => {
                                 <input 
                                     type="text" placeholder="Full Name" required
                                     value={userData.name}
-                                    style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 3rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                    style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
                                     onChange={(e) => setUserData({ ...userData, name: e.target.value })}
                                 />
                             </div>
@@ -143,7 +139,7 @@ const Signup = () => {
                                 <input 
                                     type="email" placeholder="Email Address" required
                                     value={userData.email}
-                                    style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 3rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                    style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
                                     onChange={(e) => setUserData({ ...userData, email: e.target.value })}
                                 />
                             </div>
@@ -153,7 +149,7 @@ const Signup = () => {
                                 <input 
                                     type="password" placeholder="Password (min. 6 characters)" required minLength={6}
                                     value={userData.password}
-                                    style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 3rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                    style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
                                     onChange={(e) => setUserData({ ...userData, password: e.target.value })}
                                 />
                             </div>
@@ -180,7 +176,7 @@ const Signup = () => {
                                 <input 
                                     type="text" placeholder="Phone Number" required
                                     value={userData.phone}
-                                    style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 3rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                    style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
                                     onChange={(e) => setUserData({ ...userData, phone: e.target.value })}
                                 />
                             </div>
@@ -190,7 +186,7 @@ const Signup = () => {
                                     <input 
                                         type="text" placeholder="City" required
                                         value={userData.address.city}
-                                        style={{ width: '100%', padding: '0.9rem 1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                        style={{ width: '100%', padding: '0.9rem 1rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
                                         onChange={(e) => setUserData({ ...userData, address: { ...userData.address, city: e.target.value } })}
                                     />
                                 </div>
@@ -198,7 +194,7 @@ const Signup = () => {
                                     <input 
                                         type="text" placeholder="State" required
                                         value={userData.address.state}
-                                        style={{ width: '100%', padding: '0.9rem 1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                        style={{ width: '100%', padding: '0.9rem 1rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
                                         onChange={(e) => setUserData({ ...userData, address: { ...userData.address, state: e.target.value } })}
                                     />
                                 </div>
@@ -209,7 +205,7 @@ const Signup = () => {
                                     <input 
                                         type="text" placeholder="District" required
                                         value={userData.address.district}
-                                        style={{ width: '100%', padding: '0.9rem 1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                        style={{ width: '100%', padding: '0.9rem 1rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
                                         onChange={(e) => setUserData({ ...userData, address: { ...userData.address, district: e.target.value } })}
                                     />
                                 </div>
@@ -217,7 +213,7 @@ const Signup = () => {
                                     <input 
                                         type="text" placeholder="Pincode" required
                                         value={userData.address.zip}
-                                        style={{ width: '100%', padding: '0.9rem 1rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                        style={{ width: '100%', padding: '0.9rem 1rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
                                         onChange={(e) => setUserData({ ...userData, address: { ...userData.address, zip: e.target.value } })}
                                     />
                                 </div>
@@ -225,15 +221,15 @@ const Signup = () => {
 
                             {/* Optional Geolocation Capture */}
                             {userData.role === 'farmer' && (
-                                <div style={{ background: 'rgba(0,255,157,0.03)', padding: '1rem', borderRadius: '0.75rem', border: '1px dashed rgba(0,255,157,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                <div style={{ background: 'rgba(22, 163, 74, 0.05)', padding: '1rem', borderRadius: '0.75rem', border: '1px dashed var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
                                     <div style={{ flex: 1 }}>
-                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'white' }}>GPS Store Location</h4>
+                                        <h4 style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-light)' }}>GPS Store Location</h4>
                                         <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>Captures coordinates to let consumers find you nearby.</p>
                                     </div>
                                     <button 
                                         type="button"
                                         onClick={detectLocation}
-                                        style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', borderRadius: '2rem', background: userData.coordinates ? 'var(--primary)' : 'rgba(255,255,255,0.05)', color: userData.coordinates ? 'var(--bg-darkest)' : 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s', fontWeight: 'bold' }}
+                                        style={{ fontSize: '0.8rem', padding: '0.5rem 1rem', borderRadius: '2rem', background: userData.coordinates ? 'var(--primary)' : 'var(--bg-darker)', color: userData.coordinates ? 'var(--white)' : 'var(--text-light)', border: '1px solid var(--glass-border)', cursor: 'pointer', transition: 'all 0.3s', fontWeight: 'bold', minHeight: '36px' }}
                                     >
                                         {userData.coordinates ? 'Saved ✓' : 'Detect GPS'}
                                     </button>
@@ -243,9 +239,9 @@ const Signup = () => {
                             <div style={{ display: 'flex', gap: '1rem', marginTop: '0.5rem' }}>
                                 <button 
                                     type="button" 
-                                    className="btn btn-ghost" 
+                                    className="btn btn-secondary" 
                                     onClick={() => setStep(1)}
-                                    style={{ flex: 1, padding: '1rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}
+                                    style={{ flex: 1, padding: '1rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
                                 >
                                     <ArrowLeft size={18} /> Back
                                 </button>
@@ -257,7 +253,7 @@ const Signup = () => {
                                     style={{ flex: 2, padding: '1rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', fontWeight: 'bold' }}
                                 >
                                     {loading ? (
-                                        <div className="loading" style={{ width: '20px', height: '20px', borderTopColor: 'var(--bg-darkest)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                                        <div className="loading" style={{ width: '20px', height: '20px', borderTopColor: 'var(--white)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                                     ) : (
                                         <>
                                             Submit <UserPlus size={18} />

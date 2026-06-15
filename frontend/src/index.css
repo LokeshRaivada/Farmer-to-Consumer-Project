@@ -2,32 +2,69 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@400;700&display=swap');
 
 :root {
-  /* Premium Deep Green Color Palette */
-  --primary: #00ff9d; /* Neon Green */
-  --primary-dark: #00d084;
+  /* Light Mode Colors (Default) */
+  --primary: #16A34A; /* Forest Green */
+  --primary-dark: #15803d;
   --secondary: #22c55e;
   --accent: #4ade80;
   
-  /* Background Atmosphere */
-  --bg-dark: #031b14; /* Deep Forest Dark */
-  --bg-darker: #052e24; /* Dark Emerald */
-  --bg-darkest: #01110c; 
-  --card-bg: rgba(6, 78, 59, 0.4); /* Glass Emerald */
+  --bg-dark: #F8FAFC; /* Slate 50 */
+  --bg-darker: #F1F5F9; /* Slate 100 */
+  --bg-darkest: #FFFFFF; /* White */
+  --card-bg: #FFFFFF;
   
-  --text-light: #f3f4f6;
-  --text-muted: #d1fae5; /* Soft Mint */
+  --text-light: #111827; /* Slate 900 */
+  --text-muted: #6B7280; /* Slate 500 */
   --white: #FFFFFF;
   --error: #ef4444;
-  --success: #00ff9d;
+  --success: #22c55e;
 
-  /* Premium Glassmorphism */
-  --glass-bg: rgba(5, 46, 36, 0.6);
-  --glass-border: rgba(0, 255, 157, 0.25);
-  --glass-blur: blur(20px);
+  /* Clean Borders & Backgrounds */
+  --glass-bg: #FFFFFF;
+  --glass-border: #E5E7EB;
+  --glass-blur: none;
 
-  /* Neon Glowing Shadows */
-  --shadow-glow: 0 0 25px rgba(0, 255, 157, 0.25), 0 0 10px rgba(34, 197, 94, 0.2);
-  --shadow-card: 0 15px 35px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 255, 157, 0.05);
+  /* Shadows */
+  --shadow-glow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+
+  /* WhatsApp Style Colors */
+  --whatsapp-bg: #efeae2;
+  --whatsapp-my-bubble: #d9fdd3;
+  --whatsapp-their-bubble: #ffffff;
+  --whatsapp-text: #111b21;
+}
+
+:root.dark-mode {
+  /* Dark Mode Colors */
+  --primary: #22C55E; /* Bright Neon Green */
+  --primary-dark: #16a34a;
+  --secondary: #15803d;
+  --accent: #4ade80;
+  
+  --bg-dark: #121E1A; /* Deep Dark Green-Gray */
+  --bg-darker: #0E1815; 
+  --bg-darkest: #0B1310; 
+  --card-bg: #121E1A;
+  
+  --text-light: #ECFDF5; /* Soft Emerald White */
+  --text-muted: #94A3B8; /* Slate 400 */
+  --white: #FFFFFF;
+  --error: #ef4444;
+  --success: #22c55e;
+
+  --glass-bg: #121E1A;
+  --glass-border: #2C3A36;
+  --glass-blur: none;
+
+  --shadow-glow: 0 1px 3px 0 rgba(0, 0, 0, 0.2), 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+
+  /* WhatsApp Style Colors (Dark Mode) */
+  --whatsapp-bg: #0b141a;
+  --whatsapp-my-bubble: #005c4b;
+  --whatsapp-their-bubble: #202c33;
+  --whatsapp-text: #e9edef;
 }
 
 * {
@@ -44,32 +81,7 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   position: relative;
-}
-
-/* Animated Deep Background Atmosphere */
-body::before, body::after {
-  content: '';
-  position: fixed;
-  inset: -50%;
-  z-index: -1;
-  background: 
-    radial-gradient(circle at 50% 20%, rgba(0, 255, 157, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(34, 197, 94, 0.1) 0%, transparent 40%),
-    radial-gradient(circle at 20% 70%, rgba(0, 208, 132, 0.12) 0%, transparent 40%);
-  animation: bgPulse 15s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-
-body::after {
-  background: 
-    radial-gradient(circle at 80% 20%, rgba(0, 255, 157, 0.1) 0%, transparent 30%),
-    radial-gradient(circle at 20% 30%, rgba(6, 78, 59, 0.4) 0%, transparent 50%);
-  animation: bgPulse 20s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes bgPulse {
-  0% { transform: scale(1) rotate(0deg); opacity: 0.8; }
-  100% { transform: scale(1.1) rotate(10deg); opacity: 1; }
+  font-size: 16px; /* Minimum baseline font size */
 }
 
 /* Grid Pattern Overlay */
@@ -78,30 +90,34 @@ body::after {
   inset: 0;
   z-index: -1;
   background-image: 
-    linear-gradient(to right, rgba(0,255,157,0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0,255,157,0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(22,163,74,0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(22,163,74,0.03) 1px, transparent 1px);
   background-size: 50px 50px;
   pointer-events: none;
 }
 
-/* Glass Component */
+:root.dark-mode .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(34,197,94,0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34,197,94,0.02) 1px, transparent 1px);
+}
+
+/* Cards / Glass Component */
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  border-radius: 1.25rem;
+  border-radius: 1rem;
   box-shadow: var(--shadow-card);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  transition: all 0.3s ease;
 }
 
 .glass:hover {
-  border-color: rgba(0, 255, 157, 0.5);
+  border-color: var(--primary);
   box-shadow: var(--shadow-glow);
-  background: rgba(5, 46, 36, 0.8);
+  background: var(--bg-dark);
 }
 
-/* Futuristic Neon Buttons */
+/* Buttons */
 button, .btn {
   padding: 0.8rem 1.75rem;
   border-radius: 0.75rem;
@@ -109,42 +125,40 @@ button, .btn {
   cursor: pointer;
   font-weight: 600;
   letter-spacing: 0.5px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
   font-family: inherit;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.6rem;
-  text-transform: uppercase;
-  font-size: 0.9rem;
+  text-transform: none; /* Removed uppercase */
+  font-size: 1rem;
   position: relative;
   overflow: hidden;
+  min-height: 48px; /* Large touch target */
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: var(--bg-darkest);
-  box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+  background: var(--primary);
+  color: var(--white);
   border: 1px solid transparent;
 }
 
 .btn-primary:hover {
-  color: #fff;
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 0 25px rgba(0, 255, 157, 0.6), inset 0 0 10px rgba(0,0,0,0.2);
+  background: var(--primary-dark);
+  transform: translateY(-2px);
 }
 
 .btn-secondary {
-  background: rgba(0, 255, 157, 0.1);
+  background: var(--bg-darker);
   color: var(--primary);
-  border: 1px solid var(--primary);
-  backdrop-filter: blur(5px);
+  border: 1px solid var(--glass-border);
 }
 
 .btn-secondary:hover {
-  background: rgba(0, 255, 157, 0.2);
+  background: var(--bg-dark);
+  border-color: var(--primary);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
 }
 
 .btn-ghost {
@@ -154,18 +168,28 @@ button, .btn {
 }
 
 .btn-ghost:hover {
-  background: rgba(0, 255, 157, 0.08);
-  border-color: rgba(0, 255, 157, 0.3);
+  background: var(--bg-darker);
   color: var(--primary);
-  box-shadow: inset 0 0 15px rgba(0,255,157,0.1);
 }
 
 /* Inputs & Forms */
 input, select, textarea {
   font-family: inherit;
   transition: all 0.3s ease;
-  background: rgba(3, 27, 20, 0.6) !important;
+  background: var(--bg-darkest) !important;
+  color: var(--text-light) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 0.75rem !important;
+  padding: 0.8rem 1rem !important;
+  font-size: 1rem !important;
+  min-height: 48px !important; /* Large touch target */
 }
+
+input::placeholder, textarea::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 0.7;
+}
+
 /* Navbar Styling */
 .nav-link {
   position: relative;
@@ -192,7 +216,6 @@ input, select, textarea {
 
 .nav-link:hover {
   color: var(--primary) !important;
-  text-shadow: 0 0 15px rgba(0, 255, 157, 0.4);
 }
 
 .btn-icon {
@@ -210,15 +233,121 @@ input, select, textarea {
 }
 
 .btn-icon:hover {
-  background: rgba(255,255,255,0.1);
+  background: var(--bg-darker);
   color: var(--primary);
 }
+
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(0, 255, 157, 0.25), inset 0 0 10px rgba(0,255,157,0.1) !important;
-  background: rgba(3, 27, 20, 0.9) !important;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15) !important;
 }
+
+/* Floating Help Button */
+.floating-help-btn {
+  position: fixed;
+  bottom: 5rem; /* above bottom nav on mobile */
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50% !important;
+  background: var(--primary) !important;
+  color: var(--white) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.2s ease;
+  min-height: auto !important;
+  padding: 0 !important;
+}
+
+@media (min-width: 768px) {
+  .floating-help-btn {
+    bottom: 2rem;
+  }
+}
+
+.floating-help-btn:hover {
+  transform: scale(1.1);
+  background: var(--primary-dark) !important;
+}
+
+/* Mobile Bottom Navigation Bar */
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: var(--bg-darkest);
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+@media (min-width: 768px) {
+  .mobile-bottom-nav {
+    display: none !important;
+  }
+}
+
+.mobile-bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  flex: 1;
+  height: 100%;
+}
+
+.mobile-bottom-nav-item.active {
+  color: var(--primary);
+}
+
+/* Empty States */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--bg-dark);
+  border: 1px dashed var(--glass-border);
+  border-radius: 1rem;
+  gap: 1rem;
+  width: 100%;
+}
+
+.empty-state-icon {
+  font-size: 3rem;
+  opacity: 0.8;
+}
+
+.empty-state-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-light);
+}
+
+.empty-state-desc {
+  font-size: 0.95rem;
+  max-width: 320px;
+  margin: 0 auto;
+}
+
 
 /* Floating Animations */
 @keyframes float {
@@ -278,29 +407,29 @@ input:focus, select:focus, textarea:focus {
 .nav-search-wrapper {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: var(--bg-darker);
+  border: 1px solid var(--glass-border);
   border-radius: 1.5rem;
   padding: 0.25rem 0.75rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
 }
 
 .nav-search-wrapper:hover, .nav-search-wrapper:focus-within {
-  background: rgba(0, 255, 157, 0.05);
   border-color: var(--primary);
-  box-shadow: 0 0 15px rgba(0, 255, 157, 0.15);
+  box-shadow: var(--shadow-glow);
 }
 
 .nav-search-input {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
-  color: white !important;
+  color: var(--text-light) !important;
   outline: none !important;
   font-size: 0.85rem;
   padding-left: 0.5rem;
   width: 100px;
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: width 0.3s ease;
+  min-height: auto !important;
 }
 
 .nav-search-input:focus {
@@ -353,7 +482,7 @@ input:focus, select:focus, textarea:focus {
 /* Premium Navbar Action Buttons */
 .nav-btn {
   background: transparent;
-  border: 1px solid rgba(0, 255, 157, 0.2) !important;
+  border: 1px solid var(--glass-border) !important;
   color: var(--text-light) !important;
   padding: 0.4rem 0.8rem !important;
   border-radius: 2rem !important;
@@ -371,19 +500,19 @@ input:focus, select:focus, textarea:focus {
   letter-spacing: normal !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
+  min-height: auto !important;
 }
 
 .nav-btn:hover {
-  background: rgba(0, 255, 157, 0.08) !important;
+  background: var(--bg-darker) !important;
   border-color: var(--primary) !important;
   color: var(--primary) !important;
-  box-shadow: 0 0 10px rgba(0, 255, 157, 0.2) !important;
 }
 
 .nav-btn.active {
   border-color: var(--primary) !important;
   color: var(--primary) !important;
-  background: rgba(0, 255, 157, 0.05) !important;
+  background: var(--bg-dark) !important;
 }
 
 /* Ghost navbar actions (Alerts, Wishlist, Cart) */
@@ -408,10 +537,11 @@ input:focus, select:focus, textarea:focus {
   text-decoration: none !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
+  min-height: auto !important;
 }
 
 .nav-action-btn:hover {
-  background: rgba(0, 255, 157, 0.05) !important;
+  background: var(--bg-darker) !important;
   color: var(--primary) !important;
 }
 
