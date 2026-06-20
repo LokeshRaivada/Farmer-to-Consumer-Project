@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minlength: 6,
+        minlength: 8,
         select: false // Don't return password by default
     },
     role: {
@@ -33,6 +33,14 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false // Used for farmers
     },
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationToken: String,
+    emailVerificationExpires: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
     phone: {
         type: String,
         required: true
@@ -55,6 +63,24 @@ const userSchema = new mongoose.Schema({
             default: [78.4867, 17.3850] // Default (Hyderbad)
         }
     },
+    averageRating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5
+    },
+    numReviews: {
+        type: Number,
+        default: 0
+    },
+    completedOrdersCount: {
+        type: Number,
+        default: 0
+    },
+    totalProductsSold: {
+        type: Number,
+        default: 0
+    },
     createdAt: {
         type: Date,
         default: Date.now
@@ -67,7 +93,7 @@ userSchema.index({ location: '2dsphere' });
 // Hash password before saving
 userSchema.pre('save', async function() {
     if (!this.isModified('password')) return;
-    this.password = await bcrypt.hash(this.password, 10);
+    this.password = await bcrypt.hash(this.password, 12);
 });
 
 // Compare password

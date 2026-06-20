@@ -12,6 +12,9 @@ const protect = async (req, res, next) => {
             if (!req.user) {
                 return res.status(401).json({ message: 'User not found in system.' });
             }
+            if (req.user.isBlocked) {
+                return res.status(403).json({ message: 'Your account is blocked. Please contact administration.' });
+            }
             next();
         } catch (error) {
             console.error('Auth protect error:', error);
@@ -31,4 +34,14 @@ const authorize = (...roles) => {
     };
 };
 
-module.exports = { protect, authorize };
+const requireEmailVerified = (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ message: 'Authentication required.' });
+    }
+    if (!req.user.isEmailVerified) {
+        return res.status(403).json({ message: 'Please verify your email address to perform this action.' });
+    }
+    next();
+};
+
+module.exports = { protect, authorize, requireEmailVerified };

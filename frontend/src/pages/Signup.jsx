@@ -1,32 +1,50 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { UserPlus, User, Mail, Lock, Smartphone, MapPin, AlertCircle, ArrowRight, ArrowLeft } from 'lucide-react';
+import { UserPlus, User, Mail, Lock, Smartphone, AlertCircle, ArrowRight, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const Signup = () => {
     const [step, setStep] = useState(1);
     const [userData, setUserData] = useState({ 
-        name: '', email: '', password: '', role: 'consumer', phone: '', 
+        name: '', email: '', password: '', confirmPassword: '', role: 'consumer', phone: '', 
         address: { city: '', state: '', district: '', zip: '' },
         coordinates: null
     });
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const { register, t } = useAuth();
     const navigate = useNavigate();
 
+    // Password complexity check matching backend: min 8 chars, at least 1 letter and 1 number
+    const validatePassword = (password) => {
+        const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+        return regex.test(password);
+    };
+
     const handleNext = (e) => {
         e.preventDefault();
         setError('');
-        if (!userData.name || !userData.email || !userData.password) {
-            setError('Please fill out all credentials.');
+        
+        if (!userData.name || !userData.email || !userData.password || !userData.confirmPassword) {
+            setError('Please fill out all fields.');
             return;
         }
-        if (userData.password.length < 6) {
-            setError('Password must be at least 6 characters.');
+
+        // Validate password strength
+        if (!validatePassword(userData.password)) {
+            setError('Password must be at least 8 characters long and contain both letters and numbers (only letters, numbers, and @$!%*#?& are allowed).');
             return;
         }
+
+        // Check password matching
+        if (userData.password !== userData.confirmPassword) {
+            setError('Passwords do not match.');
+            return;
+        }
+
         setStep(2);
     };
 
@@ -41,12 +59,9 @@ const Signup = () => {
 
         setLoading(true);
         try {
-            const user = await register(userData);
-            const params = new URLSearchParams(window.location.search);
-            const redirect = params.get('redirect');
-            if (user.role === 'farmer') navigate('/farmer');
-            else if (redirect) navigate(`/${redirect}`);
-            else navigate('/store');
+            await register(userData);
+            // Redirect to verify-email with email parameter
+            navigate(`/verify-email?email=${encodeURIComponent(userData.email)}`);
         } catch (err) {
             setError(err.response?.data?.message || 'Error occurred during registration.');
         } finally {
@@ -147,11 +162,35 @@ const Signup = () => {
                             <div style={{ position: 'relative' }}>
                                 <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
                                 <input 
-                                    type="password" placeholder="Password (min. 6 characters)" required minLength={6}
+                                    type={showPassword ? "text" : "password"} placeholder="Password (min. 8 characters)" required
                                     value={userData.password}
-                                    style={{ width: '100%', padding: '0.9rem 1rem 0.9rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                    style={{ width: '100%', padding: '0.9rem 3.5rem 0.9rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
                                     onChange={(e) => setUserData({ ...userData, password: e.target.value })}
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', zIndex: 5, padding: 0, minHeight: 'auto', width: 'auto' }}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
+
+                            <div style={{ position: 'relative' }}>
+                                <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
+                                <input 
+                                    type={showConfirmPassword ? "text" : "password"} placeholder="Confirm Password" required
+                                    value={userData.confirmPassword}
+                                    style={{ width: '100%', padding: '0.9rem 3.5rem 0.9rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem' }} 
+                                    onChange={(e) => setUserData({ ...userData, confirmPassword: e.target.value })}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', zIndex: 5, padding: 0, minHeight: 'auto', width: 'auto' }}
+                                >
+                                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
                             </div>
 
                             <button 
@@ -181,7 +220,7 @@ const Signup = () => {
                                 />
                             </div>
 
-                            <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div style={{ display: 'flex', gap: '1rem' }} className="flex-responsive">
                                 <div style={{ position: 'relative', flex: 1 }}>
                                     <input 
                                         type="text" placeholder="City" required
@@ -200,7 +239,7 @@ const Signup = () => {
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div style={{ display: 'flex', gap: '1rem' }} className="flex-responsive">
                                 <div style={{ position: 'relative', flex: 1 }}>
                                     <input 
                                         type="text" placeholder="District" required

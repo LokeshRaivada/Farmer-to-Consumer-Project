@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     const [lang, setLang] = useState(localStorage.getItem('lang') || 'en');
     const [largeText, setLargeText] = useState(localStorage.getItem('largeText') === 'true');
     const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
-    const [loading, setLoading] = useState(false); // We initialize synchronously so no loading needed
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (darkMode) {
@@ -27,7 +27,27 @@ export const AuthProvider = ({ children }) => {
     }, [darkMode]);
 
     useEffect(() => {
-        // Any async checks can go here, like verifying token with backend
+        const verifyToken = async () => {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                try {
+                    const parsedUser = JSON.parse(storedUser);
+                    axios.defaults.headers.common['Authorization'] = `Bearer ${parsedUser.token}`;
+                    const { data } = await axios.get('/api/auth/me');
+                    setUser({ ...data, token: parsedUser.token });
+                    localStorage.setItem('user', JSON.stringify({ ...data, token: parsedUser.token }));
+                } catch (error) {
+                    console.error('Token verification failed, logging out:', error);
+                    setUser(null);
+                    localStorage.removeItem('user');
+                    delete axios.defaults.headers.common['Authorization'];
+                }
+            } else {
+                setUser(null);
+            }
+            setLoading(false);
+        };
+        verifyToken();
     }, []);
 
     const login = async (credentials) => {
@@ -50,6 +70,48 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         localStorage.removeItem('user');
         delete axios.defaults.headers.common['Authorization'];
+    };
+
+    const changePassword = async (oldPassword, newPassword) => {
+        const { data } = await axios.put('/api/auth/change-password', { oldPassword, newPassword });
+        return data;
+    };
+
+    const updateProfile = async (profileData) => {
+        const { data } = await axios.put('/api/auth/profile', profileData);
+        const storedUser = localStorage.getItem('user');
+        const token = storedUser ? JSON.parse(storedUser).token : '';
+        const updatedUser = { ...data, token };
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        return updatedUser;
+    };
+
+    const forgotPassword = async (email) => {
+        const { data } = await axios.post('/api/auth/forgot-password', { email });
+        return data;
+    };
+
+    const resetPassword = async (token, password, confirmPassword) => {
+        const { data } = await axios.post(`/api/auth/reset-password/${token}`, { password, confirmPassword });
+        return data;
+    };
+
+    const verifyEmailToken = async (token) => {
+        const { data } = await axios.post(`/api/auth/verify-email/${token}`);
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+            const parsedUser = JSON.parse(storedUser);
+            const updatedUser = { ...parsedUser, isEmailVerified: true };
+            setUser(updatedUser);
+            localStorage.setItem('user', JSON.stringify(updatedUser));
+        }
+        return data;
+    };
+
+    const resendVerification = async (email) => {
+        const { data } = await axios.post('/api/auth/resend-verification', { email });
+        return data;
     };
 
     const toggleLang = () => {
@@ -177,9 +239,12 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, lang, toggleLang, t, login, register, logout, loading, largeText, toggleLargeText, darkMode, toggleDarkMode }}>
+        <AuthContext.Provider value={{ 
+            user, lang, toggleLang, t, login, register, logout, loading, largeText, toggleLargeText, darkMode, toggleDarkMode,
+            changePassword, updateProfile, forgotPassword, resetPassword, verifyEmailToken, resendVerification
+        }}>
             {children}
-          </AuthContext.Provider>
+        </AuthContext.Provider>
     );
 };
 

@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogIn, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { LogIn, Mail, Lock, AlertCircle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Login = () => {
     const [credentials, setCredentials] = useState({ email: '', password: '' });
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
-    const { login, logout, t } = useAuth();
+    const { login, t } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -22,7 +23,7 @@ const Login = () => {
             if (user.role === 'farmer') navigate('/farmer');
             else if (user.role === 'admin') navigate('/admin');
             else if (redirect) navigate(`/${redirect}`);
-            else navigate('/store');
+            else navigate('/orders');
         } catch (err) {
             setError(err.response?.data?.message || 'Invalid login credentials.');
         } finally {
@@ -69,10 +70,23 @@ const Login = () => {
                     <div style={{ position: 'relative' }}>
                         <Lock style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 5 }} size={18} />
                         <input 
-                            type="password" placeholder="Password" required
-                            style={{ width: '100%', padding: '1rem 1rem 1rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem', transition: 'all 0.3s' }} 
+                            type={showPassword ? "text" : "password"} placeholder="Password" required
+                            style={{ width: '100%', padding: '1rem 3.5rem 1rem 3rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', color: 'var(--text-light)', borderRadius: '0.75rem', fontSize: '0.95rem', transition: 'all 0.3s' }} 
                             onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
                         />
+                        <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', zIndex: 5, padding: 0, minHeight: 'auto', width: 'auto' }}
+                        >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-0.5rem' }}>
+                        <Link to="/forgot-password" style={{ fontSize: '0.85rem', color: 'var(--primary)', textDecoration: 'none', fontWeight: '500' }}>
+                            Forgot Password?
+                        </Link>
                     </div>
                     
                     <button 

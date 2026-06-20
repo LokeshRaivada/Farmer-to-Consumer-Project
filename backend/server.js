@@ -3,17 +3,63 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const morgan = require('morgan');
 const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const Notification = require('./models/Notification');
 require('dotenv').config();
 
 const app = express();
 const http = require('http').createServer(app);
 
-// Security Headers (Basic Production Security)
+// Security Headers via Helmet
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
+
+// Rate limiting for auth routes
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 50,
+    message: { message: 'Too many authentication attempts from this IP, please try again after 15 minutes.' }
+});
+
+// MongoDB query injection prevention middleware
 app.use((req, res, next) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'DENY');
-    res.setHeader('X-XSS-Protection', '1; mode=block');
+    const sanitize = (obj) => {
+        if (obj && typeof obj === 'object') {
+            for (const key in obj) {
+                if (key.startsWith('$') || key.includes('.')) {
+                    delete obj[key];
+                } else if (typeof obj[key] === 'object') {
+                    sanitize(obj[key]);
+                }
+            }
+        }
+    };
+    sanitize(req.body);
+    sanitize(req.query);
+    sanitize(req.params);
+    next();
+});
+
+// HTML Tag/XSS stripping middleware
+app.use((req, res, next) => {
+    const sanitizeXss = (value) => {
+        if (typeof value === 'string') {
+            return value.replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '')
+                        .replace(/<\/?[^>]+(>|$)/g, ''); // strip HTML tags
+        }
+        if (value && typeof value === 'object') {
+            for (const key in value) {
+                value[key] = sanitizeXss(value[key]);
+            }
+        }
+        return value;
+    };
+    if (req.body) {
+        req.body = sanitizeXss(req.body);
+    }
     next();
 });
 
@@ -70,7 +116,7 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
-app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth', authLimiter, require('./routes/authRoutes'));
 app.use('/api/farmer', require('./routes/farmerRoutes'));
 app.use('/api/consumer', require('./routes/consumerRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));

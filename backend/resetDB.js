@@ -36,7 +36,9 @@ const resetData = async () => {
                 email: 'admin@farmer.com',
                 password: 'password123',
                 role: 'admin',
-                phone: '1234567890'
+                phone: '1234567890',
+                isEmailVerified: true,
+                isVerified: true
             });
             console.log('Created System Admin.');
         } else {
@@ -51,7 +53,9 @@ const resetData = async () => {
                 email: 'jubburuprudhviraju@gmail.com',
                 password: 'Prudhvi@2005',
                 role: 'admin',
-                phone: '9999999999'
+                phone: '9999999999',
+                isEmailVerified: true,
+                isVerified: true
             });
             console.log('Created Prudhvi Admin.');
         } else {

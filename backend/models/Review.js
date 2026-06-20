@@ -9,12 +9,17 @@ const reviewSchema = new mongoose.Schema({
     product: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
-        required: false
+        required: true
     },
     farmer: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: false
+        required: true
+    },
+    order: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Order',
+        required: true
     },
     rating: {
         type: Number,
@@ -27,15 +32,24 @@ const reviewSchema = new mongoose.Schema({
         required: true,
         trim: true
     },
-    verifiedPurchase: {
+    images: {
+        type: [String],
+        default: []
+    },
+    isReported: {
         type: Boolean,
         default: false
     },
-    reviewType: {
+    reportReason: {
         type: String,
-        enum: ['product', 'farmer', 'website'],
-        default: 'product'
+        enum: ['Spam', 'Abuse', 'Fake Review', 'Offensive Content']
     }
 }, { timestamps: true });
+
+// Compound unique index on user, order and product to prevent duplicate reviews
+reviewSchema.index({ user: 1, order: 1, product: 1 }, { unique: true });
+// Query optimization indexes
+reviewSchema.index({ product: 1 });
+reviewSchema.index({ farmer: 1 });
 
 module.exports = mongoose.model('Review', reviewSchema);

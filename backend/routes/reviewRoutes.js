@@ -4,21 +4,9 @@ const Review = require('../models/Review');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
-const { protect } = require('../middleware/auth');
-
-// Helper to update product ratings
-const updateProductRatings = async (productId) => {
-    const reviews = await Review.find({ product: productId });
-    const numReviews = reviews.length;
-    const averageRating = numReviews > 0 
-        ? reviews.reduce((acc, item) => item.rating + acc, 0) / numReviews 
-        : 0;
-
-    await Product.findByIdAndUpdate(productId, {
-        averageRating: parseFloat(averageRating.toFixed(1)),
-        numReviews
-    });
-};
+const { protect, requireEmailVerified } = require('../middleware/auth');
+const { updateRatings } = require('../utils/ratingHelper');
+const mongoose = require('mongoose');
 
 // @route   GET /api/reviews/page-data
 // @desc    Get aggregated reviews page data
@@ -40,31 +28,10 @@ router.get('/page-data', async (req, res) => {
             .populate('farmer', 'name');
 
         // 3. Top Rated Farmers
-        const farmers = await User.find({ role: 'farmer' })
-            .select('name address location createdAt isVerified')
-            .limit(10);
-        
-        const farmersWithStats = await Promise.all(farmers.map(async (f) => {
-            const reviews = await Review.find({ farmer: f._id });
-            const ratingCount = reviews.length;
-            const avgRating = ratingCount > 0 
-                ? parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / ratingCount).toFixed(1))
-                : 0;
-            const productsCount = await Product.countDocuments({ farmer: f._id, isAvailable: true });
-            return {
-                _id: f._id,
-                name: f.name,
-                address: f.address,
-                isVerified: f.isVerified,
-                rating: avgRating,
-                productsCount,
-                reviewsCount: ratingCount
-            };
-        }));
-
-        const topFarmers = farmersWithStats
-            .sort((a, b) => b.rating - a.rating || b.reviewsCount - a.reviewsCount)
-            .slice(0, 5);
+        const topFarmers = await User.find({ role: 'farmer', averageRating: { $gt: 0 } })
+            .sort({ averageRating: -1, numReviews: -1 })
+            .limit(5)
+            .select('name address location isVerified averageRating numReviews completedOrdersCount totalProductsSold');
 
         res.json({
             latestReviews,
@@ -78,13 +45,38 @@ router.get('/page-data', async (req, res) => {
 });
 
 // @route   GET /api/reviews/recent
-// @desc    Get the 6 most recent reviews across all products
+// @desc    Get the most recent reviews across all products
 // @access  Public
 router.get('/recent', async (req, res) => {
     try {
-        const reviews = await Review.find()
+        const { search, rating } = req.query;
+        let query = {};
+
+        if (rating) {
+            query.rating = parseInt(rating);
+        }
+
+        if (search) {
+            const User = require('../models/User');
+            const Product = require('../models/Product');
+            
+            const matchedUsers = await User.find({ name: { $regex: search, $options: 'i' } }).select('_id');
+            const matchedProducts = await Product.find({ name: { $regex: search, $options: 'i' } }).select('_id');
+            
+            const userIds = matchedUsers.map(u => u._id);
+            const productIds = matchedProducts.map(p => p._id);
+            
+            query.$or = [
+                { comment: { $regex: search, $options: 'i' } },
+                { user: { $in: userIds } },
+                { product: { $in: productIds } },
+                { farmer: { $in: userIds } }
+            ];
+        }
+
+        const reviews = await Review.find(query)
             .sort({ createdAt: -1 })
-            .limit(6)
+            .limit(50)
             .populate('user', 'name')
             .populate('product', 'name')
             .populate('farmer', 'name');
@@ -95,8 +87,95 @@ router.get('/recent', async (req, res) => {
     }
 });
 
+// @route   GET /api/reviews/top-products
+// @desc    Get top rated products
+// @access  Public
+router.get('/top-products', async (req, res) => {
+    try {
+        const products = await Product.find({ averageRating: { $gt: 0 } })
+            .sort({ averageRating: -1, numReviews: -1 })
+            .limit(10)
+            .populate('farmer', 'name address location isVerified');
+        res.json(products);
+    } catch (error) {
+        console.error('Get top products error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   GET /api/reviews/top-farmers
+// @desc    Get top rated farmers
+// @access  Public
+router.get('/top-farmers', async (req, res) => {
+    try {
+        const farmers = await User.find({ role: 'farmer', averageRating: { $gt: 0 } })
+            .sort({ averageRating: -1, numReviews: -1 })
+            .limit(10)
+            .select('name address location isVerified averageRating numReviews completedOrdersCount totalProductsSold');
+        res.json(farmers);
+    } catch (error) {
+        console.error('Get top farmers error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   GET /api/reviews/my-reviews
+// @desc    Get all reviews submitted by the logged-in user
+// @access  Private
+router.get('/my-reviews', protect, async (req, res) => {
+    try {
+        const reviews = await Review.find({ user: req.user._id })
+            .populate('product', 'name')
+            .populate('farmer', 'name');
+        res.json(reviews);
+    } catch (error) {
+        console.error('Get my reviews error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   GET /api/reviews/eligible-order/:productId
+// @desc    Checks if the user has an unreviewed delivered order <= 90 days old for a product
+// @access  Private
+router.get('/eligible-order/:productId', protect, async (req, res) => {
+    try {
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+        // Find delivered orders placed in the last 90 days containing the product
+        const orders = await Order.find({
+            consumer: req.user._id,
+            status: 'delivered',
+            createdAt: { $gte: ninetyDaysAgo },
+            'items.product': req.params.productId
+        }).sort({ createdAt: -1 });
+
+        if (orders.length === 0) {
+            return res.json({ eligible: false });
+        }
+
+        // Check which of these orders does not have a review yet for this product
+        for (const order of orders) {
+            const reviewExists = await Review.findOne({
+                user: req.user._id,
+                order: order._id,
+                product: req.params.productId
+            });
+
+            if (!reviewExists) {
+                return res.json({ eligible: true, orderId: order._id });
+            }
+        }
+
+        res.json({ eligible: false });
+    } catch (error) {
+        console.error('Check review eligibility error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
 // @route   GET /api/reviews/product/:productId
-// @desc    Get all reviews for a product
+// @desc    Get all reviews for a product with ratings breakdown
 // @access  Public
 router.get('/product/:productId', async (req, res) => {
     try {
@@ -110,132 +189,182 @@ router.get('/product/:productId', async (req, res) => {
             .populate('user', 'name')
             .sort(sortQuery);
 
-        // Calculate breakdown
-        const breakdown = { 5:0, 4:0, 3:0, 2:0, 1:0 };
-        reviews.forEach(r => breakdown[Math.floor(r.rating)]++);
+        // Calculate ratings distribution breakdown
+        const totalReviews = reviews.length;
+        const breakdownCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        
+        reviews.forEach(r => {
+            const star = Math.floor(r.rating);
+            if (breakdownCounts[star] !== undefined) {
+                breakdownCounts[star]++;
+            }
+        });
 
-        res.json({ reviews, breakdown });
+        const breakdownPercentages = {};
+        for (let star = 1; star <= 5; star++) {
+            breakdownPercentages[star] = totalReviews > 0 
+                ? Math.round((breakdownCounts[star] / totalReviews) * 100)
+                : 0;
+        }
+
+        res.json({ 
+            reviews, 
+            breakdown: breakdownCounts,
+            percentages: breakdownPercentages,
+            totalReviews 
+        });
     } catch (error) {
-        console.error('Get reviews error:', error);
+        console.error('Get product reviews error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   GET /api/reviews/farmer/:farmerId
+// @desc    Get recent reviews for all crops belonging to a farmer
+// @access  Public
+router.get('/farmer/:farmerId', async (req, res) => {
+    try {
+        const reviews = await Review.find({ farmer: req.params.farmerId })
+            .populate('user', 'name')
+            .populate('product', 'name')
+            .sort({ createdAt: -1 });
+        res.json(reviews);
+    } catch (error) {
+        console.error('Get farmer reviews error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
 // @route   POST /api/reviews
-// @desc    Create a new review
+// @desc    Create a new review for a product under a delivered order
 // @access  Private
-router.post('/', protect, async (req, res) => {
+router.post('/', protect, requireEmailVerified, async (req, res) => {
     try {
-        const { productId, farmerId, rating, comment, reviewType = 'product' } = req.body;
+        const { productId, orderId, rating, comment, images = [] } = req.body;
 
-        if (reviewType === 'website') {
-            const review = await Review.create({
-                user: req.user._id,
-                rating: Number(rating),
-                comment,
-                reviewType: 'website'
-            });
-            const populatedReview = await Review.findById(review._id).populate('user', 'name');
-            return res.status(201).json(populatedReview);
+        // Validation
+        if (!productId || !orderId || !rating || !comment) {
+            return res.status(400).json({ message: 'Product ID, Order ID, Rating, and Comment are required.' });
         }
 
-        if (reviewType === 'farmer') {
-            if (!farmerId) {
-                return res.status(400).json({ message: 'Farmer ID is required for a farmer review.' });
-            }
-            
-            // Check if user already reviewed this farmer
-            const existingReview = await Review.findOne({ user: req.user._id, farmer: farmerId, reviewType: 'farmer' });
-            if (existingReview) {
-                return res.status(400).json({ message: 'You have already reviewed this farmer.' });
-            }
-
-            // Check if verified purchase from this farmer
-            const order = await Order.findOne({ 
-                consumer: req.user._id, 
-                farmer: farmerId,
-                status: 'delivered' 
-            });
-
-            const review = await Review.create({
-                user: req.user._id,
-                farmer: farmerId,
-                rating: Number(rating),
-                comment,
-                reviewType: 'farmer',
-                verifiedPurchase: !!order
-            });
-
-            const populatedReview = await Review.findById(review._id).populate('user', 'name');
-            return res.status(201).json(populatedReview);
+        if (req.user.role === 'admin') {
+            return res.status(400).json({ message: 'Administrators cannot submit reviews.' });
         }
 
-        // Default: product review
-        if (!productId) {
-            return res.status(400).json({ message: 'Product ID is required for a product review.' });
-        }
-
+        // Find the product
         const product = await Product.findById(productId);
         if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
+            return res.status(404).json({ message: 'Product not found.' });
         }
 
-        // Check if user already reviewed
-        const existingReview = await Review.findOne({ user: req.user._id, product: productId });
-        if (existingReview) {
-            return res.status(400).json({ message: 'You have already reviewed this product' });
+        // Rejects farmers writing reviews on their own crops
+        if (product.farmer.toString() === req.user._id.toString()) {
+            return res.status(400).json({ message: 'Farmers cannot review their own products.' });
         }
 
-        // Check if verified purchase
-        const order = await Order.findOne({ 
-            consumer: req.user._id, 
-            'items.product': productId,
-            status: 'delivered' 
+        // Verify order status, ownership, and age
+        const order = await Order.findById(orderId);
+        if (!order) {
+            return res.status(404).json({ message: 'Order not found.' });
+        }
+
+        if (order.consumer.toString() !== req.user._id.toString()) {
+            return res.status(403).json({ message: 'You do not own this order.' });
+        }
+
+        if (order.status !== 'delivered') {
+            return res.status(400).json({ message: 'You can only review items from delivered orders.' });
+        }
+
+        // Validate 90 day age limit
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+        if (order.createdAt < ninetyDaysAgo) {
+            return res.status(400).json({ message: 'This purchase is older than 90 days and can no longer be reviewed.' });
+        }
+
+        // Check if the product exists in the order items list
+        const productInOrder = order.items.some(item => item.product.toString() === productId);
+        if (!productInOrder) {
+            return res.status(400).json({ message: 'This product was not purchased in the specified order.' });
+        }
+
+        // Check for duplicate reviews
+        const duplicateReview = await Review.findOne({
+            user: req.user._id,
+            order: orderId,
+            product: productId
         });
 
+        if (duplicateReview) {
+            return res.status(400).json({ message: 'You have already reviewed this product for this order.' });
+        }
+
+        // Create review
         const review = await Review.create({
             user: req.user._id,
             product: productId,
             farmer: product.farmer,
+            order: orderId,
             rating: Number(rating),
             comment,
-            verifiedPurchase: !!order,
-            reviewType: 'product'
+            images
         });
 
-        await updateProductRatings(productId);
+        // Recalculate and update ratings (product & farmer stats)
+        await updateRatings(productId, product.farmer);
 
-        const populatedReview = await Review.findById(review._id).populate('user', 'name');
+        const populatedReview = await Review.findById(review._id)
+            .populate('user', 'name')
+            .populate('product', 'name');
+
         res.status(201).json(populatedReview);
     } catch (error) {
         console.error('Create review error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: error.message || 'Server error' });
     }
 });
 
 // @route   PUT /api/reviews/:id
-// @desc    Update a review
+// @desc    Update an existing review
 // @access  Private
-router.put('/:id', protect, async (req, res) => {
+router.put('/:id', protect, requireEmailVerified, async (req, res) => {
     try {
-        const { rating, comment } = req.body;
+        const { rating, comment, images } = req.body;
         const review = await Review.findById(req.params.id);
 
         if (!review) {
-            return res.status(404).json({ message: 'Review not found' });
+            return res.status(404).json({ message: 'Review not found.' });
         }
 
+        // Restrict to the owner
         if (review.user.toString() !== req.user._id.toString()) {
-            return res.status(401).json({ message: 'Not authorized' });
+            return res.status(401).json({ message: 'Not authorized to edit this review.' });
         }
 
-        review.rating = Number(rating);
-        review.comment = comment;
+        // Verify order age is still within 90 days
+        const order = await Order.findById(review.order);
+        if (order) {
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+            if (order.createdAt < ninetyDaysAgo) {
+                return res.status(400).json({ message: 'The order date is older than 90 days. Reviews cannot be updated.' });
+            }
+        }
+
+        if (rating !== undefined) review.rating = Number(rating);
+        if (comment !== undefined) review.comment = comment;
+        if (images !== undefined) review.images = images;
+
         await review.save();
 
-        await updateProductRatings(review.product);
+        // Recalculate ratings
+        await updateRatings(review.product, review.farmer);
 
-        const populatedReview = await Review.findById(review._id).populate('user', 'name');
+        const populatedReview = await Review.findById(review._id)
+            .populate('user', 'name')
+            .populate('product', 'name');
+
         res.json(populatedReview);
     } catch (error) {
         console.error('Update review error:', error);
@@ -251,61 +380,55 @@ router.delete('/:id', protect, async (req, res) => {
         const review = await Review.findById(req.params.id);
 
         if (!review) {
-            return res.status(404).json({ message: 'Review not found' });
+            return res.status(404).json({ message: 'Review not found.' });
         }
 
+        // Restrict to owner or admin
         if (review.user.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
-            return res.status(401).json({ message: 'Not authorized' });
+            return res.status(401).json({ message: 'Not authorized to delete this review.' });
         }
 
         const productId = review.product;
+        const farmerId = review.farmer;
+
         await Review.deleteOne({ _id: review._id });
 
-        await updateProductRatings(productId);
+        // Recalculate ratings
+        await updateRatings(productId, farmerId);
 
-        res.json({ message: 'Review removed' });
+        res.json({ message: 'Review successfully removed.' });
     } catch (error) {
         console.error('Delete review error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
-// @route   GET /api/reviews/farmer/stats
-// @desc    Get farmer review analytics
-// @access  Private/Farmer
-router.get('/farmer/stats', protect, async (req, res) => {
-    if (req.user.role !== 'farmer') return res.status(403).json({ message: 'Not authorized' });
-    
+// @route   PUT /api/reviews/:id/report
+// @desc    Report an inappropriate review
+// @access  Private
+router.put('/:id/report', protect, async (req, res) => {
     try {
-        const reviews = await Review.find({ farmer: req.user._id }).populate('product', 'name').populate('user', 'name').sort({ createdAt: -1 });
-        const numReviews = reviews.length;
-        const averageRating = numReviews > 0 ? reviews.reduce((a, b) => a + b.rating, 0) / numReviews : 0;
-        
-        res.json({
-            averageRating: parseFloat(averageRating.toFixed(1)),
-            numReviews,
-            recentReviews: reviews.slice(0, 10)
-        });
-    } catch (error) {
-        console.error('Farmer stats error:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-});
+        const { reportReason } = req.body;
+        const validReasons = ['Spam', 'Abuse', 'Fake Review', 'Offensive Content'];
 
-// @route   GET /api/reviews/farmer/:farmerId
-// @desc    Get all reviews for a farmer
-// @access  Public
-router.get('/farmer/:farmerId', async (req, res) => {
-    try {
-        const reviews = await Review.find({ farmer: req.params.farmerId, reviewType: 'farmer' })
-            .populate('user', 'name')
-            .sort({ createdAt: -1 });
-        res.json(reviews);
+        if (!reportReason || !validReasons.includes(reportReason)) {
+            return res.status(400).json({ message: 'A valid report reason is required (Spam, Abuse, Fake Review, or Offensive Content).' });
+        }
+
+        const review = await Review.findById(req.params.id);
+        if (!review) {
+            return res.status(404).json({ message: 'Review not found.' });
+        }
+
+        review.isReported = true;
+        review.reportReason = reportReason;
+        await review.save();
+
+        res.json({ message: 'Review has been reported and flagged for moderator review.' });
     } catch (error) {
-        console.error('Get farmer reviews error:', error);
+        console.error('Report review error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });
 
 module.exports = router;
-

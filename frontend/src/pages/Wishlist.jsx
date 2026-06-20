@@ -53,7 +53,7 @@ const Wishlist = () => {
     return (
       <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem' }}>
         <Loader className="animate-spin" size={32} color="var(--primary)" />
-        <span style={{ color: 'var(--text-muted)' }}>Loading wishlist...</span>
+        <span style={{ color: 'var(--text-muted)' }}>Loading Wishlist...</span>
       </div>
     );
   }
@@ -67,7 +67,7 @@ const Wishlist = () => {
       {wishlist.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">❤️</div>
-          <h3 className="empty-state-title">{lang === 'te' ? 'మీ విష్‌లిస్ట్ ఖాళీగా ఉంది' : 'Your wishlist is empty'}</h3>
+          <h3 className="empty-state-title">{lang === 'te' ? 'ఇంకా విష్‌లిస్ట్ ఐటమ్స్ లేవు' : 'No Wishlist Items Yet'}</h3>
           <p className="empty-state-desc">
             {lang === 'te' ? 'స్థానిక రైతులు జాబితా చేసిన ఉత్పత్తులను అన్వేషించండి మరియు మీ అభిమాన పంటలను ఇక్కడ జోడించండి.' : 'Explore our marketplace and bookmark your favorite fresh produce to purchase them later.'}
           </p>

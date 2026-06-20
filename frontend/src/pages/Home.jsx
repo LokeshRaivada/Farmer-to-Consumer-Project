@@ -200,7 +200,7 @@ const Home = () => {
         
         {/* 1. HERO SECTION */}
         <section style={{ minHeight: '45vh', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '2rem', padding: '2rem 0', position: 'relative' }}>
-          <div style={{ flex: '1 1 500px', zIndex: 10, textAlign: 'left' }}>
+          <div style={{ flex: '1 1 300px', zIndex: 10, textAlign: 'left' }}>
             <div
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(22, 163, 74, 0.1)', border: '1px solid var(--primary)', padding: '0.4rem 1rem', borderRadius: '2rem', marginBottom: '1rem', color: 'var(--primary)', fontWeight: '600', fontSize: '0.85rem' }}
             >
@@ -208,7 +208,7 @@ const Home = () => {
             </div>
             
             <h1
-              style={{ fontSize: '2.4rem', lineHeight: '1.2', marginBottom: '1rem', fontWeight: '800', letterSpacing: '-1px', color: 'var(--text-light)' }}
+              style={{ fontSize: 'clamp(1.75rem, 6vw, 2.4rem)', lineHeight: '1.2', marginBottom: '1rem', fontWeight: '800', letterSpacing: '-1px', color: 'var(--text-light)' }}
             >
               {lang === 'te' ? 'తాజా పంటలు నేరుగా రైతుల నుండి' : 'Fresh Produce Direct From Farmers'}
             </h1>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, MapPin, Star, Package, ShoppingCart, Loader, MessageSquare, Send, CheckCircle, Search } from 'lucide-react';
@@ -6,6 +7,8 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 
 const Farmers = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
     const { user, lang } = useAuth();
     const { addToCart } = useCart();
     
@@ -49,6 +52,34 @@ const Farmers = () => {
     useEffect(() => {
         fetchFarmers();
     }, [searchCity, searchPincode]);
+
+    useEffect(() => {
+        const loadSelectedFarmer = async () => {
+            if (!id) {
+                setSelectedFarmer(null);
+                setFarmerProducts([]);
+                setFarmerReviews([]);
+                return;
+            }
+
+            let found = farmers.find(f => f._id === id);
+            
+            if (!found && farmers.length > 0) {
+                try {
+                    const { data } = await axios.get('/api/consumer/farmers');
+                    found = data.find(f => f._id === id);
+                } catch (err) {
+                    console.error('Error fetching fallback farmer:', err);
+                }
+            }
+
+            if (found) {
+                selectFarmer(found);
+            }
+        };
+
+        loadSelectedFarmer();
+    }, [id, farmers]);
 
     const selectFarmer = async (farmer) => {
         setSelectedFarmer(farmer);
@@ -166,7 +197,7 @@ const Farmers = () => {
             {loading ? (
                 <div style={{ minHeight: '40vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem' }}>
                     <Loader className="animate-spin" size={32} color="var(--primary)" />
-                    <span style={{ color: 'var(--text-muted)' }}>Loading farmers list...</span>
+                    <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Loading Farmers...</span>
                 </div>
             ) : (
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr', md: '1fr 1.5fr', gap: '2rem' }} className="farmers-main-grid">
@@ -182,7 +213,7 @@ const Farmers = () => {
                                 <motion.div
                                     key={f._id}
                                     whileHover={{ x: 4 }}
-                                    onClick={() => selectFarmer(f)}
+                                    onClick={() => navigate(`/farmers/${f._id}`)}
                                     className="glass"
                                     style={{ 
                                         padding: '1.25rem', 
@@ -235,22 +266,43 @@ const Farmers = () => {
                                 >
                                     {/* Farmer Detail Card */}
                                     <div className="glass" style={{ padding: '2rem', borderRadius: '1.25rem', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
                                             <div>
                                                 <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 0 0.25rem' }}>
                                                     {selectedFarmer.name}
-                                                    {selectedFarmer.isVerified && <span style={{ color: 'var(--primary)', fontSize: '1rem' }} title="Verified Profile">🛡️ Verified Farmer</span>}
+                                                    {selectedFarmer.isVerified && <span style={{ color: 'var(--primary)', fontSize: '0.9rem', background: 'rgba(22, 163, 74, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '1rem' }} title="Verified Profile">🛡️ Verified Farmer</span>}
                                                 </h2>
                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                                     <MapPin size={14} /> <span>{selectedFarmer.address?.street}, {selectedFarmer.address?.city}, {selectedFarmer.address?.state} - {selectedFarmer.address?.zip}</span>
                                                 </div>
                                             </div>
-                                            <div style={{ textAlign: 'right' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#eab308', fontSize: '1.1rem', fontWeight: 'bold', justifyContent: 'flex-end' }}>
-                                                    <Star size={16} fill="#eab308" color="#eab308" />
-                                                    <span>{selectedFarmer.rating > 0 ? selectedFarmer.rating.toFixed(1) : 'New'}</span>
+                                        </div>
+
+                                        {/* Aggregated Farmer Trust Signals Grid */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                                                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#eab308' }}>
+                                                    ⭐ {selectedFarmer.averageRating > 0 ? selectedFarmer.averageRating.toFixed(1) : (selectedFarmer.rating > 0 ? selectedFarmer.rating.toFixed(1) : 'New')}
                                                 </div>
-                                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({selectedFarmer.reviewsCount} reviews)</span>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Rating</div>
+                                            </div>
+                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                                                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--primary)' }}>
+                                                    {selectedFarmer.completedOrdersCount || 0}
+                                                </div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Completed Orders</div>
+                                            </div>
+                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                                                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-light)' }}>
+                                                    {selectedFarmer.productsCount || 0}
+                                                </div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Active Crops</div>
+                                            </div>
+                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                                                <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#10b981' }}>
+                                                    {selectedFarmer.totalProductsSold || 0} kg
+                                                </div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Total Sold</div>
                                             </div>
                                         </div>
                                         {/* Direct Farmer Call and WhatsApp triggers */}
@@ -323,82 +375,55 @@ const Farmers = () => {
                                     {/* Farmer Review System */}
                                     <div style={{ marginTop: '1rem' }}>
                                         <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <MessageSquare size={18} color="var(--primary)" /> {lang === 'te' ? 'రైతు సమీక్షలు' : 'Farmer Reviews'}
+                                            <MessageSquare size={18} color="var(--primary)" /> {lang === 'te' ? 'రైతు సమీక్షలు' : 'Recent Customer Reviews'}
                                         </h3>
 
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', lg: '1.2fr 1fr', gap: '1.5rem', alignItems: 'start' }}>
-                                            {/* List of Farmer Reviews */}
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                                {reviewsLoading ? (
-                                                    <div style={{ padding: '1.5rem', textAlign: 'center' }}><Loader className="animate-spin" size={16} /></div>
-                                                ) : farmerReviews.length === 0 ? (
-                                                    <div className="glass" style={{ padding: '2rem', textAlign: 'center', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
-                                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0 }}>No reviews submitted for this farmer yet.</p>
-                                                    </div>
-                                                ) : (
-                                                    farmerReviews.map(r => (
-                                                        <div key={r._id} className="glass" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', border: '1px solid var(--glass-border)' }}>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                <span style={{ fontSize: '0.85rem', fontWeight: 'bold', color: 'var(--text-light)' }}>{r.user?.name || 'Anonymous Consumer'}</span>
-                                                                <div style={{ display: 'flex', gap: '1px' }}>
-                                                                    {[1,2,3,4,5].map(star => (
-                                                                        <Star key={star} size={10} fill={star <= r.rating ? '#eab308' : 'transparent'} color={star <= r.rating ? '#eab308' : 'var(--glass-border)'} />
-                                                                    ))}
-                                                                </div>
+                                        {/* List of Farmer Reviews */}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                            {reviewsLoading ? (
+                                                <div style={{ padding: '1.5rem', textAlign: 'center' }}><Loader className="animate-spin" size={16} /></div>
+                                            ) : farmerReviews.length === 0 ? (
+                                                <div className="glass" style={{ padding: '2rem', textAlign: 'center', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
+                                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0 }}>No customer reviews yet.</p>
+                                                </div>
+                                            ) : (
+                                                farmerReviews.map(r => (
+                                                    <div key={r._id} className="glass" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', border: '1px solid var(--glass-border)' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <div>
+                                                                <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)' }}>{r.user?.name || 'Anonymous Consumer'}</span>
+                                                                {r.product?.name && (
+                                                                    <span style={{ fontSize: '0.75rem', color: 'var(--primary)', marginLeft: '0.5rem', background: 'rgba(22, 163, 74, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '0.25rem' }}>
+                                                                        {r.product.name}
+                                                                    </span>
+                                                                )}
                                                             </div>
-                                                            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, fontStyle: 'italic' }}>"{r.comment}"</p>
-                                                            <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                {r.verifiedPurchase && <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓ Verified Buyer</span>}
-                                                                <span>•</span>
-                                                                <span>{new Date(r.createdAt).toLocaleDateString()}</span>
-                                                            </div>
-                                                        </div>
-                                                    ))
-                                                )}
-                                            </div>
-
-                                            {/* Submit Farmer Review */}
-                                            {user && user.role === 'consumer' ? (
-                                                <div className="glass" style={{ padding: '1.5rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid var(--glass-border)' }}>
-                                                    <h4 style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>Review Farmer {selectedFarmer.name}</h4>
-                                                    
-                                                    {reviewError && <div style={{ color: 'var(--error)', fontSize: '0.8rem' }}>{reviewError}</div>}
-                                                    {reviewSuccess && <div style={{ color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 'bold' }}>{reviewSuccess}</div>}
-
-                                                    <form onSubmit={handleFarmerReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                                        <div>
-                                                            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>Rating</label>
-                                                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                                                            <div style={{ display: 'flex', gap: '1px' }}>
                                                                 {[1,2,3,4,5].map(star => (
-                                                                    <button
-                                                                        key={star} type="button" onClick={() => setRating(star)}
-                                                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-                                                                    >
-                                                                        <Star size={18} fill={star <= rating ? '#eab308' : 'transparent'} color={star <= rating ? '#eab308' : 'var(--glass-border)'} />
-                                                                    </button>
+                                                                    <Star key={star} size={12} fill={star <= r.rating ? '#eab308' : 'transparent'} color={star <= r.rating ? '#eab308' : 'var(--glass-border)'} />
                                                                 ))}
                                                             </div>
                                                         </div>
-                                                        <div>
-                                                            <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.25rem' }}>Review Message</label>
-                                                            <textarea
-                                                                rows={3} required value={comment} onChange={(e) => setComment(e.target.value)}
-                                                                placeholder="Write farmer feedback..."
-                                                                style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', outline: 'none', fontSize: '0.8rem', resize: 'none' }}
-                                                            />
+                                                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0.25rem 0', fontStyle: 'italic' }}>"{r.comment}"</p>
+                                                        {r.images && r.images.length > 0 && (
+                                                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                                                                {r.images.map((img, idx) => (
+                                                                    <img 
+                                                                        key={idx} 
+                                                                        src={img} 
+                                                                        alt="Review" 
+                                                                        style={{ width: '60px', height: '60px', borderRadius: '0.35rem', objectFit: 'cover', border: '1px solid var(--glass-border)' }} 
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '0.25rem' }}>
+                                                            <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓ Verified Buyer</span>
+                                                            <span>•</span>
+                                                            <span>{new Date(r.createdAt).toLocaleDateString()}</span>
                                                         </div>
-                                                        <button 
-                                                            type="submit" disabled={submittingReview} className="btn btn-primary"
-                                                            style={{ width: '100%', padding: '0.5rem 0', borderRadius: '1.5rem', fontSize: '0.8rem', textTransform: 'none', minHeight: '32px' }}
-                                                        >
-                                                            {submittingReview ? 'Submitting...' : <><Send size={12} /> Submit Review</>}
-                                                        </button>
-                                                    </form>
-                                                </div>
-                                            ) : (
-                                                <div className="glass" style={{ padding: '1.25rem', borderRadius: '1rem', opacity: 0.8, fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', border: '1px solid var(--glass-border)' }}>
-                                                    🔒 Log in as a Consumer to write a farmer review.
-                                                </div>
+                                                    </div>
+                                                ))
                                             )}
                                         </div>
                                     </div>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { Package, Clock, Truck, CheckCircle, MapPin, Calendar, Heart, DollarSign, ListOrdered, ShoppingBag, RefreshCw, X, Star, AlertCircle } from 'lucide-react';
+import { Package, Clock, Truck, CheckCircle, MapPin, Calendar, Heart, DollarSign, ShoppingBag, RefreshCw, X, Star, AlertCircle, Camera, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 
@@ -65,7 +65,13 @@ const SummaryCard = ({ title, value, icon: Icon, color }) => (
     </div>
 );
 
-const OrderCard = ({ order, onReviewClick }) => {
+const isOrderRecent = (createdAt) => {
+    const ninetyDaysAgo = new Date();
+    ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+    return new Date(createdAt) >= ninetyDaysAgo;
+};
+
+const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview }) => {
     const { lang } = useAuth();
     const statuses = ['pending', 'accepted', 'packed', 'shipped', 'delivered'];
     const currentStatusIndex = statuses.indexOf(order.status);
@@ -75,6 +81,8 @@ const OrderCard = ({ order, onReviewClick }) => {
         const d = new Date(timestamp);
         return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
+
+    const recent = isOrderRecent(order.createdAt);
 
     return (
         <motion.div 
@@ -94,29 +102,71 @@ const OrderCard = ({ order, onReviewClick }) => {
                         <StatusBadge status={order.status} />
                     </div>
 
-                    <div style={{ display: 'grid', gap: '1rem' }}>
-                        {order.items.map((item, idx) => (
-                            <div key={idx} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                <div style={{ width: '40px', height: '40px', background: 'var(--bg-darker)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Package size={18} color="var(--primary)" />
+                    <div style={{ display: 'grid', gap: '1.25rem' }}>
+                        {order.items.map((item, idx) => {
+                            if (!item.product) return null;
+                            const reviewKey = `${order._id}_${item.product._id}`;
+                            const existingReview = userReviews[reviewKey];
+
+                            return (
+                                <div key={idx} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                                    <div style={{ width: '40px', height: '40px', background: 'var(--bg-darker)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Package size={18} color="var(--primary)" />
+                                    </div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-light)' }}>{item.product.name}</div>
+                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.quantity} kg x ₹{item.price}/kg</div>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.4rem' }}>
+                                        <div style={{ fontWeight: '700', color: 'var(--text-light)', fontSize: '0.9rem' }}>₹{item.quantity * item.price}</div>
+                                        
+                                        {order.status === 'delivered' && (
+                                            existingReview ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.15rem' }}>
+                                                    <div style={{ display: 'flex', gap: '1px' }}>
+                                                        {[...Array(5)].map((_, i) => (
+                                                            <Star key={i} size={10} fill={i < existingReview.rating ? "#eab308" : "transparent"} color={i < existingReview.rating ? "#eab308" : "var(--glass-border)"} />
+                                                        ))}
+                                                    </div>
+                                                    {recent ? (
+                                                        <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                                            <button 
+                                                                onClick={() => onReviewClick(item.product, order, existingReview)}
+                                                                style={{ background: 'transparent', border: 'none', color: 'var(--primary)', padding: 0, fontSize: '0.7rem', cursor: 'pointer', minHeight: 'auto', textDecoration: 'underline' }}
+                                                            >
+                                                                Edit
+                                                            </button>
+                                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>|</span>
+                                                            <button 
+                                                                onClick={() => onDeleteReview(existingReview._id)}
+                                                                style={{ background: 'transparent', border: 'none', color: 'var(--error)', padding: 0, fontSize: '0.7rem', cursor: 'pointer', minHeight: 'auto', textDecoration: 'underline' }}
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>Locked (90+ days)</span>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                recent ? (
+                                                    <button 
+                                                        onClick={() => onReviewClick(item.product, order, null)}
+                                                        style={{ background: 'rgba(22, 163, 74, 0.05)', border: '1px solid var(--primary)', color: 'var(--primary)', padding: '0.25rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.7rem', cursor: 'pointer', textTransform: 'none', minHeight: 'auto', fontWeight: '600' }}
+                                                    >
+                                                        Write Review
+                                                    </button>
+                                                ) : (
+                                                    <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                                                        🔒 Over 90 Days
+                                                    </span>
+                                                )
+                                            )
+                                        )}
+                                    </div>
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ fontSize: '0.95rem', fontWeight: '600', color: 'var(--text-light)' }}>{item.product?.name || 'Deleted Product'}</div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{item.quantity} kg x ₹{item.price}/kg</div>
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
-                                    <div style={{ fontWeight: '700', color: 'var(--text-light)' }}>₹{item.quantity * item.price}</div>
-                                    {order.status === 'delivered' && item.product && (
-                                        <button 
-                                            onClick={() => onReviewClick(item.product)}
-                                            style={{ background: 'rgba(22, 163, 74, 0.08)', border: '1px solid var(--primary)', color: 'var(--primary)', padding: '0.2rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.7rem', cursor: 'pointer', textTransform: 'none', minHeight: 'auto' }}
-                                        >
-                                            Write Review
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
@@ -261,13 +311,21 @@ const ConsumerOrders = () => {
     const [orders, setOrders] = useState([]);
     const [wishlistCount, setWishlistCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
+    const [userReviews, setUserReviews] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const { t, lang } = useAuth();
 
+    // Review modal state
     const [reviewProduct, setReviewProduct] = useState(null);
+    const [reviewOrder, setReviewOrder] = useState(null);
+    const [editingReview, setEditingReview] = useState(null); // Review object if editing
+    
     const [rating, setRating] = useState(5);
+    const [hoverRating, setHoverRating] = useState(0);
     const [comment, setComment] = useState('');
+    const [images, setImages] = useState([]);
+    const [imageUrlInput, setImageUrlInput] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [reviewError, setReviewError] = useState('');
     const [reviewSuccess, setReviewSuccess] = useState('');
@@ -276,14 +334,26 @@ const ConsumerOrders = () => {
         setLoading(true);
         setError(false);
         try {
-            const [ordersRes, wishlistRes, notificationsRes] = await Promise.all([
+            const [ordersRes, wishlistRes, notificationsRes, reviewsRes] = await Promise.all([
                 axios.get('/api/consumer/orders'),
                 axios.get('/api/consumer/wishlist'),
-                axios.get('/api/consumer/notifications?limit=5')
+                axios.get('/api/consumer/notifications?limit=5'),
+                axios.get('/api/reviews/my-reviews')
             ]);
             setOrders(ordersRes.data || []);
             setWishlistCount(wishlistRes.data?.length || 0);
             setNotifications(notificationsRes.data?.notifications || []);
+
+            // Map user reviews: key orderId_productId
+            const reviewsMap = {};
+            if (reviewsRes.data) {
+                reviewsRes.data.forEach(r => {
+                    if (r.order && r.product) {
+                        reviewsMap[`${r.order}_${r.product._id}`] = r;
+                    }
+                });
+            }
+            setUserReviews(reviewsMap);
         } catch (error) {
             console.error('Fetch consumer orders dashboard error:', error);
             setError(true);
@@ -296,12 +366,46 @@ const ConsumerOrders = () => {
         fetchConsumerData();
     }, []);
 
-    const handleReviewClick = (product) => {
+    const handleReviewClick = (product, order, existingReview) => {
         setReviewProduct(product);
-        setRating(5);
-        setComment('');
+        setReviewOrder(order);
+        setEditingReview(existingReview);
+        
+        if (existingReview) {
+            setRating(existingReview.rating);
+            setComment(existingReview.comment);
+            setImages(existingReview.images || []);
+        } else {
+            setRating(5);
+            setComment('');
+            setImages([]);
+        }
+        
+        setImageUrlInput('');
         setReviewError('');
         setReviewSuccess('');
+    };
+
+    const handleAddImage = () => {
+        if (imageUrlInput.trim()) {
+            setImages([...images, imageUrlInput.trim()]);
+            setImageUrlInput('');
+        }
+    };
+
+    const handleRemoveImage = (indexToRemove) => {
+        setImages(images.filter((_, idx) => idx !== indexToRemove));
+    };
+
+    const handleSimulatePhoto = () => {
+        const mockPhotos = [
+            'https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500', // fresh tomatoes
+            'https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=500', // potatoes
+            'https://images.unsplash.com/photo-1618519764620-7403abdbfee9?w=500', // onions
+            'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500'  // grains/rice
+        ];
+        const randomImg = mockPhotos[Math.floor(Math.random() * mockPhotos.length)];
+        setImages([...images, randomImg]);
     };
 
     const handleReviewSubmit = async (e) => {
@@ -311,20 +415,50 @@ const ConsumerOrders = () => {
         setReviewSuccess('');
 
         try {
-            await axios.post('/api/reviews', {
-                productId: reviewProduct._id,
-                rating,
-                comment
-            });
-            setReviewSuccess('Thank you! Your review has been submitted successfully.');
+            if (editingReview) {
+                // Edit existing review
+                await axios.put(`/api/reviews/${editingReview._id}`, {
+                    rating,
+                    comment,
+                    images
+                });
+                setReviewSuccess('Your review has been updated successfully!');
+            } else {
+                // Create new review
+                await axios.post('/api/reviews', {
+                    productId: reviewProduct._id,
+                    orderId: reviewOrder._id,
+                    rating,
+                    comment,
+                    images
+                });
+                setReviewSuccess('Your review has been submitted successfully!');
+            }
+
+            // Reload data to reflect edits
+            await fetchConsumerData();
             setTimeout(() => {
                 setReviewProduct(null);
+                setReviewOrder(null);
+                setEditingReview(null);
             }, 2000);
         } catch (err) {
             console.error('Review submit error:', err);
-            setReviewError(err.response?.data?.message || 'Failed to submit review. Please try again.');
+            setReviewError(err.response?.data?.message || 'Failed to save review. Please try again.');
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const handleDeleteReview = async (reviewId) => {
+        if (!window.confirm('Are you sure you want to delete this review? This action cannot be undone.')) return;
+        try {
+            await axios.delete(`/api/reviews/${reviewId}`);
+            await fetchConsumerData();
+            alert('Review deleted successfully.');
+        } catch (err) {
+            console.error('Delete review error:', err);
+            alert(err.response?.data?.message || 'Failed to delete review.');
         }
     };
 
@@ -334,14 +468,9 @@ const ConsumerOrders = () => {
 
     if (loading) {
         return (
-            <div style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ width: '200px', height: '32px', background: 'var(--bg-darker)', borderRadius: '4px', marginBottom: '1rem' }} />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
-                    {[...Array(4)].map((_, i) => <div key={i} className="glass" style={{ height: '80px', borderRadius: '1rem', opacity: 0.5 }} />)}
-                </div>
-                {[...Array(3)].map((_, i) => (
-                    <div key={i} className="glass" style={{ height: '220px', borderRadius: '1.25rem', opacity: 0.3 }} />
-                ))}
+            <div style={{ maxWidth: '1000px', margin: '2rem auto', padding: '0 1rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
+                <div className="loading" style={{ width: '40px', height: '40px', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Loading Orders...</span>
             </div>
         );
     }
@@ -382,8 +511,8 @@ const ConsumerOrders = () => {
                     </h3>
                     {orders.length === 0 ? (
                         <div className="empty-state">
-                            <div className="empty-state-icon">🛍️</div>
-                            <h3 className="empty-state-title">{lang === 'te' ? 'ఇంకా ఎలాంటి ఆర్డర్లు లేవు' : 'No orders placed yet'}</h3>
+                            <div className="empty-state-icon">📦</div>
+                            <h3 className="empty-state-title">{lang === 'te' ? 'ఇంకా ఆర్డర్లు లేవు' : 'No Orders Yet'}</h3>
                             <p className="empty-state-desc">{lang === 'te' ? 'స్థానిక రైతులు నేరుగా జాబితా చేసిన ఉత్పత్తులను అన్వేషించండి మరియు ఈ రోజు షాపింగ్ ప్రారంభించండి.' : 'Explore products listed directly by local farmers and start shopping today.'}</p>
                             <Link to="/store" className="btn btn-primary" style={{ borderRadius: '2rem', marginTop: '0.5rem', textDecoration: 'none' }}>{lang === 'te' ? 'షాపింగ్ ప్రారంభించండి' : 'Start Shopping'}</Link>
                         </div>
@@ -391,14 +520,20 @@ const ConsumerOrders = () => {
                         <div style={{ display: 'grid', gap: '1.5rem', width: '100%' }}>
                             <AnimatePresence>
                                 {orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).map(order => (
-                                    <OrderCard key={order._id} order={order} onReviewClick={handleReviewClick} />
+                                    <OrderCard 
+                                        key={order._id} 
+                                        order={order} 
+                                        onReviewClick={handleReviewClick} 
+                                        userReviews={userReviews}
+                                        onDeleteReview={handleDeleteReview}
+                                    />
                                 ))}
                             </AnimatePresence>
                         </div>
                     )}
                 </div>
 
-                {/* Right Column: Live Notifications (Phase 6) */}
+                {/* Right Column: Live Notifications */}
                 <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'sticky', top: '7.5rem' }}>
                     <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid var(--glass-border)' }}>
                         <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
@@ -427,72 +562,152 @@ const ConsumerOrders = () => {
                 </div>
             </div>
 
-            {/* Review Submission Modal (Phase 5) */}
+            {/* Mobile-First Review Modal */}
             {reviewProduct && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', padding: '1rem' }}>
+                <div style={{ position: 'fixed', inset: 0, zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', padding: '1rem' }}>
                     <motion.div 
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
                         className="glass"
-                        style={{ width: '100%', maxWidth: '450px', padding: '2rem', display: 'flex', flexDirection: 'column', gap: '1.25rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)' }}
+                        style={{ width: '100%', maxWidth: '460px', padding: '2.5rem 2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '1.5rem', boxShadow: 'var(--shadow-card)', maxHeight: '90vh', overflowY: 'auto' }}
                     >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Review {reviewProduct.name}</h3>
+                            <h3 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-light)', margin: 0 }}>
+                                {editingReview ? 'Update Review' : `Review ${reviewProduct.name}`}
+                            </h3>
                             <button 
-                                onClick={() => setReviewProduct(null)} 
+                                onClick={() => { setReviewProduct(null); setReviewOrder(null); setEditingReview(null); }} 
                                 style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
                             >
-                                <X size={20} />
+                                <X size={22} />
                             </button>
                         </div>
 
-                        {reviewError && <div style={{ color: 'var(--error)', fontSize: '0.85rem' }}>{reviewError}</div>}
-                        {reviewSuccess && <div style={{ color: 'var(--primary)', fontSize: '0.85rem', fontWeight: '600' }}>{reviewSuccess}</div>}
+                        {reviewError && (
+                            <div style={{ color: 'var(--error)', fontSize: '0.85rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.08)', borderRadius: '0.5rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                {reviewError}
+                            </div>
+                        )}
+                        {reviewSuccess && (
+                            <div style={{ color: 'var(--primary)', fontSize: '0.85rem', fontWeight: '700', padding: '0.75rem', background: 'rgba(22, 163, 74, 0.08)', borderRadius: '0.5rem', border: '1px solid rgba(22, 163, 74, 0.2)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <CheckCircle size={16} /> {reviewSuccess}
+                            </div>
+                        )}
 
                         {!reviewSuccess && (
-                            <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
-                                {/* Stars Selection */}
-                                <div>
-                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Rating</label>
-                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                {/* Big Stars Rating Selection */}
+                                <div style={{ textAlign: 'center', background: 'var(--bg-dark)', padding: '1rem', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
+                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem', fontWeight: 'bold' }}>TAP STARS TO RATE</label>
+                                    <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <button
                                                 key={star}
                                                 type="button"
+                                                onMouseEnter={() => setHoverRating(star)}
+                                                onMouseLeave={() => setHoverRating(0)}
                                                 onClick={() => setRating(star)}
-                                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.2rem', transition: 'transform 0.15s' }}
+                                                className="hover-scale"
                                             >
                                                 <Star 
-                                                    size={24} 
-                                                    fill={star <= rating ? '#eab308' : 'transparent'} 
-                                                    color={star <= rating ? '#eab308' : 'var(--glass-border)'} 
+                                                    size={36} 
+                                                    fill={star <= (hoverRating || rating) ? '#eab308' : 'transparent'} 
+                                                    color={star <= (hoverRating || rating) ? '#eab308' : 'var(--glass-border)'} 
+                                                    style={{ filter: star <= (hoverRating || rating) ? 'drop-shadow(0 0 4px rgba(234,179,8,0.2))' : 'none' }}
                                                 />
                                             </button>
                                         ))}
                                     </div>
+                                    <span style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-light)', fontWeight: 'bold', marginTop: '0.5rem' }}>
+                                        {rating === 5 ? 'Excellent! 😍' : rating === 4 ? 'Very Good! 😊' : rating === 3 ? 'Good 🙂' : rating === 2 ? 'Fair 😐' : 'Poor 😞'}
+                                    </span>
                                 </div>
 
                                 {/* Comment Field */}
                                 <div>
-                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.5rem' }}>Review Comment</label>
+                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', fontWeight: 'bold' }}>YOUR EXPERIENCE</label>
                                     <textarea
                                         rows={4}
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
-                                        placeholder="Share your experience with this crop..."
+                                        placeholder="Tell others about this product..."
                                         required
-                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', outline: 'none', resize: 'none' }}
+                                        style={{ width: '100%', padding: '0.85rem', borderRadius: '0.75rem', border: '1px solid var(--glass-border)', background: 'var(--bg-darkest)', color: 'var(--text-light)', fontSize: '0.95rem', outline: 'none', resize: 'none' }}
                                     />
                                 </div>
 
-                                <button
-                                    type="submit"
-                                    className="btn btn-primary"
-                                    style={{ width: '100%', padding: '0.8rem 0', borderRadius: '2rem', marginTop: '0.5rem' }}
-                                    disabled={submitting}
-                                >
-                                    {submitting ? 'Submitting...' : 'Submit Review'}
-                                </button>
+                                {/* Simulated Image Upload */}
+                                <div>
+                                    <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'block', marginBottom: '0.4rem', fontWeight: 'bold' }}>📷 PRODUCT PHOTOS</label>
+                                    <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                                        <input 
+                                            type="text" 
+                                            placeholder="Paste image URL..." 
+                                            value={imageUrlInput}
+                                            onChange={(e) => setImageUrlInput(e.target.value)}
+                                            style={{ flex: 1, padding: '0.6rem 0.85rem', borderRadius: '0.5rem', border: '1px solid var(--glass-border)', background: 'var(--bg-darkest)', color: 'var(--text-light)', fontSize: '0.85rem' }}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={handleAddImage}
+                                            className="btn btn-secondary"
+                                            style={{ minHeight: 'auto', padding: '0.5rem 1rem', fontSize: '0.8rem', borderRadius: '0.5rem' }}
+                                        >
+                                            Add
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={handleSimulatePhoto}
+                                            className="btn btn-ghost"
+                                            title="Simulate Photo Capture"
+                                            style={{ minHeight: 'auto', padding: '0.5rem', color: 'var(--primary)' }}
+                                        >
+                                            <Camera size={18} />
+                                        </button>
+                                    </div>
+
+                                    {/* Uploaded Images Preview */}
+                                    {images.length > 0 && (
+                                        <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', background: 'var(--bg-dark)', borderRadius: '0.5rem', padding: '0.5rem' }}>
+                                            {images.map((img, idx) => (
+                                                <div key={idx} style={{ position: 'relative', width: '56px', height: '56px', borderRadius: '0.4rem', overflow: 'hidden', border: '1px solid var(--glass-border)', flexShrink: 0 }}>
+                                                    <img src={img} alt="review crop" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => handleRemoveImage(idx)}
+                                                        style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', padding: 0 }}
+                                                    >
+                                                        <X size={10} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Submit Actions */}
+                                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                        style={{ flex: 1, padding: '1rem', borderRadius: '0.75rem', fontWeight: 'bold', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                        disabled={submitting}
+                                    >
+                                        {submitting ? 'Saving...' : editingReview ? 'Update Review' : 'Submit Review'}
+                                    </button>
+                                    
+                                    {editingReview && (
+                                        <button
+                                            type="button"
+                                            onClick={() => { handleDeleteReview(editingReview._id); setReviewProduct(null); }}
+                                            className="btn btn-ghost"
+                                            style={{ padding: '1rem', color: 'var(--error)', borderRadius: '0.75rem', border: '1px solid var(--error)33', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    )}
+                                </div>
                             </form>
                         )}
                     </motion.div>

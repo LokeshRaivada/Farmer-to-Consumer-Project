@@ -35,8 +35,12 @@ const FarmerDashboard = () => {
     const [activeTab, setActiveTab] = useState('overview');
     const [farmerStats, setFarmerStats] = useState({ averageRating: 0, numReviews: 0, recentReviews: [] });
     const [wizardStep, setWizardStep] = useState(1);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     const fetchDashData = async () => {
+        setLoading(true);
+        setError('');
         try {
             const { data: prodData } = await axios.get('/api/farmer/products');
             setProducts(prodData);
@@ -48,8 +52,11 @@ const FarmerDashboard = () => {
             } catch (err) {
                 console.error('Fetch stats error:', err);
             }
-        } catch (error) {
-            console.error('Fetch dashboard data error:', error);
+        } catch (err) {
+            console.error('Fetch dashboard data error:', err);
+            setError('Something went wrong. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -142,6 +149,32 @@ const FarmerDashboard = () => {
         return new Date(o.deliverySchedule).toDateString() === today && o.status !== 'delivered' && o.status !== 'cancelled';
     }).length;
     const lowStockCount = products.filter(p => p.quantity <= 10).length;
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', gap: '1rem' }}>
+                <div className="loading" style={{ width: '40px', height: '40px', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Loading Crops & Orders...</span>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div style={{ maxWidth: '600px', margin: '6rem auto', padding: '2rem', textAlign: 'center' }} className="glass">
+                <span style={{ fontSize: '3rem' }}>⚠️</span>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', margin: '1rem 0 0.5rem' }}>
+                    {lang === 'te' ? 'సమస్య ఏర్పడింది' : 'Something went wrong'}
+                </h2>
+                <p style={{ color: 'var(--text-muted)', marginBottom: '2rem', fontSize: '0.95rem' }}>
+                    {lang === 'te' ? 'సమస్య ఏర్పడింది. దయచేసి మళ్లీ ప్రయత్నించండి.' : 'Something went wrong. Please try again.'}
+                </p>
+                <button onClick={fetchDashData} className="btn btn-primary" style={{ padding: '0.8rem 2rem' }}>
+                    {lang === 'te' ? 'మళ్లీ ప్రయత్నించు' : 'Retry'}
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem', paddingBottom: '6rem', textAlign: 'left' }}>
@@ -303,8 +336,10 @@ const FarmerDashboard = () => {
                                 </div>
                             ))}
                             {products.length === 0 && (
-                                <div className="glass" style={{ gridColumn: '1/-1', padding: '3rem', textAlign: 'center', color: 'var(--text-muted)', border: '1px dashed var(--glass-border)', background: 'var(--bg-darkest)', borderRadius: '1rem' }}>
-                                    🌾 {lang === 'te' ? 'ఇంకా ఏ పంటలు జోడించబడలేదు. మొదటి పంటను జోడించడానికి క్లిక్ చేయండి.' : 'No Crops Listed Yet. Click Add Crop to start selling.'}
+                                <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+                                    <div className="empty-state-icon">🌾</div>
+                                    <h3 className="empty-state-title">{lang === 'te' ? 'ఇంకా ఏ పంటలు జోడించలేదు' : 'No Crops Added Yet'}</h3>
+                                    <p className="empty-state-desc">{lang === 'te' ? 'అమ్మకం ప్రారంభించడానికి పంటను జోడించండి.' : 'Add your first crop to start selling produce directly to consumers.'}</p>
                                 </div>
                             )}
                         </div>
@@ -313,7 +348,13 @@ const FarmerDashboard = () => {
 
                 {activeTab === 'orders' && (
                     <motion.div key="orders" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} style={{ display: 'grid', gap: '1.5rem' }}>
-                        {orders.length === 0 && <div className="glass" style={{ textAlign: 'center', padding: '4rem', color: 'var(--text-muted)', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '1rem' }}>No orders received yet.</div>}
+                        {orders.length === 0 && (
+                            <div className="empty-state" style={{ gridColumn: '1/-1' }}>
+                                <div className="empty-state-icon">📦</div>
+                                <h3 className="empty-state-title">{lang === 'te' ? 'ఇంకా ఆర్డర్లు లేవు' : 'No Orders Yet'}</h3>
+                                <p className="empty-state-desc">{lang === 'te' ? 'కస్టమర్లు ఆర్డర్లు చేసినప్పుడు అవి ఇక్కడ కనిపిస్తాయి.' : 'When customers place orders, they will appear here.'}</p>
+                            </div>
+                        )}
                         {orders.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).map(order => (
                             <div key={order._id} className="glass" style={{ padding: '1.5rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)' }}>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '1rem' }}>
@@ -438,7 +479,13 @@ const FarmerDashboard = () => {
                                         <p style={{ color: 'var(--text-light)', fontSize: '0.85rem', lineHeight: 1.4, margin: 0 }}>"{review.comment}"</p>
                                     </div>
                                 ))}
-                                {farmerStats.recentReviews.length === 0 && <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>No customer feedback yet.</div>}
+                                {farmerStats.recentReviews.length === 0 && (
+                                    <div className="empty-state" style={{ padding: '2rem' }}>
+                                        <div className="empty-state-icon">💬</div>
+                                        <h3 className="empty-state-title">{lang === 'te' ? 'ఇంకా సందేశాలు లేవు' : 'No Messages Yet'}</h3>
+                                        <p className="empty-state-desc">{lang === 'te' ? 'కస్టమర్ల నుండి రేటింగులు మరియు ఫీడ్‌బ్యాక్ ఇక్కడ కనిపిస్తాయి.' : 'Ratings and reviews from customers will show up here.'}</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </motion.div>

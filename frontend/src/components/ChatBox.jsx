@@ -6,9 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-const ChatBox = ({ recipientId, recipientName, orderId }) => {
+const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setIsOpen: propSetIsOpen }) => {
   const { user, lang } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [localIsOpen, setLocalIsOpen] = useState(false);
+  const isOpen = propIsOpen !== undefined ? propIsOpen : localIsOpen;
+  const setIsOpen = propSetIsOpen !== undefined ? propSetIsOpen : setLocalIsOpen;
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [socket, setSocket] = useState(null);
@@ -70,7 +72,7 @@ const ChatBox = ({ recipientId, recipientName, orderId }) => {
   if (!user) return null;
 
   return (
-    <div style={{ position: 'fixed', bottom: '5rem', right: '1.5rem', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+    <div style={{ position: 'fixed', bottom: '5.5rem', right: '1.5rem', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
       
       {/* Chat Window */}
       <AnimatePresence>
@@ -81,7 +83,7 @@ const ChatBox = ({ recipientId, recipientName, orderId }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            style={{ width: '330px', height: '480px', marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '1rem', border: '1px solid var(--glass-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
+            style={{ width: '330px', maxWidth: 'calc(100vw - 3rem)', height: '480px', maxHeight: 'calc(100vh - 7.5rem)', marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '1rem', border: '1px solid var(--glass-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
           >
             
             {/* WhatsApp Header */}
@@ -200,30 +202,6 @@ const ChatBox = ({ recipientId, recipientName, orderId }) => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Floating Toggle Button */}
-      {!isOpen && (
-        <button 
-          onClick={() => setIsOpen(true)} 
-          className="btn btn-primary" 
-          style={{ 
-            width: '56px', 
-            height: '56px', 
-            minWidth: '56px', 
-            minHeight: '56px', 
-            borderRadius: '50%', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
-            padding: 0,
-            cursor: 'pointer',
-            border: 'none'
-          }}
-        >
-          <MessageCircle size={24} />
-        </button>
-      )}
 
     </div>
   );

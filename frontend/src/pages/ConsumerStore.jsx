@@ -101,7 +101,7 @@ const ProductCard = ({ product, onClick }) => {
 
                 <button 
                     className={`btn ${added ? 'btn-secondary' : 'btn-primary'}`} 
-                    style={{ padding: '0.4rem 0.8rem', borderRadius: '1.5rem', fontSize: '0.8rem', textTransform: 'none', minHeight: '32px' }}
+                    style={{ padding: '0.5rem 1.0rem', borderRadius: '1.5rem', fontSize: '0.85rem', textTransform: 'none', minHeight: '40px' }}
                     onClick={handleAdd}
                     disabled={user?.role === 'farmer' || product.quantity <= 0}
                 >
@@ -142,6 +142,7 @@ const ConsumerStore = () => {
 
     const [loading, setLoading] = useState(true);
     const [selectedProduct, setSelectedProduct] = useState(null);
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
 
     const searchInputRef = useRef(null);
 
@@ -232,8 +233,27 @@ const ConsumerStore = () => {
             {/* Layout Wrapper */}
             <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
                 
+                {/* Mobile Filters Toggle Bar */}
+                <button 
+                    className="mobile-filters-toggle btn btn-secondary" 
+                    onClick={() => setShowMobileFilters(!showMobileFilters)}
+                    style={{ 
+                        width: '100%', 
+                        marginBottom: '1rem', 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        minHeight: '44px',
+                        borderRadius: '1.5rem',
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem'
+                    }}
+                >
+                    {showMobileFilters ? '⚡ ' + (lang === 'te' ? 'ఫిల్టర్లు దాచు' : 'Hide Filters') : '🔍 ' + (lang === 'te' ? 'ఫిల్టర్లను చూపించు' : 'Show Filters')}
+                </button>
+
                 {/* Desktop Left Sidebar Filters */}
-                <aside className="glass" style={{ flex: '1 1 280px', maxWidth: '300px', width: '100%', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'sticky', top: '7rem', borderRadius: '1.5rem', background: 'var(--bg-darkest)' }}>
+                <aside className={`glass store-filters-sidebar ${showMobileFilters ? 'show' : ''}`} style={{ flex: '1 1 280px', maxWidth: '300px', width: '100%', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'sticky', top: '7rem', borderRadius: '1.5rem', background: 'var(--bg-darkest)' }}>
                     <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                         🛡️ {lang === 'te' ? 'ఫిల్టర్లు' : 'Filters'}
                     </h3>
@@ -362,8 +382,9 @@ const ConsumerStore = () => {
                 {/* Product Grid Area */}
                 <div style={{ flex: '3 1 600px' }}>
                     {loading ? (
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '1.25rem' }}>
-                            {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '40vh', gap: '1rem' }}>
+                            <div className="loading" style={{ width: '40px', height: '40px', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                            <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Loading Products...</span>
                         </div>
                     ) : products.length === 0 ? (
                         <motion.div 

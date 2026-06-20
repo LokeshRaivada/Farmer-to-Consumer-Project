@@ -1,17 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Lock, MapPin, Camera, Save, Loader, Shield, CheckCircle, Sliders, Sun, Moon } from 'lucide-react';
+import { User, Lock, MapPin, Camera, Save, Loader, Shield, CheckCircle, Sliders, Sun, Moon, LogOut, RefreshCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
-  const { user, t, lang, darkMode, toggleDarkMode, largeText, toggleLargeText } = useAuth();
+  const { user, t, lang, darkMode, toggleDarkMode, largeText, toggleLargeText, updateProfile, changePassword, logout, resendVerification } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
+
+  // Email verification resend state
+  const [resending, setResending] = useState(false);
+  const [resendStatus, setResendStatus] = useState({ type: '', text: '' });
 
   // Form states
   const [profileForm, setProfileForm] = useState({
@@ -65,7 +68,14 @@ const Settings = () => {
     setSuccessMsg('');
     setErrorMsg('');
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await updateProfile({
+        name: profileForm.name,
+        phone: profileForm.phone,
+        street: profileForm.street,
+        city: profileForm.city,
+        state: profileForm.state,
+        zip: profileForm.zip
+      });
       setSuccessMsg('Profile information updated successfully!');
     } catch (err) {
       console.error(err);
@@ -81,18 +91,42 @@ const Settings = () => {
       setErrorMsg('New passwords do not match.');
       return;
     }
+    // Simple frontend check matching backend validation
+    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d@$!%*#?&]{8,}$/;
+    if (!regex.test(passwordForm.newPassword)) {
+      setErrorMsg('Password must be at least 8 characters long and contain both letters and numbers.');
+      return;
+    }
+
     setLoading(true);
     setSuccessMsg('');
     setErrorMsg('');
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await changePassword(passwordForm.oldPassword, passwordForm.newPassword);
       setSuccessMsg('Password changed successfully!');
       setPasswordForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err) {
       console.error(err);
-      setErrorMsg('Failed to change password.');
+      setErrorMsg(err.response?.data?.message || 'Failed to change password.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!user?.email) return;
+    setResending(true);
+    setResendStatus({ type: '', text: '' });
+    try {
+      const res = await resendVerification(user.email);
+      setResendStatus({ type: 'success', text: res.message || 'Verification email sent successfully!' });
+    } catch (err) {
+      setResendStatus({ 
+        type: 'error', 
+        text: err.response?.data?.message || 'Failed to send verification email.' 
+      });
+    } finally {
+      setResending(false);
     }
   };
 
@@ -112,6 +146,23 @@ const Settings = () => {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const inputStyle = {
+    width: '100%',
+    padding: '0.8rem 1rem',
+    background: 'var(--bg-darkest)',
+    border: '1px solid var(--glass-border)',
+    color: 'var(--text-light)',
+    borderRadius: '0.75rem',
+    fontSize: '0.95rem',
+    outline: 'none',
+    transition: 'border-color 0.3s'
   };
 
   return (
@@ -159,6 +210,21 @@ const Settings = () => {
           >
             <Sliders size={16} /> {lang === 'te' ? 'ప్రాధాన్యతలు' : 'Preferences'}
           </button>
+          
+          <button 
+            onClick={handleLogout}
+            style={{ 
+              background: 'transparent', 
+              color: 'var(--error)',
+              border: 'none', padding: '0.75rem 1rem', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', textAlign: 'left', textTransform: 'none', width: '100%', minHeight: 'auto',
+              marginTop: '1.5rem',
+              borderTop: '1px solid var(--glass-border)',
+              paddingTop: '1rem',
+              borderRadius: '0'
+            }}
+          >
+            <LogOut size={16} /> {lang === 'te' ? 'లాగ్ అవుట్' : 'Logout'}
+          </button>
         </div>
 
         {/* Tab Content Panels */}
@@ -191,6 +257,62 @@ const Settings = () => {
                   </div>
                 )}
 
+                {/* Verification Card widget inside Profile Tab */}
+                <div style={{ background: 'var(--bg-dark)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                    <div>
+                      <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>Email Verification Status</h4>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem', margin: 0 }}>
+                        {!user?.isEmailVerified ? 'Verify your email to buy/sell crops and write reviews.' : 'Your email is fully verified.'}
+                      </p>
+                    </div>
+                    <div>
+                      {user?.isEmailVerified ? (
+                        <span style={{ background: 'rgba(22, 163, 74, 0.1)', color: 'var(--primary)', border: '1px solid var(--primary)', padding: '0.35rem 0.75rem', borderRadius: '2rem', fontSize: '0.75rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          Verified ✓
+                        </span>
+                      ) : (
+                        <span style={{ background: 'rgba(239, 68, 68, 0.1)', color: 'var(--error)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '0.35rem 0.75rem', borderRadius: '2rem', fontSize: '0.75rem', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                          Unverified ⚠️
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {!user?.isEmailVerified && (
+                    <div style={{ borderTop: '1px solid var(--glass-border)', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                      <button 
+                        type="button" 
+                        onClick={handleResendVerification}
+                        disabled={resending}
+                        className="btn btn-secondary"
+                        style={{ alignSelf: 'flex-start', padding: '0.4rem 1rem', borderRadius: '0.5rem', fontSize: '0.8rem', minHeight: '32px', display: 'flex', alignItems: 'center', gap: '0.45rem' }}
+                      >
+                        {resending ? <Loader size={14} className="animate-spin" style={{ animation: 'spin 1.5s linear infinite' }} /> : <RefreshCw size={14} />}
+                        Resend Verification Email
+                      </button>
+
+                      {resendStatus.text && (
+                        <div style={{ 
+                          background: resendStatus.type === 'success' ? 'rgba(22, 163, 74, 0.08)' : 'rgba(239, 68, 68, 0.08)',
+                          border: `1px solid ${resendStatus.type === 'success' ? 'rgba(22, 163, 74, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+                          color: resendStatus.type === 'success' ? 'var(--primary)' : 'var(--error)',
+                          padding: '0.5rem 0.75rem',
+                          borderRadius: '0.5rem',
+                          fontSize: '0.75rem'
+                        }}>
+                          {resendStatus.text}
+                          {resendStatus.type === 'success' && (
+                            <span style={{ display: 'block', fontWeight: 'bold', marginTop: '0.25rem', color: 'var(--text-muted)' }}>
+                              Local sandbox tip: check scratch/email_log.txt for the link!
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Profile Photo Upload Row */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', background: 'var(--bg-dark)', padding: '1.25rem', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
                   <div style={{ position: 'relative' }}>
@@ -212,7 +334,7 @@ const Settings = () => {
                   </div>
                   <div>
                     <h4 style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>{lang === 'te' ? 'ప్రొఫైల్ చిత్రం' : 'Profile Picture'}</h4>
-                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem', margin: 0 }}>{lang === 'te' ? 'మిమ్మల్ని కనుగొనడానికి ఇది కస్టమర్లకు సహాయపడుతుంది. గరిష్టంగా 2MB.' : 'Help buyers identify you. Upload an image, max 2MB.'}</p>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2' }}>{lang === 'te' ? 'మిమ్మల్ని కనుగొనడానికి ఇది కస్టమర్లకు సహాయపడుతుంది. గరిష్టంగా 2MB.' : 'Help buyers identify you. Upload an image, max 2MB.'}</p>
                   </div>
                 </div>
 
@@ -223,13 +345,14 @@ const Settings = () => {
                     <input 
                       type="text" name="name" value={profileForm.name} onChange={handleProfileChange}
                       required
+                      style={inputStyle}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>{lang === 'te' ? 'ఈమెయిల్ చిరునామా' : 'Email Address'}</label>
                     <input 
-                      type="email" name="email" value={profileForm.email} onChange={handleProfileChange}
-                      required
+                      type="email" name="email" value={profileForm.email} disabled
+                      style={{ ...inputStyle, opacity: 0.6, cursor: 'not-allowed' }}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -237,6 +360,7 @@ const Settings = () => {
                     <input 
                       type="text" name="phone" value={profileForm.phone} onChange={handleProfileChange}
                       required
+                      style={inputStyle}
                     />
                   </div>
                 </div>
@@ -251,6 +375,7 @@ const Settings = () => {
                   <input 
                     type="text" name="street" value={profileForm.street} onChange={handleProfileChange}
                     placeholder="Door No, Street Name, Landmark"
+                    style={inputStyle}
                   />
                 </div>
 
@@ -259,18 +384,21 @@ const Settings = () => {
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>{lang === 'te' ? 'జిల్లా / నగరం' : 'District / City'}</label>
                     <input 
                       type="text" name="city" value={profileForm.city} onChange={handleProfileChange}
+                      style={inputStyle}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>{lang === 'te' ? 'రాష్ట్రం' : 'State'}</label>
                     <input 
                       type="text" name="state" value={profileForm.state} onChange={handleProfileChange}
+                      style={inputStyle}
                     />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                     <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 'bold' }}>{lang === 'te' ? 'పిన్‌కోడ్' : 'Pincode / Zip'}</label>
                     <input 
                       type="text" name="zip" value={profileForm.zip} onChange={handleProfileChange}
+                      style={inputStyle}
                     />
                   </div>
                 </div>
@@ -281,7 +409,7 @@ const Settings = () => {
                   className="btn btn-primary" 
                   style={{ alignSelf: 'flex-start', padding: '0.6rem 1.75rem', borderRadius: '2rem', fontSize: '0.85rem', textTransform: 'none', minHeight: '36px' }}
                 >
-                  {loading ? <Loader className="animate-spin" size={16} /> : <Save size={16} />} {lang === 'te' ? 'మార్పులను సేవ్ చేయి' : 'Save Changes'}
+                  {loading ? <Loader className="animate-spin" size={16} style={{ animation: 'spin 1.5s linear infinite' }} /> : <Save size={16} />} {lang === 'te' ? 'మార్పులను సేవ్ చేయి' : 'Save Changes'}
                 </button>
               </motion.form>
             )}
@@ -316,6 +444,7 @@ const Settings = () => {
                   <input 
                     type="password" name="oldPassword" value={passwordForm.oldPassword} onChange={handlePasswordChange}
                     required
+                    style={inputStyle}
                   />
                 </div>
 
@@ -324,6 +453,7 @@ const Settings = () => {
                   <input 
                     type="password" name="newPassword" value={passwordForm.newPassword} onChange={handlePasswordChange}
                     required
+                    style={inputStyle}
                   />
                 </div>
 
@@ -332,6 +462,7 @@ const Settings = () => {
                   <input 
                     type="password" name="confirmPassword" value={passwordForm.confirmPassword} onChange={handlePasswordChange}
                     required
+                    style={inputStyle}
                   />
                 </div>
 
@@ -341,7 +472,7 @@ const Settings = () => {
                   className="btn btn-primary" 
                   style={{ alignSelf: 'flex-start', padding: '0.6rem 1.75rem', borderRadius: '2rem', fontSize: '0.85rem', textTransform: 'none', minHeight: '36px' }}
                 >
-                  {loading ? <Loader className="animate-spin" size={16} /> : <Save size={16} />} {lang === 'te' ? 'పాస్‌వర్డ్ అప్‌డేట్ చేయి' : 'Update Password'}
+                  {loading ? <Loader className="animate-spin" size={16} style={{ animation: 'spin 1.5s linear infinite' }} /> : <Save size={16} />} {lang === 'te' ? 'పాస్‌వర్డ్ అప్‌డేట్ చేయి' : 'Update Password'}
                 </button>
               </motion.form>
             )}

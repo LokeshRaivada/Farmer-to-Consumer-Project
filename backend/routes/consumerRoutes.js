@@ -4,7 +4,7 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, requireEmailVerified } = require('../middleware/auth');
 
 // @route   GET /api/consumer/home
 // @desc    Get aggregated homepage data in a single request
@@ -154,7 +154,7 @@ router.get('/farmers', async (req, res) => {
         if (city) query['address.city'] = { $regex: new RegExp(`^${city}$`, 'i') };
         if (pincode) query['address.zip'] = pincode;
 
-        let farmers = await User.find(query).select('name address location createdAt isVerified');
+        let farmers = await User.find(query).select('name address location createdAt isVerified phone averageRating numReviews completedOrdersCount totalProductsSold');
 
         let farmersWithReviews = await Promise.all(farmers.map(async (f) => {
             const Review = require('../models/Review');
@@ -206,7 +206,7 @@ router.get('/orders', protect, authorize('consumer'), async (req, res) => {
 // @route   POST /api/consumer/orders
 // @desc    Place order
 // @access  Private/Consumer
-router.post('/orders', protect, authorize('consumer'), async (req, res) => {
+router.post('/orders', protect, authorize('consumer'), requireEmailVerified, async (req, res) => {
     try {
         const { items, shippingAddress, deliverySchedule, paymentMethod } = req.body;
         

@@ -185,6 +185,8 @@ const AdminDashboard = () => {
     const [reviews, setReviews] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
+    const [reviewsFilterReported, setReviewsFilterReported] = useState('all');
+    const [reviewsFilterReason, setReviewsFilterReason] = useState('all');
 
     const fetchData = async () => {
         setLoading(true);
@@ -259,6 +261,15 @@ const AdminDashboard = () => {
         }
     };
 
+    const dismissReport = async (id) => {
+        try {
+            await axios.put(`/api/admin/reviews/${id}/dismiss-report`);
+            fetchData();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error dismissing report');
+        }
+    };
+
     // Tab switcher with state cleanses to prevent index bounds issues
     const handleTabChange = (tabId) => {
         setActiveTab(tabId);
@@ -293,12 +304,23 @@ const AdminDashboard = () => {
     }, [products, searchQuery]);
 
     const filteredReviews = useMemo(() => {
-        return reviews.filter(r => 
-            (r?.product?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (r?.user?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (r?.comment || '').toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [reviews, searchQuery]);
+        return reviews.filter(r => {
+            const matchesSearch = 
+                (r?.product?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (r?.user?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (r?.comment || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+            const matchesReported = 
+                reviewsFilterReported === 'all' || 
+                (reviewsFilterReported === 'reported' && r.isReported);
+
+            const matchesReason = 
+                reviewsFilterReason === 'all' || 
+                r.reportReason === reviewsFilterReason;
+
+            return matchesSearch && matchesReported && matchesReason;
+        });
+    }, [reviews, searchQuery, reviewsFilterReported, reviewsFilterReason]);
 
     const filteredOrders = useMemo(() => {
         return orders.filter(o => 
@@ -338,6 +360,13 @@ const AdminDashboard = () => {
     const paginatedOrders = useMemo(() => {
         return filteredOrders.slice((currentPage - 1) * ITEMS_PER_TABLE, currentPage * ITEMS_PER_TABLE);
     }, [filteredOrders, currentPage]);
+
+    // Page counts definitions
+    const totalUsersPages = Math.ceil(filteredUsers.length / ITEMS_PER_TABLE);
+    const totalFarmersPages = Math.ceil(filteredFarmers.length / ITEMS_PER_GRID);
+    const totalProductsPages = Math.ceil(filteredProducts.length / ITEMS_PER_TABLE);
+    const totalReviewsPages = Math.ceil(filteredReviews.length / ITEMS_PER_GRID);
+    const totalOrdersPages = Math.ceil(filteredOrders.length / ITEMS_PER_TABLE);
 
     // Charts data
     const revenueData = useMemo(() => {
@@ -759,15 +788,38 @@ const AdminDashboard = () => {
                                 <div className="glass" style={{ padding: '2rem' }}>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '2rem' }}>
                                         <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)' }}>Moderation Feed ({filteredReviews.length})</h3>
-                                        <div style={{ position: 'relative', width: '100%', maxWidth: '280px' }}>
-                                            <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
-                                            <input 
-                                                type="text" 
-                                                placeholder="Search reviews..." 
-                                                value={searchQuery} 
-                                                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
-                                                style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'var(--text-light)', fontSize: '0.85rem' }} 
-                                            />
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', width: '100%', maxWidth: '700px', justifyContent: 'flex-end' }}>
+                                            <div style={{ position: 'relative', width: '100%', maxWidth: '220px' }}>
+                                                <Search style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={16} />
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Search reviews..." 
+                                                    value={searchQuery} 
+                                                    onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }} 
+                                                    style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', color: 'var(--text-light)', fontSize: '0.85rem' }} 
+                                                />
+                                            </div>
+                                            <select
+                                                value={reviewsFilterReported}
+                                                onChange={(e) => { setReviewsFilterReported(e.target.value); setReviewsFilterReason('all'); setCurrentPage(1); }}
+                                                style={{ padding: '0.5rem 1rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '1.5rem', color: 'var(--text-light)', fontSize: '0.85rem', cursor: 'pointer' }}
+                                            >
+                                                <option value="all">All Statuses</option>
+                                                <option value="reported">Reported Only</option>
+                                            </select>
+                                            {reviewsFilterReported === 'reported' && (
+                                                <select
+                                                    value={reviewsFilterReason}
+                                                    onChange={(e) => { setReviewsFilterReason(e.target.value); setCurrentPage(1); }}
+                                                    style={{ padding: '0.5rem 1rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '1.5rem', color: 'var(--text-light)', fontSize: '0.85rem', cursor: 'pointer' }}
+                                                >
+                                                    <option value="all">All Reasons</option>
+                                                    <option value="Spam">Spam</option>
+                                                    <option value="Abuse">Abuse</option>
+                                                    <option value="Fake Review">Fake Review</option>
+                                                    <option value="Offensive Content">Offensive Content</option>
+                                                </select>
+                                            )}
                                         </div>
                                     </div>
 
@@ -777,27 +829,62 @@ const AdminDashboard = () => {
                                         <>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
                                                 {paginatedReviews.map(r => (
-                                                    <div key={r._id} style={{ background: 'var(--bg-darkest)', padding: '1.5rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                    <div 
+                                                        key={r._id} 
+                                                        style={{ 
+                                                            background: 'var(--bg-darkest)', 
+                                                            padding: '1.5rem', 
+                                                            borderRadius: '1rem', 
+                                                            display: 'flex', 
+                                                            flexDirection: 'column', 
+                                                            gap: '1rem', 
+                                                            border: r.isReported ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255,255,255,0.03)',
+                                                            boxShadow: r.isReported ? '0 0 10px rgba(239, 68, 68, 0.1)' : 'none'
+                                                        }}
+                                                    >
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                                             <div>
                                                                 <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.9rem' }}>{r?.user?.name || 'Anonymous'}</span>
                                                                 <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}> reviewed </span>
                                                                 <strong style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>{r?.product?.name || 'Unknown Crop'}</strong>
+                                                                {r.isReported && (
+                                                                    <div style={{ display: 'inline-block', background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', fontSize: '0.7rem', fontWeight: 'bold', padding: '0.15rem 0.5rem', borderRadius: '0.25rem', marginTop: '0.25rem' }}>
+                                                                        ⚠️ Reported: {r.reportReason}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                             <div style={{ display: 'flex', color: '#F59E0B', flexShrink: 0 }}>
                                                                 {[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < r.rating ? "#F59E0B" : "transparent"} stroke={i < r.rating ? "#F59E0B" : "rgba(255,255,255,0.3)"} />)}
                                                             </div>
                                                         </div>
-                                                        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontStyle: 'italic', background: 'var(--bg-darker)', padding: '0.75rem 1rem', borderRadius: '0.5rem', borderLeft: '3px solid var(--primary)', margin: 0 }}>
+                                                        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontStyle: 'italic', background: 'var(--bg-darker)', padding: '0.75rem 1rem', borderRadius: '0.5rem', borderLeft: r.isReported ? '3px solid #ef4444' : '3px solid var(--primary)', margin: 0 }}>
                                                             "{r?.comment || 'No comment text'}"
                                                         </p>
-                                                        <button 
-                                                            onClick={() => deleteReview(r._id)} 
-                                                            className="btn btn-ghost" 
-                                                            style={{ color: 'var(--error)', alignSelf: 'flex-end', fontSize: '0.75rem', padding: '0.4rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                                                        >
-                                                            <Trash size={12} /> Remove Review
-                                                        </button>
+                                                        {r.images && r.images.length > 0 && (
+                                                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                                {r.images.map((img, idx) => (
+                                                                    <img key={idx} src={img} alt="Review attachment" style={{ width: '60px', height: '60px', borderRadius: '0.35rem', objectFit: 'cover', border: '1px solid var(--glass-border)', cursor: 'pointer' }} onClick={() => window.open(img, '_blank')} />
+                                                                ))}
+                                                            </div>
+                                                        )}
+                                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: 'auto' }}>
+                                                            {r.isReported && (
+                                                                <button 
+                                                                    onClick={() => dismissReport(r._id)} 
+                                                                    className="btn btn-primary" 
+                                                                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '0.5rem', background: '#10b981', borderColor: '#10b981', color: '#fff', minHeight: '30px' }}
+                                                                >
+                                                                    Dismiss Report
+                                                                </button>
+                                                            )}
+                                                            <button 
+                                                                onClick={() => deleteReview(r._id)} 
+                                                                className="btn btn-ghost" 
+                                                                style={{ color: 'var(--error)', fontSize: '0.75rem', padding: '0.4rem 0.8rem', display: 'flex', alignItems: 'center', gap: '0.25rem', minHeight: '30px' }}
+                                                            >
+                                                                <Trash size={12} /> Remove Review
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>

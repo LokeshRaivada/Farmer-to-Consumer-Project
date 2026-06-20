@@ -7,6 +7,7 @@ const Review = require('../models/Review');
 const PriceTrend = require('../models/PriceTrend');
 const Notification = require('../models/Notification');
 const { protect, authorize } = require('../middleware/auth');
+const { updateRatings } = require('../utils/ratingHelper');
 
 router.use(protect);
 router.use(authorize('admin'));
@@ -117,7 +118,12 @@ router.delete('/products/:id', async (req, res) => {
 
 router.get('/reviews', async (req, res) => {
     try {
-        const reviews = await Review.find()
+        const { isReported, reportReason } = req.query;
+        const filter = {};
+        if (isReported === 'true') filter.isReported = true;
+        if (reportReason) filter.reportReason = reportReason;
+
+        const reviews = await Review.find(filter)
             .populate('user', 'name')
             .populate('product', 'name')
             .populate('farmer', 'name')
@@ -135,23 +141,34 @@ router.delete('/reviews/:id', async (req, res) => {
             return res.status(404).json({ message: 'Review not found' });
         }
         const productId = review.product;
+        const farmerId = review.farmer;
+
         await Review.findByIdAndDelete(req.params.id);
 
-        // Update product ratings
-        const reviews = await Review.find({ product: productId });
-        const numReviews = reviews.length;
-        const averageRating = numReviews > 0 
-            ? reviews.reduce((acc, item) => item.rating + acc, 0) / numReviews 
-            : 0;
-
-        await Product.findByIdAndUpdate(productId, {
-            averageRating: parseFloat(averageRating.toFixed(1)),
-            numReviews
-        });
+        // Recalculate ratings
+        await updateRatings(productId, farmerId);
 
         res.json({ message: 'Review deleted' });
     } catch (error) {
         console.error('Admin review delete error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+router.put('/reviews/:id/dismiss-report', async (req, res) => {
+    try {
+        const review = await Review.findById(req.params.id);
+        if (!review) {
+            return res.status(404).json({ message: 'Review not found' });
+        }
+
+        review.isReported = false;
+        review.reportReason = undefined;
+        await review.save();
+
+        res.json({ message: 'Review report dismissed successfully.' });
+    } catch (error) {
+        console.error('Admin review dismiss error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

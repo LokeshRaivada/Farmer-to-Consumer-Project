@@ -19,6 +19,11 @@ const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Reviews = lazy(() => import('./pages/Reviews'));
 const Farmers = lazy(() => import('./pages/Farmers'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const AssistantPanel = lazy(() => import('./components/AssistantPanel'));
+const FarmerGuideModal = lazy(() => import('./components/FarmerGuideModal'));
 
 const Navbar = () => {
   const { user, logout, t, lang, toggleLang, largeText, toggleLargeText } = useAuth();
@@ -146,8 +151,8 @@ const Navbar = () => {
           <span className="desktop-menu">{lang === 'te' ? 'వెతకండి' : 'Search'}</span>
         </Link>
 
-        {/* Permanent Language Toggle (Desktop & Mobile) */}
-        <div style={{ display: 'flex', background: 'var(--bg-darker)', borderRadius: '2rem', padding: '2px', border: '1px solid var(--glass-border)', alignItems: 'center', height: '32px', flexShrink: 0 }}>
+        {/* Permanent Language Toggle (Desktop only) */}
+        <div className="desktop-menu" style={{ display: 'flex', background: 'var(--bg-darker)', borderRadius: '2rem', padding: '2px', border: '1px solid var(--glass-border)', alignItems: 'center', height: '32px', flexShrink: 0 }}>
           <button 
             onClick={() => lang !== 'en' && toggleLang()} 
             className="lang-toggle-btn"
@@ -303,9 +308,9 @@ const Navbar = () => {
         <button 
           className="mobile-toggle btn-icon" 
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          style={{ display: 'none' }}
+          aria-label="Toggle navigation menu"
         >
-          {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
@@ -350,26 +355,6 @@ const Navbar = () => {
           </div>
         </div>
       )}
-
-      {/* Responsive Styles Injection */}
-      <style dangerouslySetInnerHTML={{__html: `
-        @media (max-width: 1280px) {
-          .desktop-menu {
-            display: none !important;
-          }
-          .mobile-toggle {
-            display: flex !important;
-          }
-        }
-        @media (max-width: 1380px) {
-          .lang-te .desktop-menu {
-            display: none !important;
-          }
-          .lang-te .mobile-toggle {
-            display: flex !important;
-          }
-        }
-      `}} />
     </nav>
   );
 };
@@ -486,6 +471,8 @@ const AppContent = () => {
   const location = useLocation();
   const path = location.pathname;
   const [helpOpen, setHelpOpen] = React.useState(false);
+  const [chatOpen, setChatOpen] = React.useState(false);
+  const [guideOpen, setGuideOpen] = React.useState(false);
 
   return (
     <div className={`${lang === 'te' ? 'lang-te' : ''} ${largeText ? 'large-mode' : ''}`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -497,6 +484,10 @@ const AppContent = () => {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/store" element={<ConsumerStore />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
             <Route path="/farmer/*" element={<ProtectedRoute allowedRoles={['farmer']}><FarmerDashboard /></ProtectedRoute>} />
             <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
             <Route path="/cart" element={<Cart />} />
@@ -505,23 +496,24 @@ const AppContent = () => {
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/farmers" element={<Farmers />} />
+            <Route path="/farmers/:id" element={<Farmers />} />
           </Routes>
         </Suspense>
       </main>
       
-      <ChatBox recipientName="Support / Seller" />
+      <ChatBox recipientName="Support / Seller" isOpen={chatOpen} setIsOpen={setChatOpen} />
 
-      {/* Floating Help Button */}
-      <button 
-        className="floating-help-btn"
-        onClick={() => setHelpOpen(true)}
-        title={lang === 'te' ? 'సహాయం' : 'Help'}
-      >
-        ❓
-      </button>
+      <AssistantPanel 
+        onOpenChat={() => setChatOpen(true)}
+        onOpenHelp={() => setHelpOpen(true)}
+        onOpenGuide={() => setGuideOpen(true)}
+      />
 
       {/* Help Modal Popup */}
       <HelpModal isOpen={helpOpen} onClose={() => setHelpOpen(false)} path={path} lang={lang} />
+
+      {/* Speech-enabled Farmer Walkthrough Guide */}
+      <FarmerGuideModal isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
 
       {/* Mobile Bottom Navigation Bar */}
       <div className="mobile-bottom-nav">

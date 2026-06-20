@@ -3,12 +3,19 @@ const router = express.Router();
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const Notification = require('../models/Notification');
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, requireEmailVerified } = require('../middleware/auth');
+
+const requireApprovedFarmer = (req, res, next) => {
+    if (!req.user.isVerified) {
+        return res.status(403).json({ message: 'Your farmer profile is pending administrator approval. You cannot list or update crops yet.' });
+    }
+    next();
+};
 
 // @route   POST /api/farmer/products
 // @desc    Add product
 // @access  Private/Farmer
-router.post('/products', protect, authorize('farmer'), async (req, res) => {
+router.post('/products', protect, authorize('farmer'), requireEmailVerified, requireApprovedFarmer, async (req, res) => {
     try {
         const product = await Product.create({
             ...req.body,
@@ -41,7 +48,7 @@ router.get('/products', protect, authorize('farmer'), async (req, res) => {
 // @route   PUT /api/farmer/products/:id
 // @desc    Update product
 // @access  Private/Farmer
-router.put('/products/:id', protect, authorize('farmer'), async (req, res) => {
+router.put('/products/:id', protect, authorize('farmer'), requireEmailVerified, requireApprovedFarmer, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
         if (!product || product.farmer.toString() !== req.user._id.toString()) {
@@ -58,7 +65,7 @@ router.put('/products/:id', protect, authorize('farmer'), async (req, res) => {
 // @route   DELETE /api/farmer/products/:id
 // @desc    Delete product
 // @access  Private/Farmer
-router.delete('/products/:id', protect, authorize('farmer'), async (req, res) => {
+router.delete('/products/:id', protect, authorize('farmer'), requireEmailVerified, requireApprovedFarmer, async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
         if (!product || product.farmer.toString() !== req.user._id.toString()) {
@@ -92,7 +99,7 @@ router.get('/orders', protect, authorize('farmer'), async (req, res) => {
 // @route   PUT /api/farmer/orders/:id
 // @desc    Update order status
 // @access  Private/Farmer
-router.put('/orders/:id', protect, authorize('farmer'), async (req, res) => {
+router.put('/orders/:id', protect, authorize('farmer'), requireEmailVerified, async (req, res) => {
     try {
         const { status } = req.body;
         const validStatuses = ['pending', 'accepted', 'packed', 'shipped', 'delivered', 'cancelled'];
@@ -113,6 +120,7 @@ router.put('/orders/:id', protect, authorize('farmer'), async (req, res) => {
             return res.status(403).json({ message: 'Unauthorized access to this order' });
         }
 
+        const previousStatus = order.status;
         order.status = status;
         
         let auditNote = `Order status updated to ${status}.`;
@@ -136,6 +144,25 @@ router.put('/orders/:id', protect, authorize('farmer'), async (req, res) => {
         });
 
         await order.save();
+
+        // Update farmer completed orders and total products sold
+        if (status === 'delivered' && previousStatus !== 'delivered') {
+            const itemsQuantity = order.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+            await User.findByIdAndUpdate(order.farmer, {
+                $inc: { 
+                    completedOrdersCount: 1,
+                    totalProductsSold: itemsQuantity
+                }
+            });
+        } else if (previousStatus === 'delivered' && status !== 'delivered') {
+            const itemsQuantity = order.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+            await User.findByIdAndUpdate(order.farmer, {
+                $inc: { 
+                    completedOrdersCount: -1,
+                    totalProductsSold: -itemsQuantity
+                }
+            });
+        }
 
         // Create notification for consumer
         let title = 'Order Update 🚜';

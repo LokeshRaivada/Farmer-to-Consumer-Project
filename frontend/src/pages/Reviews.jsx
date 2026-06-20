@@ -1,74 +1,67 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { motion } from 'framer-motion';
-import { Star, MessageSquare, Award, ArrowUpRight, Loader, Leaf, User, Send, CheckCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Star, MessageSquare, Award, ArrowUpRight, Loader, Leaf, User, Search, Filter, CheckCircle2 } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Reviews = () => {
-    const { user, lang } = useAuth();
-    
-    const [data, setData] = useState({
-        latestReviews: [],
-        highestRatedProducts: [],
-        topFarmers: []
-    });
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const { lang } = useAuth();
+    const navigate = useNavigate();
 
-    // Website Review Form States
-    const [rating, setRating] = useState(5);
-    const [comment, setComment] = useState('');
-    const [submitting, setSubmitting] = useState(false);
-    const [submitSuccess, setSubmitSuccess] = useState('');
-    const [submitError, setSubmitError] = useState('');
+    // Stats leaderboards state
+    const [topFarmers, setTopFarmers] = useState([]);
+    const [topProducts, setTopProducts] = useState([]);
+    const [leadersLoading, setLeadersLoading] = useState(true);
 
-    const fetchReviewsData = async () => {
-        setLoading(true);
-        setError(null);
+    // Reviews list & filters state
+    const [reviews, setReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(true);
+    const [search, setSearch] = useState('');
+    const [rating, setRating] = useState(''); // Empty string = All Ratings
+
+    const loadLeaders = async () => {
+        setLeadersLoading(true);
         try {
-            const res = await axios.get('/api/reviews/page-data');
-            setData(res.data);
+            const [farmersRes, productsRes] = await Promise.all([
+                axios.get('/api/reviews/top-farmers'),
+                axios.get('/api/reviews/top-products')
+            ]);
+            setTopFarmers(farmersRes.data || []);
+            setTopProducts(productsRes.data || []);
         } catch (err) {
-            console.error('Error fetching reviews page data:', err);
-            setError('Failed to load reviews data. Please try again.');
+            console.error('Error loading leaders:', err);
         } finally {
-            setLoading(false);
+            setLeadersLoading(false);
+        }
+    };
+
+    const loadReviews = async () => {
+        setReviewsLoading(true);
+        try {
+            const params = {};
+            if (search) params.search = search.trim();
+            if (rating) params.rating = rating;
+
+            const { data } = await axios.get('/api/reviews/recent', { params });
+            setReviews(data || []);
+        } catch (err) {
+            console.error('Error loading reviews:', err);
+        } finally {
+            setReviewsLoading(false);
         }
     };
 
     useEffect(() => {
-        fetchReviewsData();
+        loadLeaders();
     }, []);
 
-    const handleWebsiteReviewSubmit = async (e) => {
-        e.preventDefault();
-        setSubmitting(true);
-        setSubmitSuccess('');
-        setSubmitError('');
-
-        try {
-            const { data: newReview } = await axios.post('/api/reviews', {
-                rating,
-                comment,
-                reviewType: 'website'
-            });
-
-            setSubmitSuccess('Thank you! Your website feedback has been submitted.');
-            setComment('');
-            setRating(5);
-
-            setData(prev => ({
-                ...prev,
-                latestReviews: [newReview, ...prev.latestReviews].slice(0, 6)
-            }));
-        } catch (err) {
-            console.error('Website review submit error:', err);
-            setSubmitError(err.response?.data?.message || 'Failed to submit review.');
-        } finally {
-            setSubmitting(false);
-        }
-    };
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            loadReviews();
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [search, rating]);
 
     const renderStars = (rating) => {
         const stars = [];
@@ -77,7 +70,7 @@ const Reviews = () => {
             stars.push(
                 <Star 
                     key={i} 
-                    size={14} 
+                    size={12} 
                     fill={i <= floor ? '#eab308' : 'transparent'} 
                     color={i <= floor ? '#eab308' : 'var(--glass-border)'} 
                 />
@@ -86,231 +79,242 @@ const Reviews = () => {
         return stars;
     };
 
-    if (loading) {
-        return (
-            <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '1rem' }}>
-                <Loader className="animate-spin" size={32} color="var(--primary)" />
-                <span style={{ color: 'var(--text-muted)' }}>Loading reviews & highlights...</span>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div style={{ maxWidth: '600px', margin: '4rem auto', padding: '2rem', textAlign: 'center' }} className="glass">
-                <p style={{ color: 'var(--error)', marginBottom: '1.5rem' }}>{error}</p>
-                <button className="btn btn-primary" onClick={fetchReviewsData} style={{ borderRadius: '2rem' }}>Retry</button>
-            </div>
-        );
-    }
-
     return (
         <div style={{ maxWidth: '1200px', margin: '2rem auto', padding: '0 1rem', paddingBottom: '6rem', textAlign: 'left' }}>
-            {/* Header & Website Review Form Split Section */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', marginBottom: '3rem', alignItems: 'center' }}>
-                <div style={{ flex: '1 1 400px' }}>
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
-                        <MessageSquare size={36} color="var(--primary)" /> {lang === 'te' ? 'కమ్యూనిటీ హబ్' : 'Community Hub'}
-                    </h1>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '1rem', margin: 0, lineHeight: 1.5 }}>
-                        {lang === 'te' ? 'సహచర వినియోగదారుల నుండి పారదర్శక సమీక్షలను చదవండి మరియు అత్యుత్తమ రేటింగ్ పొందిన పంటలు మరియు రైతులను కనుగొనండి. మా వేదిక మెరుగుపరచడానికి మీ అభిప్రాయాన్ని అందించండి!' : 'Read transparent reviews from fellow consumers and discover top-rated fresh produce and farmers. Help us improve by submitting website feedback!'}
-                    </p>
+            {/* Header Section */}
+            <div style={{ marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                    💬 {lang === 'te' ? 'కమ్యూనిటీ రేటింగ్స్ & సమీక్షలు' : 'Ratings & Reviews Hub'}
+                </h1>
+                <p style={{ color: 'var(--text-muted)', fontSize: '1rem', margin: 0, lineHeight: 1.5 }}>
+                    {lang === 'te' ? 'వినియోగదారుల నుండి నిజమైన సమీక్షలను బ్రౌజ్ చేయండి మరియు అత్యుత్తమ రేటింగ్ పొందిన రైతులు మరియు పంటలను కనుగొనండి.' : 'Browse real customer feedback derived from completed orders to find trustworthy farmers and high-quality crops.'}
+                </p>
+            </div>
+
+            {/* Interactive Filters Bar */}
+            <div className="glass" style={{ padding: '1rem 1.5rem', borderRadius: '1rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem', alignItems: 'center', border: '1px solid var(--glass-border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '260px' }}>
+                    <Search size={18} color="var(--text-muted)" />
+                    <input 
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder={lang === 'te' ? 'రైతు, పంట లేదా సమీక్షను శోధించండి...' : 'Search by farmer, crop, reviewer, comment...'}
+                        style={{ width: '100%', background: 'transparent', border: 'none', color: 'var(--text-light)', outline: 'none', fontSize: '0.9rem' }}
+                    />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '180px' }}>
+                    <Filter size={16} color="var(--text-muted)" />
+                    <select
+                        value={rating}
+                        onChange={(e) => setRating(e.target.value)}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--text-light)', outline: 'none', fontSize: '0.9rem', cursor: 'pointer', width: '100%' }}
+                    >
+                        <option value="" style={{ background: 'var(--bg-darker)' }}>⭐ {lang === 'te' ? 'అన్ని రేటింగ్‌లు' : 'All Ratings'}</option>
+                        <option value="5" style={{ background: 'var(--bg-darker)' }}>⭐ 5 Stars</option>
+                        <option value="4" style={{ background: 'var(--bg-darker)' }}>⭐ 4 Stars & Above</option>
+                        <option value="3" style={{ background: 'var(--bg-darker)' }}>⭐ 3 Stars & Above</option>
+                        <option value="2" style={{ background: 'var(--bg-darker)' }}>⭐ 2 Stars & Above</option>
+                        <option value="1" style={{ background: 'var(--bg-darker)' }}>⭐ 1 Star & Above</option>
+                    </select>
+                </div>
+                {(search || rating) && (
+                    <button 
+                        onClick={() => { setSearch(''); setRating(''); }}
+                        className="btn btn-secondary"
+                        style={{ padding: '0.4rem 0.8rem', fontSize: '0.8rem', borderRadius: '0.5rem', minHeight: '32px' }}
+                    >
+                        Clear Filters
+                    </button>
+                )}
+            </div>
+
+            {/* Layout Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr', lg: '1.8fr 1.2fr', gap: '2rem' }} className="reviews-layout-grid">
+                
+                {/* Left Side: Dynamic Reviews Feed */}
+                <div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <MessageSquare size={18} color="var(--primary)" /> {lang === 'te' ? 'కస్టమర్ అభిప్రాయం' : 'Customer Feedback Feed'}
+                    </h2>
+
+                    {reviewsLoading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', flexDirection: 'column', gap: '1rem' }}>
+                            <Loader className="animate-spin" size={24} color="var(--primary)" />
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Filtering reviews...</span>
+                        </div>
+                    ) : reviews.length === 0 ? (
+                        <div className="glass" style={{ padding: '4rem 2rem', textAlign: 'center', borderRadius: '1rem', border: '1px dashed var(--glass-border)' }}>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0 }}>
+                                {search || rating 
+                                    ? "No reviews match your filters."
+                                    : "No customer reviews yet. Be the first customer to review this product."}
+                            </p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            {reviews.map(r => (
+                                <motion.div 
+                                    key={r._id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="glass"
+                                    style={{ padding: '1.5rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', border: '1px solid var(--glass-border)' }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
+                                        <div>
+                                            <div style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                <User size={14} color="var(--text-muted)" /> {r.user?.name || 'Verified Customer'}
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.1rem', display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                                                <span>Bought</span>
+                                                <span style={{ color: 'var(--primary)', fontWeight: 'bold', background: 'rgba(22, 163, 74, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '0.25rem' }}>
+                                                    {r.product?.name || 'Crop Listing'}
+                                                </span>
+                                                <span>from</span>
+                                                <span 
+                                                    onClick={() => r.farmer?._id && navigate(`/farmers/${r.farmer._id}`)}
+                                                    style={{ color: 'var(--primary)', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }}
+                                                >
+                                                    {r.farmer?.name || 'Verified Farmer'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '2px', background: 'rgba(234, 179, 8, 0.05)', padding: '0.2rem 0.5rem', borderRadius: '0.5rem', border: '1px solid rgba(234, 179, 8, 0.1)' }}>
+                                            {renderStars(r.rating)}
+                                            <span style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#eab308', marginLeft: '0.25rem' }}>{r.rating.toFixed(1)}</span>
+                                        </div>
+                                    </div>
+                                    <p style={{ fontSize: '0.9rem', color: 'var(--text-light)', margin: '0.25rem 0', fontStyle: 'italic', lineHeight: '1.4' }}>
+                                        "{r.comment}"
+                                    </p>
+                                    
+                                    {/* Uploaded Crop Photos */}
+                                    {r.images && r.images.length > 0 && (
+                                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                                            {r.images.map((img, idx) => (
+                                                <img 
+                                                    key={idx} 
+                                                    src={img} 
+                                                    alt="Review photo" 
+                                                    style={{ width: '80px', height: '80px', borderRadius: '0.5rem', objectFit: 'cover', border: '1px solid var(--glass-border)', cursor: 'pointer' }}
+                                                    onClick={() => window.open(img, '_blank')}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <span style={{ color: 'var(--primary)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                            <CheckCircle2 size={10} /> Verified Purchase
+                                        </span>
+                                        <span>•</span>
+                                        <span>{new Date(r.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                {/* Website Feedback Form Card */}
-                <div style={{ flex: '1 1 350px' }}>
-                    <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid var(--glass-border)' }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.4rem', textAlign: 'left' }}>
-                            💬 {lang === 'te' ? 'మా ప్లాట్‌ఫారమ్‌ను రేట్ చేయండి' : 'Rate Our Website & Platform'}
-                        </h3>
-
-                        {submitError && <div style={{ color: 'var(--error)', fontSize: '0.8rem', marginBottom: '0.5rem' }}>{submitError}</div>}
-                        {submitSuccess && <div style={{ color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>{submitSuccess}</div>}
-
-                        {user ? (
-                            <form onSubmit={handleWebsiteReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'flex-start' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Rating:</span>
-                                    <div style={{ display: 'flex', gap: '0.25rem' }}>
-                                        {[1, 2, 3, 4, 5].map((star) => (
-                                            <button
-                                                key={star} type="button" onClick={() => setRating(star)}
-                                                style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
-                                            >
-                                                <Star 
-                                                    size={18} 
-                                                    fill={star <= rating ? '#eab308' : 'transparent'} 
-                                                    color={star <= rating ? '#eab308' : 'var(--glass-border)'} 
-                                                />
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <textarea
-                                    rows={2} required value={comment} onChange={(e) => setComment(e.target.value)}
-                                    placeholder="Write website feedback..."
-                                    style={{ width: '100%', padding: '0.5rem', borderRadius: '0.5rem', outline: 'none', fontSize: '0.85rem', resize: 'none' }}
-                                />
-                                <button 
-                                    type="submit" disabled={submitting} className="btn btn-primary"
-                                    style={{ width: '100%', padding: '0.5rem 0', borderRadius: '1.5rem', fontSize: '0.8rem', textTransform: 'none', minHeight: '32px' }}
-                                >
-                                    {submitting ? 'Submitting...' : <><Send size={12} /> Submit Website Review</>}
-                                </button>
-                            </form>
+                {/* Right Side: Leaderboard Sidebars */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                    
+                    {/* Leaderboard: Top Rated Farmers */}
+                    <div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Award size={18} color="var(--primary)" /> {lang === 'te' ? 'టాప్ రేటెడ్ రైతులు' : 'Top Farmers'}
+                        </h2>
+                        {leadersLoading ? (
+                            <div style={{ padding: '1.5rem', textAlign: 'center' }}><Loader className="animate-spin" size={16} /></div>
+                        ) : topFarmers.length === 0 ? (
+                            <div className="glass" style={{ padding: '2rem', textAlign: 'center', borderRadius: '1rem' }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0 }}>No farmers ranked yet.</p>
+                            </div>
                         ) : (
-                            <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', padding: '0.5rem 0' }}>
-                                🔒 Please log in to leave website feedback.
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {topFarmers.map(f => (
+                                    <div 
+                                        key={f._id}
+                                        onClick={() => navigate(`/farmers/${f._id}`)}
+                                        className="glass"
+                                        style={{ padding: '1rem', borderRadius: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', border: '1px solid var(--glass-border)', cursor: 'pointer', transition: 'transform 0.2s' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(22, 163, 74, 0.08)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold' }}>
+                                            {f.name.charAt(0).toUpperCase()}
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>
+                                                    {f.name} {f.isVerified && '🛡️'}
+                                                </h3>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', color: '#eab308', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                                    <Star size={10} fill="#eab308" color="#eab308" />
+                                                    <span>{(f.averageRating || f.rating || 0).toFixed(1)}</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                                                📍 {f.address?.city || 'Local Area'} • {f.completedOrdersCount || 0} Orders Completed
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
-                </div>
-            </div>
 
-            {/* Grid Layout */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', lg: 'repeat(3, 1fr)', gap: '2rem' }} className="reviews-grid">
-                {/* Column 1: Latest Reviews */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <MessageSquare size={18} color="var(--primary)" /> {lang === 'te' ? 'ఇటీవలి సమీక్షలు' : 'Latest Feedback'}
-                    </h2>
-                    {data.latestReviews.length === 0 ? (
-                        <div className="glass" style={{ padding: '3rem 1.5rem', textAlign: 'center', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>No reviews submitted yet.</p>
-                        </div>
-                    ) : (
-                        data.latestReviews.map(r => (
-                            <motion.div 
-                                key={r._id}
-                                whileHover={{ y: -2 }}
-                                className="glass"
-                                style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', border: '1px solid var(--glass-border)' }}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div style={{ textAlign: 'left' }}>
-                                        <div style={{ fontSize: '0.9rem', fontWeight: '600', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                            <User size={12} color="var(--text-muted)" /> {r.user?.name || 'Anonymous User'}
+                    {/* Leaderboard: Top Rated Products */}
+                    <div>
+                        <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Leaf size={18} color="var(--primary)" /> {lang === 'te' ? 'టాప్ రేటెడ్ పంటలు' : 'Top Rated Crops'}
+                        </h2>
+                        {leadersLoading ? (
+                            <div style={{ padding: '1.5rem', textAlign: 'center' }}><Loader className="animate-spin" size={16} /></div>
+                        ) : topProducts.length === 0 ? (
+                            <div className="glass" style={{ padding: '2rem', textAlign: 'center', borderRadius: '1rem' }}>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: 0 }}>No rated products yet.</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {topProducts.map(p => (
+                                    <div 
+                                        key={p._id}
+                                        className="glass"
+                                        style={{ padding: '1rem', borderRadius: '1rem', display: 'flex', gap: '0.75rem', alignItems: 'center', border: '1px solid var(--glass-border)' }}
+                                    >
+                                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'var(--bg-darker)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                                            <Leaf size={20} />
                                         </div>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                            {r.reviewType === 'website' ? (
-                                                <span style={{ color: 'var(--primary)', fontWeight: '500' }}>Platform Feedback 🌐</span>
-                                            ) : r.reviewType === 'farmer' ? (
-                                                <span>Reviewed Farmer <span style={{ color: 'var(--primary)', fontWeight: '500' }}>{r.farmer?.name || 'Verified Farmer'}</span></span>
-                                            ) : (
-                                                <span>Reviewed Crop <span style={{ color: 'var(--primary)', fontWeight: '500' }}>{r.product?.name || 'Deleted Crop'}</span></span>
-                                            )}
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <h3 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>{p.name}</h3>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', color: '#eab308', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                                                    <Star size={10} fill="#eab308" color="#eab308" />
+                                                    <span>{p.averageRating.toFixed(1)}</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem', display: 'flex', justifyContent: 'space-between' }}>
+                                                <span>By {p.farmer?.name || 'Verified Farmer'}</span>
+                                                <span>₹{p.price}/kg</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '1px' }}>
-                                        {renderStars(r.rating)}
-                                    </div>
-                                </div>
-                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, fontStyle: 'italic', lineHeight: '1.4', textAlign: 'left' }}>
-                                    "{r.comment}"
-                                </p>
-                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'flex-end', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    {r.verifiedPurchase && <span style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✓ Verified Purchase</span>}
-                                    <span>{new Date(r.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}</span>
-                                </div>
-                            </motion.div>
-                        ))
-                    )}
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
                 </div>
 
-                {/* Column 2: Highest Rated Products */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Leaf size={18} color="var(--primary)" /> {lang === 'te' ? 'టాప్ పంటల ఎంపిక' : 'Top Crop Selection'}
-                    </h2>
-                    {data.highestRatedProducts.length === 0 ? (
-                        <div className="glass" style={{ padding: '3rem 1.5rem', textAlign: 'center', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>No highly rated crops available yet.</p>
-                        </div>
-                    ) : (
-                        data.highestRatedProducts.map(p => (
-                            <motion.div 
-                                key={p._id}
-                                whileHover={{ y: -2 }}
-                                className="glass"
-                                style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', border: '1px solid var(--glass-border)' }}
-                            >
-                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'var(--bg-darker)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Leaf size={24} color="var(--primary)" />
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <h3 style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>{p.name}</h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#eab308', fontSize: '0.8rem', fontWeight: '600' }}>
-                                            <Star size={12} fill="#eab308" color="#eab308" />
-                                            <span>{p.averageRating.toFixed(1)}</span>
-                                        </div>
-                                    </div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-                                        <span>By {p.farmer?.name || 'Verified Farmer'}</span>
-                                        <span>({p.numReviews} review{p.numReviews !== 1 ? 's' : ''})</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.25rem' }}>
-                                        <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-light)' }}>₹{p.price}/kg</span>
-                                        <Link to="/store" style={{ fontSize: '0.75rem', color: 'var(--primary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                                            Shop Crop <ArrowUpRight size={12} />
-                                        </Link>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))
-                    )}
-                </div>
-
-                {/* Column 3: Top Rated Farmers */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-light)', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Award size={18} color="var(--primary)" /> {lang === 'te' ? 'టాప్ రేటెడ్ రైతులు' : 'Top Ranked Farmers'}
-                    </h2>
-                    {data.topFarmers.length === 0 ? (
-                        <div className="glass" style={{ padding: '3rem 1.5rem', textAlign: 'center', borderRadius: '1rem', border: '1px solid var(--glass-border)' }}>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: 0 }}>No verified farmer rankings yet.</p>
-                        </div>
-                    ) : (
-                        data.topFarmers.map(f => (
-                            <motion.div 
-                                key={f._id}
-                                whileHover={{ y: -2 }}
-                                className="glass"
-                                style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', gap: '1rem', alignItems: 'center', border: '1px solid var(--glass-border)' }}
-                            >
-                                <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'rgba(22, 163, 74, 0.08)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                    {f.name.charAt(0).toUpperCase()}
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <h3 style={{ fontSize: '0.95rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                            {f.name}
-                                            {f.isVerified && <span style={{ color: 'var(--primary)', fontSize: '0.8rem' }} title="Verified profile">🛡️</span>}
-                                        </h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#eab308', fontSize: '0.8rem', fontWeight: '600' }}>
-                                            <Star size={12} fill="#eab308" color="#eab308" />
-                                            <span>{f.rating.toFixed(1)}</span>
-                                        </div>
-                                    </div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'left' }}>
-                                        {f.address?.city || 'Local Area'}, {f.address?.state || 'India'}
-                                    </div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', gap: '1rem', marginTop: '0.25rem' }}>
-                                        <span>🌾 <strong>{f.productsCount}</strong> Active Crops</span>
-                                        <span>💬 <strong>{f.reviewsCount}</strong> Review{f.reviewsCount !== 1 ? 's' : ''}</span>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))
-                    )}
-                </div>
             </div>
 
             {/* Custom Responsive Styles */}
             <style dangerouslySetInnerHTML={{__html: `
                 @media (min-width: 992px) {
-                    .reviews-grid {
-                        grid-template-columns: repeat(3, 1fr) !important;
+                    .reviews-layout-grid {
+                        grid-template-columns: 1.8fr 1.2fr !important;
                     }
                 }
             `}} />

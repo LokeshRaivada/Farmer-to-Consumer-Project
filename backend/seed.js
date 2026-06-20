@@ -24,7 +24,8 @@ const seedData = async () => {
             email: 'admin@farmer.com',
             password: 'password123',
             role: 'admin',
-            phone: '1234567890'
+            phone: '1234567890',
+            isEmailVerified: true
         });
 
         // Create Prudhvi Admin
@@ -33,7 +34,8 @@ const seedData = async () => {
             email: 'jubburuprudhviraju@gmail.com',
             password: 'Prudhvi@2005',
             role: 'admin',
-            phone: '9999999999'
+            phone: '9999999999',
+            isEmailVerified: true
         });
 
         // Create Farmer
@@ -45,7 +47,8 @@ const seedData = async () => {
             phone: '0987654321',
             address: { city: 'Guntur', state: 'Andhra Pradesh' },
             location: { type: 'Point', coordinates: [80.4365, 16.3067] },
-            isVerified: true
+            isVerified: true,
+            isEmailVerified: true
         });
 
         // Create Farmer 2
@@ -57,7 +60,8 @@ const seedData = async () => {
             phone: '9988776655',
             address: { city: 'Nellore', state: 'Andhra Pradesh' },
             location: { type: 'Point', coordinates: [79.9865, 14.4426] },
-            isVerified: true
+            isVerified: true,
+            isEmailVerified: true
         });
 
         // Create Consumer
@@ -67,7 +71,8 @@ const seedData = async () => {
             password: 'password123',
             role: 'consumer',
             phone: '1122334455',
-            address: { city: 'Hyderabad', state: 'Telangana' }
+            address: { city: 'Hyderabad', state: 'Telangana' },
+            isEmailVerified: true
         });
 
         // Create Products
