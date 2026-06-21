@@ -64,8 +64,20 @@ app.use((req, res, next) => {
 });
 
 // Middleware Configuration
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://farmerdirect.vercel.app'
+];
+
 const corsOptions = {
-    origin: process.env.NODE_ENV === 'production' ? process.env.FRONTEND_URL : '*',
+    origin: (origin, callback) => {
+        if (!origin || process.env.NODE_ENV !== 'production' || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     optionsSuccessStatus: 200
 };
 app.use(cors(corsOptions));
