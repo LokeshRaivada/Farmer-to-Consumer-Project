@@ -122,6 +122,7 @@ app.use('/api/consumer', require('./routes/consumerRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/farmers', require('./routes/farmerPublicRoutes'));
 
 app.get('/api/config/public', (req, res) => {
     res.json({

@@ -19,6 +19,7 @@ const Wishlist = lazy(() => import('./pages/Wishlist'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Reviews = lazy(() => import('./pages/Reviews'));
 const Farmers = lazy(() => import('./pages/Farmers'));
+const FarmerProfile = lazy(() => import('./pages/FarmerProfile'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
@@ -557,7 +558,7 @@ const AppContent = () => {
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/farmers" element={<Farmers />} />
-            <Route path="/farmers/:id" element={<Farmers />} />
+            <Route path="/farmers/:id" element={<FarmerProfile />} />
           </Routes>
         </Suspense>
       </main>

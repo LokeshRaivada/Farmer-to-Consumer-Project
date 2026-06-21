@@ -3,8 +3,10 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, User, MessageSquare, CheckCircle, Send, Camera, AlertTriangle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const ProductDetailsModal = ({ product, onClose }) => {
+    const navigate = useNavigate();
     const { user, lang } = useAuth();
     const [reviews, setReviews] = useState([]);
     const [breakdown, setBreakdown] = useState({ 5:0, 4:0, 3:0, 2:0, 1:0 });
@@ -201,7 +203,20 @@ const ProductDetailsModal = ({ product, onClose }) => {
                         <div style={{ marginBottom: '2.5rem' }}>
                             <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '0.5rem', color: 'var(--text-light)' }}>{product.name}</h3>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0 }}>
-                              By {product.farmer?.name || 'Local Farmer'} 
+                              By{' '}
+                              {product.farmer?._id ? (
+                                  <span 
+                                      onClick={() => {
+                                          onClose();
+                                          navigate(`/farmers/${product.farmer._id}`);
+                                      }}
+                                      style={{ color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer' }}
+                                  >
+                                      {product.farmer.name}
+                                  </span>
+                              ) : (
+                                  <span>{product.farmer?.name || 'Local Farmer'}</span>
+                              )}
                               {product.farmer?.isVerified && <span style={{ color: 'var(--primary)', fontWeight: 'bold', marginLeft: '0.25rem' }}>🛡️ {lang === 'te' ? 'వెరిఫైడ్' : 'Verified'}</span>}
                             </p>
 

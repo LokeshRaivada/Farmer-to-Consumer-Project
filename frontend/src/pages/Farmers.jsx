@@ -240,6 +240,9 @@ const Farmers = () => {
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                             <MapPin size={10} /> <span>{f.address?.city || 'Local Area'}, {f.address?.state || 'India'}</span>
                                         </div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 'bold', marginTop: '0.25rem' }}>
+                                            {lang === 'te' ? 'ప్రొఫైల్ చూడండి' : 'View Profile'} &rarr;
+                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.2rem' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.1rem', color: '#eab308', fontSize: '0.75rem', fontWeight: 'bold' }}>

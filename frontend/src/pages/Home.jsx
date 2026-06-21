@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Leaf, Search, MapPin, ArrowRight, ShieldCheck, Sprout, Star, ShoppingCart } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 
@@ -21,6 +21,7 @@ const getCropEmoji = (name) => {
 };
 
 const ProductCard = ({ product, onAddToCart }) => {
+  const navigate = useNavigate();
   const [added, setAdded] = useState(false);
   const { user, lang } = useAuth();
   
@@ -60,11 +61,49 @@ const ProductCard = ({ product, onAddToCart }) => {
           </div>
         </div>
 
-        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.25rem' }}>
-          <span>By {product.farmer?.name || 'Farmer'}</span>
+        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.25rem', width: '100%' }}>
+          <span>By </span>
+          {product.farmer?._id ? (
+            <span 
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                navigate(`/farmers/${product.farmer._id}`);
+              }}
+              style={{ color: 'var(--primary)', fontWeight: 'bold', textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              {product.farmer.name}
+            </span>
+          ) : (
+            <span>{product.farmer?.name || 'Farmer'}</span>
+          )}
           {product.farmer?.isVerified && (
-            <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.75rem' }}>
-              🛡️ {lang === 'te' ? 'వెరిఫైడ్' : 'Verified'}
+            <span style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.75rem', marginLeft: '0.15rem' }} title="Verified Farmer">
+              🛡️
+            </span>
+          )}
+          {product.farmer?._id && (
+            <span 
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                navigate(`/farmers/${product.farmer._id}`);
+              }}
+              style={{ 
+                marginLeft: 'auto', 
+                color: 'var(--primary)', 
+                fontWeight: '700', 
+                fontSize: '0.7rem', 
+                cursor: 'pointer', 
+                border: '1px solid var(--primary)', 
+                padding: '0.15rem 0.4rem', 
+                borderRadius: '0.5rem',
+                background: 'var(--primary-glow)',
+                display: 'inline-flex',
+                alignItems: 'center'
+              }}
+            >
+              {lang === 'te' ? 'రైతు ప్రొఫైల్' : 'View Farmer'}
             </span>
           )}
         </div>
