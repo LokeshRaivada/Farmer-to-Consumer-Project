@@ -22,6 +22,7 @@ const Farmers = lazy(() => import('./pages/Farmers'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const LiveTracking = lazy(() => import('./pages/LiveTracking'));
 const AssistantPanel = lazy(() => import('./components/AssistantPanel'));
 const FarmerGuideModal = lazy(() => import('./components/FarmerGuideModal'));
 
@@ -115,7 +116,7 @@ const Navbar = () => {
   );
 
   return (
-    <nav className="glass" style={{ margin: '1.5rem auto', maxWidth: '1300px', position: 'sticky', top: '1.5rem', zIndex: 1000, padding: '0.6rem 1.25rem', borderRadius: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1)', border: '1px solid rgba(0,255,157,0.2)', backdropFilter: 'blur(25px)' }}>
+    <nav className="glass" style={{ margin: '1.5rem auto', maxWidth: '1300px', position: 'sticky', top: '1.5rem', zIndex: 1000, padding: '0.6rem 1.25rem', borderRadius: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: 'var(--shadow-card)', border: '1px solid var(--border)', backdropFilter: 'blur(25px)' }}>
       {/* Left: Logo & Desktop Links */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexShrink: 0 }}>
         <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
@@ -128,7 +129,7 @@ const Navbar = () => {
         </Link>
 
         {/* Center Links (Desktop only) */}
-        <div className="desktop-menu" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '0.3rem 0.8rem', borderRadius: '2rem', border: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+        <div className="desktop-menu" style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', background: 'var(--surface)', padding: '0.3rem 0.8rem', borderRadius: '2rem', border: '1px solid var(--border)', flexShrink: 0 }}>
           <NavLink to="/">🏠 {t('home')}</NavLink>
           <NavLink to="/store">🛒 {t('shop')}</NavLink>
           <NavLink to="/farmers">👨‍🌾 {t('farmers')}</NavLink>
@@ -158,7 +159,7 @@ const Navbar = () => {
             className="lang-toggle-btn"
             style={{ 
               background: lang === 'en' ? 'var(--primary)' : 'transparent', 
-              color: lang === 'en' ? 'var(--white)' : 'var(--text-light)',
+              color: lang === 'en' ? 'var(--text-on-primary)' : 'var(--text-primary)',
               border: 'none', borderRadius: '1.5rem', padding: '0.1rem 0.5rem', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' 
             }}
           >
@@ -169,7 +170,7 @@ const Navbar = () => {
             className="lang-toggle-btn"
             style={{ 
               background: lang === 'te' ? 'var(--primary)' : 'transparent', 
-              color: lang === 'te' ? 'var(--white)' : 'var(--text-light)',
+              color: lang === 'te' ? 'var(--text-on-primary)' : 'var(--text-primary)',
               border: 'none', borderRadius: '1.5rem', padding: '0.1rem 0.5rem', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center', whiteSpace: 'nowrap' 
             }}
           >
@@ -198,7 +199,7 @@ const Navbar = () => {
             {/* Notifications Popover */}
             {showNotifications && (
               <div className="glass" style={{ position: 'absolute', top: '3rem', right: '-4rem', width: '320px', padding: '1rem', borderRadius: '1rem', border: '1px solid var(--glass-border)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 1010, display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'var(--bg-dark)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
                   <span style={{ fontWeight: '600', fontSize: '0.9rem', color: 'var(--primary)' }}>Notifications</span>
                   {unreadCount > 0 && (
                     <button onClick={markAllRead} style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', fontSize: '0.75rem', cursor: 'pointer', padding: 0 }}>
@@ -211,9 +212,9 @@ const Navbar = () => {
                     <div style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>No notifications</div>
                   ) : (
                     notifications.map(n => (
-                      <div key={n._id} onClick={() => handleNotificationClick(n)} style={{ padding: '0.6rem', borderRadius: '0.5rem', background: n.read ? 'transparent' : 'rgba(0, 255, 157, 0.05)', border: '1px solid rgba(255,255,255,0.04)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', gap: '0.25rem' }} className="hover-glow">
+                      <div key={n._id} onClick={() => handleNotificationClick(n)} style={{ padding: '0.6rem', borderRadius: '0.5rem', background: n.read ? 'transparent' : 'rgba(0, 255, 157, 0.05)', border: '1px solid var(--border)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', flexDirection: 'column', gap: '0.25rem' }} className="hover-glow">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '0.5rem' }}>
-                          <span style={{ fontWeight: n.read ? '600' : '700', fontSize: '0.85rem', color: 'white' }}>{n.title}</span>
+                          <span style={{ fontWeight: n.read ? '600' : '700', fontSize: '0.85rem', color: 'var(--text-primary)' }}>{n.title}</span>
                           <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{formatTimeAgo(n.createdAt)}</span>
                         </div>
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.3', margin: 0 }}>{n.message}</p>
@@ -252,37 +253,37 @@ const Navbar = () => {
               <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(0,255,157,0.1)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold', fontSize: '0.8rem', flexShrink: 0 }}>
                  {user.name.charAt(0).toUpperCase()}
               </div>
-              <span className="user-name" style={{ fontSize: '0.85rem', fontWeight: '600', color: 'white', display: 'inline-block', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>
+              <span className="user-name" style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-primary)', display: 'inline-block', maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>
               <ChevronDown size={14} color="var(--text-muted)" style={{ transform: showProfile ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s', flexShrink: 0 }} />
             </button>
 
             {/* Profile Dropdown Menu */}
             {showProfile && (
               <div className="glass" style={{ position: 'absolute', top: '3.5rem', right: 0, width: '220px', padding: '1rem', borderRadius: '1rem', border: '1px solid var(--glass-border)', boxShadow: '0 10px 25px rgba(0,0,0,0.5)', zIndex: 1010, display: 'flex', flexDirection: 'column', gap: '0.5rem', background: 'var(--bg-dark)' }}>
-                <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
-                  <div style={{ fontWeight: '600', fontSize: '0.85rem', color: 'white' }}>{user.name}</div>
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div style={{ fontWeight: '600', fontSize: '0.85rem', color: 'var(--text-primary)' }}>{user.name}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user.email}</div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', textAlign: 'left' }}>
-                  <Link to="/settings" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.target.style.background = 'transparent'}>
+                  <Link to="/settings" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-darker)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                     👤 {t('profile') || 'Profile'} & Settings
                   </Link>
                   {user.role === 'farmer' && (
-                    <Link to="/farmer" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.target.style.background = 'transparent'}>
+                    <Link to="/farmer" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-darker)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                       🌾 {t('my_farm') || 'My Farm'}
                     </Link>
                   )}
                   {user.role === 'admin' && (
-                    <Link to="/admin" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.target.style.background = 'transparent'}>
+                    <Link to="/admin" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-darker)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                       🛡️ Admin Dashboard
                     </Link>
                   )}
                   {user.role === 'consumer' && (
                     <>
-                      <Link to="/orders" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.target.style.background = 'transparent'}>
+                      <Link to="/orders" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-darker)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                         📦 {lang === 'te' ? 'నా ఆర్డర్లు' : 'My Orders'}
                       </Link>
-                      <Link to="/wishlist" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={(e) => e.target.style.background = 'transparent'}>
+                      <Link to="/wishlist" onClick={() => setShowProfile(false)} style={{ textDecoration: 'none', color: 'var(--text-light)', fontSize: '0.85rem', padding: '0.5rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-darker)'} onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                         ❤️ {t('wishlist') || 'Wishlist'}
                       </Link>
                     </>
@@ -329,7 +330,7 @@ const Navbar = () => {
             
             {user ? (
               <>
-                <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0.5rem 0' }}></div>
+                <div style={{ height: '1px', background: 'var(--border)', margin: '0.5rem 0' }}></div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', paddingLeft: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Account Settings</div>
                 <NavLink to="/settings">👤 {t('profile')} & Settings</NavLink>
                 {user.role === 'farmer' && <NavLink to="/farmer">🌾 {t('my_farm')}</NavLink>}
@@ -345,7 +346,7 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <div style={{ height: '1px', background: 'rgba(255,255,255,0.08)', margin: '0.5rem 0' }}></div>
+                <div style={{ height: '1px', background: 'var(--border)', margin: '0.5rem 0' }}></div>
                 <div style={{ display: 'flex', gap: '1rem', width: '100%' }}>
                   <Link to="/login" className="btn btn-ghost" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, padding: '0.6rem 0' }}>🔑 {t('login')}</Link>
                   <Link to="/signup" className="btn btn-primary" onClick={() => setMobileMenuOpen(false)} style={{ flex: 1, padding: '0.6rem 0', borderRadius: '1.5rem' }}>📝 {t('signup')}</Link>
@@ -366,7 +367,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (loading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '60vh', gap: '1rem', color: 'var(--text-light)' }}>
-        <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid rgba(255,255,255,0.05)', borderTopColor: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
+        <div style={{ width: '40px', height: '40px', borderRadius: '50%', border: '3px solid var(--border)', borderTopColor: 'var(--primary)', animation: 'spin 1s linear infinite' }} />
         <div style={{ fontSize: '0.85rem', opacity: 0.6, letterSpacing: '1.25px', textTransform: 'uppercase' }}>Authenticating...</div>
       </div>
     );
@@ -466,6 +467,64 @@ const HelpModal = ({ isOpen, onClose, path, lang }) => {
   );
 };
 
+const VerificationBanner = () => {
+  const { user, config, lang } = useAuth();
+  const location = useLocation();
+  const path = location.pathname;
+
+  const showBanner = user && 
+                     !user.isEmailVerified && 
+                     config?.emailVerificationRequired && 
+                     path !== '/verify-email' && 
+                     !path.startsWith('/verify-email/') &&
+                     path !== '/login' && 
+                     path !== '/signup';
+
+  if (!showBanner) return null;
+
+  return (
+    <div style={{
+      background: 'rgba(239, 68, 68, 0.08)',
+      border: '1px solid rgba(239, 68, 68, 0.2)',
+      borderRadius: '1rem',
+      padding: '0.75rem 1.25rem',
+      margin: '1rem auto',
+      maxWidth: '1200px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '1rem',
+      flexWrap: 'wrap'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--error)', fontSize: '0.85rem', fontWeight: '500' }}>
+        <span>⚠️</span>
+        <span>
+          {lang === 'te' 
+            ? 'అన్ని ఫీచర్లను ఉపయోగించడానికి మీ ఈమెయిల్ వెరిఫై చేయండి.' 
+            : 'Verify your email to unlock all marketplace features.'}
+        </span>
+      </div>
+      <Link 
+        to={`/verify-email?email=${encodeURIComponent(user.email)}`}
+        className="btn"
+        style={{
+          background: 'var(--error)',
+          color: 'white',
+          padding: '0.35rem 0.85rem',
+          borderRadius: '0.5rem',
+          fontSize: '0.75rem',
+          fontWeight: 'bold',
+          textDecoration: 'none',
+          minHeight: 'auto',
+          boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
+        }}
+      >
+        {lang === 'te' ? 'ఈమెయిల్ వెరిఫై చేయి' : 'Verify Email'}
+      </Link>
+    </div>
+  );
+};
+
 const AppContent = () => {
   const { user, lang, largeText, t } = useAuth();
   const location = useLocation();
@@ -478,6 +537,7 @@ const AppContent = () => {
     <div className={`${lang === 'te' ? 'lang-te' : ''} ${largeText ? 'large-mode' : ''}`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
       <main style={{ flex: 1, padding: '0 1rem', paddingBottom: '80px' }}>
+        <VerificationBanner />
         <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}><div className="loading" style={{ width: '40px', height: '40px', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -492,6 +552,7 @@ const AppContent = () => {
             <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/orders" element={<ProtectedRoute allowedRoles={['consumer']}><ConsumerOrders /></ProtectedRoute>} />
+            <Route path="/orders/:orderId/track" element={<ProtectedRoute><LiveTracking /></ProtectedRoute>} />
             <Route path="/wishlist" element={<ProtectedRoute allowedRoles={['consumer']}><Wishlist /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/reviews" element={<Reviews />} />

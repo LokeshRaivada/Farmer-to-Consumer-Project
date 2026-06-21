@@ -35,7 +35,13 @@ const ProductCard = ({ product, onClick }) => {
     const emoji = getCropEmoji(product.name);
 
     return (
-        <div
+        <motion.div
+            layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            whileHover={{ y: -6, boxShadow: 'var(--shadow-glow)', borderColor: 'var(--primary)' }}
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
             className="glass"
             style={{ 
                 padding: '1.25rem', 
@@ -46,12 +52,9 @@ const ProductCard = ({ product, onClick }) => {
                 cursor: 'pointer',
                 textAlign: 'left',
                 borderRadius: '1.25rem',
-                transition: 'transform 0.2s',
                 background: 'var(--bg-darkest)'
             }}
             onClick={onClick}
-            onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
         >
             {/* Image Box */}
             <div style={{ 
@@ -108,7 +111,7 @@ const ProductCard = ({ product, onClick }) => {
                     {added ? (lang === 'te' ? 'జోడించబడింది' : 'Added') : (lang === 'te' ? 'కార్ట్' : '🛒 Add')}
                 </button>
             </div>
-        </div>
+        </motion.div>
     );
 };
 

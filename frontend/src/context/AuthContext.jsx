@@ -17,6 +17,19 @@ export const AuthProvider = ({ children }) => {
     const [largeText, setLargeText] = useState(localStorage.getItem('largeText') === 'true');
     const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
     const [loading, setLoading] = useState(true);
+    const [config, setConfig] = useState({ emailVerificationRequired: false, emailEnabled: false });
+
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const { data } = await axios.get('/api/config/public');
+                setConfig(data);
+            } catch (err) {
+                console.error('Failed to fetch public config:', err);
+            }
+        };
+        fetchConfig();
+    }, []);
 
     useEffect(() => {
         if (darkMode) {
@@ -241,7 +254,8 @@ export const AuthProvider = ({ children }) => {
     return (
         <AuthContext.Provider value={{ 
             user, lang, toggleLang, t, login, register, logout, loading, largeText, toggleLargeText, darkMode, toggleDarkMode,
-            changePassword, updateProfile, forgotPassword, resetPassword, verifyEmailToken, resendVerification
+            changePassword, updateProfile, forgotPassword, resetPassword, verifyEmailToken, resendVerification,
+            config
         }}>
             {children}
         </AuthContext.Provider>

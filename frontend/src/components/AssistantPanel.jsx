@@ -64,9 +64,26 @@ const AssistantPanel = ({ onOpenChat, onOpenHelp, onOpenGuide }) => {
             </span>
             <button 
               onClick={() => setIsOpen(false)} 
-              style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '0.2rem', display: 'flex', alignItems: 'center', minHeight: 'auto' }}
+              aria-label={lang === 'te' ? 'సహాయ కేంద్రాన్ని మూసివేయి' : 'Close assistant panel'}
+              style={{ 
+                background: 'transparent', 
+                border: 'none', 
+                color: 'var(--text-secondary)', 
+                cursor: 'pointer', 
+                width: '40px', 
+                height: '40px', 
+                borderRadius: '50%', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                transition: 'all 0.2s', 
+                minHeight: '40px', 
+                padding: 0 
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-darker)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
             >
-              <X size={16} />
+              <X size={20} />
             </button>
           </div>
 
@@ -122,7 +139,7 @@ const AssistantPanel = ({ onOpenChat, onOpenHelp, onOpenGuide }) => {
                 justifyContent: 'center',
                 gap: '0.5rem',
                 background: 'var(--primary)',
-                color: 'white',
+                color: 'var(--text-on-primary)',
                 padding: '0.6rem',
                 borderRadius: '0.5rem',
                 textDecoration: 'none',

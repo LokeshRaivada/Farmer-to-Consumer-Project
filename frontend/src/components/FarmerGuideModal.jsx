@@ -101,7 +101,7 @@ const FarmerGuideModal = ({ isOpen, onClose }) => {
       <div className="glass" style={{ padding: '2.5rem', maxWidth: '520px', width: '100%', position: 'relative', border: '2px solid var(--primary)', borderRadius: '1.5rem', boxShadow: '0 0 40px rgba(0,255,157,0.25)', background: 'var(--bg-dark)' }}>
         
         {/* Close Button */}
-        <button onClick={handleClose} style={{ position: 'absolute', right: '1.25rem', top: '1.25rem', background: 'rgba(255,255,255,0.08)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}>
+        <button onClick={handleClose} aria-label="Close guide modal" style={{ position: 'absolute', right: '1.25rem', top: '1.25rem', background: 'rgba(128, 128, 128, 0.1)', border: 'none', borderRadius: '50%', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-primary)', cursor: 'pointer', transition: 'background 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(128, 128, 128, 0.2)'} onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(128, 128, 128, 0.1)'}>
           <X size={20} />
         </button>
 
@@ -126,7 +126,7 @@ const FarmerGuideModal = ({ isOpen, onClose }) => {
                   width: '12px', 
                   height: '12px', 
                   borderRadius: '50%', 
-                  background: i === step ? 'var(--primary)' : 'rgba(255,255,255,0.15)',
+                  background: i === step ? 'var(--primary)' : 'var(--text-secondary)',
                   boxShadow: i === step ? '0 0 8px var(--primary)' : 'none',
                   transition: 'background 0.3s' 
                 }} 
@@ -134,8 +134,8 @@ const FarmerGuideModal = ({ isOpen, onClose }) => {
             ))}
           </div>
 
-          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'white', marginBottom: '1rem' }}>{currentStepData.title}</h2>
-          <p style={{ color: 'var(--text-light)', fontSize: '1.05rem', lineHeight: '1.7', marginBottom: '2.5rem', textAlign: 'left', background: 'rgba(255,255,255,0.02)', padding: '1rem 1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.04)' }}>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-primary)', marginBottom: '1rem' }}>{currentStepData.title}</h2>
+          <p style={{ color: 'var(--text-light)', fontSize: '1.05rem', lineHeight: '1.7', marginBottom: '2.5rem', textAlign: 'left', background: 'var(--bg-darker)', padding: '1rem 1.25rem', borderRadius: '0.75rem', border: '1px solid var(--border)' }}>
             {currentStepData.text}
           </p>
         </div>

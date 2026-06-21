@@ -5,7 +5,7 @@ import { User, Lock, MapPin, Camera, Save, Loader, Shield, CheckCircle, Sliders,
 import { useNavigate } from 'react-router-dom';
 
 const Settings = () => {
-  const { user, t, lang, darkMode, toggleDarkMode, largeText, toggleLargeText, updateProfile, changePassword, logout, resendVerification } = useAuth();
+  const { user, t, lang, darkMode, toggleDarkMode, largeText, toggleLargeText, updateProfile, changePassword, logout, resendVerification, config } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(false);
@@ -263,7 +263,11 @@ const Settings = () => {
                     <div>
                       <h4 style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>Email Verification Status</h4>
                       <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem', margin: 0 }}>
-                        {!user?.isEmailVerified ? 'Verify your email to buy/sell crops and write reviews.' : 'Your email is fully verified.'}
+                        {!user?.isEmailVerified 
+                          ? (config?.emailVerificationRequired === false 
+                              ? 'Email verification is optional in development mode.' 
+                              : 'Verify your email to buy/sell crops and write reviews.')
+                          : 'Your email is fully verified.'}
                       </p>
                     </div>
                     <div>
@@ -499,7 +503,7 @@ const Settings = () => {
                   <button 
                     onClick={toggleDarkMode}
                     className="btn btn-secondary"
-                    style={{ padding: '0.4rem 0.8rem', minHeight: '36px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+                    style={{ padding: '0.4rem 0.8rem', minHeight: '40px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
                   >
                     {darkMode ? (
                       <><Moon size={14} /> {lang === 'te' ? 'డార్క్ మోడ్' : 'Dark Mode'}</>
@@ -518,7 +522,7 @@ const Settings = () => {
                   <button 
                     onClick={toggleLargeText}
                     className="btn btn-secondary"
-                    style={{ padding: '0.4rem 0.8rem', minHeight: '36px', fontSize: '0.85rem' }}
+                    style={{ padding: '0.4rem 0.8rem', minHeight: '40px', fontSize: '0.85rem' }}
                   >
                     {largeText ? (
                       lang === 'te' ? '✔️ పెద్ద అక్షరాలు' : '✔️ Larger Text'

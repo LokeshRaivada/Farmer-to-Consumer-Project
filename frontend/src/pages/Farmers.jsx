@@ -223,13 +223,13 @@ const Farmers = () => {
                                         gap: '1rem', 
                                         alignItems: 'center',
                                         borderLeft: selectedFarmer?._id === f._id ? '4px solid var(--primary)' : '1px solid var(--glass-border)',
-                                        background: selectedFarmer?._id === f._id ? 'rgba(22, 163, 74, 0.08)' : 'var(--glass-bg)',
+                                        background: selectedFarmer?._id === f._id ? 'var(--primary-glow)' : 'var(--glass-bg)',
                                         borderTop: '1px solid var(--glass-border)',
                                         borderBottom: '1px solid var(--glass-border)',
                                         borderRight: '1px solid var(--glass-border)'
                                     }}
                                 >
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(22, 163, 74, 0.1)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'var(--primary-glow)', border: '1px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold' }}>
                                         {f.name.charAt(0).toUpperCase()}
                                     </div>
                                     <div style={{ flex: 1 }}>
@@ -270,7 +270,7 @@ const Farmers = () => {
                                             <div>
                                                 <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '0 0 0.25rem' }}>
                                                     {selectedFarmer.name}
-                                                    {selectedFarmer.isVerified && <span style={{ color: 'var(--primary)', fontSize: '0.9rem', background: 'rgba(22, 163, 74, 0.1)', padding: '0.2rem 0.6rem', borderRadius: '1rem' }} title="Verified Profile">🛡️ Verified Farmer</span>}
+                                                    {selectedFarmer.isVerified && <span style={{ color: 'var(--primary)', fontSize: '0.9rem', background: 'var(--primary-glow)', padding: '0.2rem 0.6rem', borderRadius: '1rem' }} title="Verified Profile">🛡️ Verified Farmer</span>}
                                                 </h2>
                                                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                                     <MapPin size={14} /> <span>{selectedFarmer.address?.street}, {selectedFarmer.address?.city}, {selectedFarmer.address?.state} - {selectedFarmer.address?.zip}</span>
@@ -280,25 +280,25 @@ const Farmers = () => {
 
                                         {/* Aggregated Farmer Trust Signals Grid */}
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'var(--bg-darker)', border: '1px solid var(--glass-border)' }}>
                                                 <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#eab308' }}>
                                                     ⭐ {selectedFarmer.averageRating > 0 ? selectedFarmer.averageRating.toFixed(1) : (selectedFarmer.rating > 0 ? selectedFarmer.rating.toFixed(1) : 'New')}
                                                 </div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Rating</div>
                                             </div>
-                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'var(--bg-darker)', border: '1px solid var(--glass-border)' }}>
                                                 <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--primary)' }}>
                                                     {selectedFarmer.completedOrdersCount || 0}
                                                 </div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Completed Orders</div>
                                             </div>
-                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'var(--bg-darker)', border: '1px solid var(--glass-border)' }}>
                                                 <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-light)' }}>
                                                     {selectedFarmer.productsCount || 0}
                                                 </div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Active Crops</div>
                                             </div>
-                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--glass-border)' }}>
+                                            <div className="glass" style={{ padding: '0.75rem', borderRadius: '0.75rem', textAlign: 'center', background: 'var(--bg-darker)', border: '1px solid var(--glass-border)' }}>
                                                 <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#10b981' }}>
                                                     {selectedFarmer.totalProductsSold || 0} kg
                                                 </div>
@@ -320,7 +320,7 @@ const Farmers = () => {
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="btn btn-primary"
-                                                    style={{ flex: 1, minHeight: '44px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', background: '#25D366', borderColor: '#25D366', color: 'white' }}
+                                                    style={{ flex: 1, minHeight: '44px', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', background: '#25D366', borderColor: '#25D366', color: 'var(--white)' }}
                                                 >
                                                     💬 WhatsApp
                                                 </a>
@@ -393,7 +393,7 @@ const Farmers = () => {
                                                             <div>
                                                                 <span style={{ fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-light)' }}>{r.user?.name || 'Anonymous Consumer'}</span>
                                                                 {r.product?.name && (
-                                                                    <span style={{ fontSize: '0.75rem', color: 'var(--primary)', marginLeft: '0.5rem', background: 'rgba(22, 163, 74, 0.1)', padding: '0.1rem 0.4rem', borderRadius: '0.25rem' }}>
+                                                                    <span style={{ fontSize: '0.75rem', color: 'var(--primary)', marginLeft: '0.5rem', background: 'var(--primary-glow)', padding: '0.1rem 0.4rem', borderRadius: '0.25rem' }}>
                                                                         {r.product.name}
                                                                     </span>
                                                                 )}

@@ -2,9 +2,19 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const sendEmail = require('../utils/sendEmail');
+
+// Rate limiting specifically for resending verification email
+const resendLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes window
+    max: 3, // Limit each IP to 3 requests per 15 minutes
+    message: { message: 'Too many resend verification requests. Please try again after 15 minutes.' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 const generateToken = (user) => {
     return jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
@@ -60,12 +70,8 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'An account with this email already exists.' });
         }
 
-        // Generate email verification token
-        const verifyTokenRaw = crypto.randomBytes(20).toString('hex');
-        const emailVerificationToken = crypto.createHash('sha256').update(verifyTokenRaw).digest('hex');
-        const emailVerificationExpires = Date.now() + 24 * 3600000; // 24 hours
-
         // Create user
+        const lastVerificationEmailSentAt = new Date();
         const user = await User.create({
             name,
             email,
@@ -78,12 +84,22 @@ router.post('/register', async (req, res) => {
                 coordinates: coordinates || [78.4867, 17.3850], // Lon, Lat
             },
             isEmailVerified: false,
-            emailVerificationToken,
-            emailVerificationExpires
+            lastVerificationEmailSentAt
         });
 
+        // Generate cryptographically secure JWT email verification token
+        const verifyTokenRaw = jwt.sign(
+            { 
+                userId: user._id, 
+                type: 'email_verification',
+                sentAt: lastVerificationEmailSentAt.getTime()
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
         // Send email
-        const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${verifyTokenRaw}`;
+        const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verifyTokenRaw}`;
         await sendEmail({
             to: user.email,
             subject: 'Verify your FarmerDirect Account 🌾',
@@ -169,19 +185,37 @@ router.get('/me', protect, async (req, res) => {
 // @access  Public
 router.post('/verify-email/:token', async (req, res) => {
     try {
-        const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
-        const user = await User.findOne({
-            emailVerificationToken: hashedToken,
-            emailVerificationExpires: { $gt: Date.now() }
-        });
+        let decoded;
+        try {
+            decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
+        } catch (err) {
+            if (err.name === 'TokenExpiredError') {
+                return res.status(400).json({ message: 'Verification link expired. Request a new email.' });
+            }
+            return res.status(400).json({ message: 'Invalid email verification link. Please request a new one.' });
+        }
 
+        if (decoded.type !== 'email_verification') {
+            return res.status(400).json({ message: 'Invalid verification token type.' });
+        }
+
+        const user = await User.findById(decoded.userId);
         if (!user) {
-            return res.status(400).json({ message: 'Invalid or expired email verification link.' });
+            return res.status(400).json({ message: 'User not found.' });
+        }
+
+        // Check if already verified
+        if (user.isEmailVerified) {
+            return res.status(400).json({ message: 'This account has already been verified.' });
+        }
+
+        // Check token invalidation (sentAt must match User's lastVerificationEmailSentAt)
+        if (!user.lastVerificationEmailSentAt || user.lastVerificationEmailSentAt.getTime() !== decoded.sentAt) {
+            return res.status(400).json({ message: 'This verification link has been superseded by a newer link.' });
         }
 
         user.isEmailVerified = true;
-        user.emailVerificationToken = undefined;
-        user.emailVerificationExpires = undefined;
+        user.lastVerificationEmailSentAt = undefined; // invalidate single-use
         await user.save();
 
         res.json({ message: 'Email verified successfully. Your account is now fully active!' });
@@ -194,7 +228,7 @@ router.post('/verify-email/:token', async (req, res) => {
 // @route   POST /api/auth/resend-verification
 // @desc    Resend email verification link
 // @access  Public
-router.post('/resend-verification', async (req, res) => {
+router.post('/resend-verification', resendLimiter, async (req, res) => {
     try {
         const { email } = req.body;
         if (!email) {
@@ -210,17 +244,30 @@ router.post('/resend-verification', async (req, res) => {
             return res.status(400).json({ message: 'This account has already been verified.' });
         }
 
-        // Generate email verification token
-        const verifyTokenRaw = crypto.randomBytes(20).toString('hex');
-        const emailVerificationToken = crypto.createHash('sha256').update(verifyTokenRaw).digest('hex');
-        const emailVerificationExpires = Date.now() + 24 * 3600000; // 24 hours
+        // Cooldown rate limiting check (60 seconds)
+        const cooldown = 60 * 1000;
+        if (user.lastVerificationEmailSentAt && (Date.now() - user.lastVerificationEmailSentAt) < cooldown) {
+            const secondsLeft = Math.ceil((cooldown - (Date.now() - user.lastVerificationEmailSentAt)) / 1000);
+            return res.status(429).json({ message: `Please wait ${secondsLeft} seconds before requesting another verification email.` });
+        }
 
-        user.emailVerificationToken = emailVerificationToken;
-        user.emailVerificationExpires = emailVerificationExpires;
+        // Generate JWT email verification token
+        const lastVerificationEmailSentAt = new Date();
+        const verifyTokenRaw = jwt.sign(
+            { 
+                userId: user._id, 
+                type: 'email_verification',
+                sentAt: lastVerificationEmailSentAt.getTime()
+            },
+            process.env.JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        user.lastVerificationEmailSentAt = lastVerificationEmailSentAt;
         await user.save();
 
         // Send email
-        const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${verifyTokenRaw}`;
+        const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verifyTokenRaw}`;
         await sendEmail({
             to: user.email,
             subject: 'Verify your FarmerDirect Account 🌾',
@@ -228,10 +275,10 @@ router.post('/resend-verification', async (req, res) => {
             html: `<h3>Hello ${user.name},</h3><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Account</a></p><p>Or copy this link to your browser: ${verificationLink}</p><p>This link will expire in 24 hours.</p>`
         });
 
-        res.json({ message: 'Verification email has been resent. Please check your inbox.' });
+        res.json({ message: 'We sent a verification email to your inbox.' });
     } catch (error) {
         console.error('Resend verification error:', error);
-        res.status(500).json({ message: 'Server error' });
+        res.status(500).json({ message: 'Unable to send email right now. Please try again later.' });
     }
 });
 

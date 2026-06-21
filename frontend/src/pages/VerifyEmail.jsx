@@ -5,13 +5,15 @@ import { Mail, CheckCircle, XCircle, Loader2, ArrowRight, RefreshCw, LogIn } fro
 import { motion } from 'framer-motion';
 
 const VerifyEmail = () => {
-    const { token } = useParams();
+    const { token: tokenFromParams } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
-    const { verifyEmailToken, resendVerification, user } = useAuth();
+    const { verifyEmailToken, resendVerification, user, config } = useAuth();
 
-    const queryParams = new URLSearchParams(location.search);
+    const queryParams = new URLSearchParams(window.location.search);
     const emailParam = queryParams.get('email') || user?.email || '';
+    const tokenFromQuery = queryParams.get('token');
+    const token = tokenFromParams || tokenFromQuery;
 
     const [status, setStatus] = useState(token ? 'verifying' : 'prompt');
     const [message, setMessage] = useState('');
@@ -150,8 +152,18 @@ const VerifyEmail = () => {
                         </div>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-light)', marginBottom: '0.75rem' }}>Verify Your Email 🌾</h2>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                            We have sent a verification link to your email address {emailParam ? <strong>({emailParam})</strong> : ''}. Please click the link to confirm your account.
+                            We sent a verification email to your inbox {emailParam ? <strong>({emailParam})</strong> : ''}. Please click the link to confirm your account.
                         </p>
+
+                        {config?.emailVerificationRequired === false && (
+                            <button 
+                                className="btn btn-secondary"
+                                onClick={handleDashboardRedirect}
+                                style={{ width: '100%', justifyContent: 'center', padding: '1rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', fontWeight: 'bold' }}
+                            >
+                                Skip Verification & Go to Dashboard <ArrowRight size={18} />
+                            </button>
+                        )}
 
                         <div style={{ background: 'rgba(22, 163, 74, 0.05)', border: '1px solid rgba(22, 163, 74, 0.1)', borderRadius: '0.75rem', padding: '1rem', marginBottom: '2rem', textAlign: 'left', fontSize: '0.8rem' }}>
                             <span style={{ fontWeight: 'bold', display: 'block', color: 'var(--primary)', marginBottom: '0.25rem' }}>💡 Sandbox Testing Tip</span>
@@ -189,6 +201,13 @@ const VerifyEmail = () => {
                         </button>
                     </div>
                 )}
+
+                <div style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px dashed var(--border)', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'left' }}>
+                    <p style={{ margin: '0.2rem 0' }}><strong>Debug Info:</strong></p>
+                    <p style={{ margin: '0.2rem 0' }}>• Current Status: <code style={{ color: 'var(--primary)' }}>{status}</code></p>
+                    <p style={{ margin: '0.2rem 0' }}>• Token in URL: <code style={{ color: token ? 'var(--primary)' : 'var(--error)', wordBreak: 'break-all' }}>{token ? token.substring(0, 30) + '...' : 'None'}</code></p>
+                    <p style={{ margin: '0.2rem 0' }}>• Location Search: <code style={{ wordBreak: 'break-all' }}>{location.search || 'Empty'}</code></p>
+                </div>
             </motion.div>
         </div>
     );

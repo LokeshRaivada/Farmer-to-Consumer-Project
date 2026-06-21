@@ -171,7 +171,28 @@ const ProductDetailsModal = ({ product, onClose }) => {
                 {/* Header */}
                 <div style={{ padding: '1.5rem 2rem', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-dark)' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>{lang === 'te' ? 'పంట సమీక్షలు' : 'Product Reviews'}</h2>
-                    <button onClick={onClose} style={{ background: 'var(--bg-darker)', border: 'none', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-light)', cursor: 'pointer', minHeight: 'auto', padding: 0 }} className="hover-glow"><X size={20} /></button>
+                    <button 
+                        onClick={onClose} 
+                        aria-label="Close details modal"
+                        style={{ 
+                            background: 'var(--bg-darker)', 
+                            border: 'none', 
+                            borderRadius: '50%', 
+                            width: '40px', 
+                            height: '40px', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            color: 'var(--text-light)', 
+                            cursor: 'pointer', 
+                            minHeight: '40px', 
+                            padding: 0,
+                            transition: 'all 0.2s'
+                        }} 
+                        className="hover-glow"
+                    >
+                        <X size={20} />
+                    </button>
                 </div>
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', overflowY: 'auto' }}>
@@ -287,7 +308,7 @@ const ProductDetailsModal = ({ product, onClose }) => {
                                                 {images.map((img, idx) => (
                                                     <div key={idx} style={{ position: 'relative', width: '40px', height: '40px', borderRadius: '0.25rem', overflow: 'hidden' }}>
                                                         <img src={img} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                                        <button type="button" onClick={() => handleRemoveImage(idx)} style={{ position: 'absolute', top: '1px', right: '1px', background: 'black', border: 'none', width: '12px', height: '12px', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><X size={8} /></button>
+                                                        <button type="button" onClick={() => handleRemoveImage(idx)} style={{ position: 'absolute', top: '1px', right: '1px', background: 'var(--text-primary)', border: 'none', width: '12px', height: '12px', borderRadius: '50%', color: 'var(--background)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}><X size={8} /></button>
                                                     </div>
                                                 ))}
                                             </div>
@@ -398,7 +419,24 @@ const ProductDetailsModal = ({ product, onClose }) => {
                             </h3>
                             <button 
                                 onClick={() => setReportingReviewId(null)} 
-                                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
+                                aria-label="Close report dialog"
+                                style={{ 
+                                    background: 'transparent', 
+                                    border: 'none', 
+                                    color: 'var(--text-secondary)', 
+                                    cursor: 'pointer', 
+                                    width: '40px', 
+                                    height: '40px', 
+                                    borderRadius: '50%', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    transition: 'all 0.2s', 
+                                    minHeight: '40px', 
+                                    padding: 0 
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-darker)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                             >
                                 <X size={20} />
                             </button>

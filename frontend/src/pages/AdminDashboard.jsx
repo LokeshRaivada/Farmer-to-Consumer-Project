@@ -118,7 +118,7 @@ const TabSkeleton = ({ tab }) => {
 
 // Premium empty states
 const EmptyState = ({ message, subtitle, icon: Icon }) => (
-    <div className="glass" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 2rem', textAlign: 'center', borderStyle: 'dashed', borderWidth: '1px', borderColor: 'rgba(255,255,255,0.1)' }}>
+    <div className="glass" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '5rem 2rem', textAlign: 'center', borderStyle: 'dashed', borderWidth: '1px', borderColor: 'var(--border)' }}>
         <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: 'var(--bg-darker)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', marginBottom: '1.25rem', border: '1px solid rgba(0, 255, 157, 0.15)' }}>
             <Icon size={24} />
         </div>
@@ -435,7 +435,25 @@ const AdminDashboard = () => {
                     >
                         <div style={{ padding: '0 1.5rem 1.5rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--glass-border)', marginBottom: '1.5rem' }}>
                             <h2 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-light)', letterSpacing: '-0.5px' }}>Admin<span style={{ color: 'var(--primary)' }}>Panel</span></h2>
-                            {window.innerWidth < 768 && <button className="btn-ghost" onClick={() => setSidebarOpen(false)}><X size={20} /></button>}
+                            {window.innerWidth < 768 && (
+                                <button 
+                                    className="btn btn-ghost" 
+                                    onClick={() => setSidebarOpen(false)}
+                                    aria-label="Close sidebar"
+                                    style={{ 
+                                        width: '40px', 
+                                        height: '40px', 
+                                        minHeight: '40px', 
+                                        padding: 0, 
+                                        borderRadius: '50%', 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        justifyContent: 'center' 
+                                    }}
+                                >
+                                    <X size={20} />
+                                </button>
+                            )}
                         </div>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             <SidebarItem id="overview" icon={Activity} label="Overview" />
@@ -452,7 +470,16 @@ const AdminDashboard = () => {
             {/* Main Content Pane */}
             <div style={{ flex: 1, padding: '2.5rem 2rem', overflowX: 'hidden', minHeight: '100%' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
-                    {!sidebarOpen && <button className="btn btn-ghost" style={{ padding: '0.5rem', borderRadius: '50%' }} onClick={() => setSidebarOpen(true)}><Menu size={24} /></button>}
+                    {!sidebarOpen && (
+                        <button 
+                            className="btn btn-ghost" 
+                            style={{ width: '40px', height: '40px', minHeight: '40px', padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }} 
+                            onClick={() => setSidebarOpen(true)}
+                            aria-label="Open sidebar"
+                        >
+                            <Menu size={24} />
+                        </button>
+                    )}
                     <h1 style={{ fontSize: '1.75rem', fontWeight: '800', textTransform: 'capitalize', color: 'var(--text-light)', letterSpacing: '-0.5px' }}>
                         {activeTab === 'farmers' ? 'Farmer Verification' : activeTab} Dashboard
                     </h1>
@@ -689,7 +716,7 @@ const AdminDashboard = () => {
                                         <>
                                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                                                 {paginatedFarmers.map(f => (
-                                                    <div key={f._id} style={{ background: 'var(--bg-darkest)', padding: '1.5rem', borderRadius: '1rem', border: f?.isVerified ? '1px solid rgba(0,255,157,0.2)' : '1px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                                    <div key={f._id} style={{ background: 'var(--bg-darkest)', padding: '1.5rem', borderRadius: '1rem', border: f?.isVerified ? '1px solid var(--primary-border-glow)' : '1px dashed var(--border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                                         <div>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
                                                                 <div>
@@ -838,7 +865,7 @@ const AdminDashboard = () => {
                                                             display: 'flex', 
                                                             flexDirection: 'column', 
                                                             gap: '1rem', 
-                                                            border: r.isReported ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid rgba(255,255,255,0.03)',
+                                                            border: r.isReported ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border)',
                                                             boxShadow: r.isReported ? '0 0 10px rgba(239, 68, 68, 0.1)' : 'none'
                                                         }}
                                                     >
@@ -854,10 +881,10 @@ const AdminDashboard = () => {
                                                                 )}
                                                             </div>
                                                             <div style={{ display: 'flex', color: '#F59E0B', flexShrink: 0 }}>
-                                                                {[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < r.rating ? "#F59E0B" : "transparent"} stroke={i < r.rating ? "#F59E0B" : "rgba(255,255,255,0.3)"} />)}
+                                                                {[...Array(5)].map((_, i) => <Star key={i} size={12} fill={i < r.rating ? "#F59E0B" : "transparent"} stroke={i < r.rating ? "#F59E0B" : "var(--glass-border)"} />)}
                                                             </div>
                                                         </div>
-                                                        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.85rem', fontStyle: 'italic', background: 'var(--bg-darker)', padding: '0.75rem 1rem', borderRadius: '0.5rem', borderLeft: r.isReported ? '3px solid #ef4444' : '3px solid var(--primary)', margin: 0 }}>
+                                                        <p style={{ color: 'var(--text-primary)', fontSize: '0.85rem', fontStyle: 'italic', background: 'var(--bg-darker)', padding: '0.75rem 1rem', borderRadius: '0.5rem', borderLeft: r.isReported ? '3px solid #ef4444' : '3px solid var(--primary)', margin: 0 }}>
                                                             "{r?.comment || 'No comment text'}"
                                                         </p>
                                                         {r.images && r.images.length > 0 && (
@@ -872,7 +899,7 @@ const AdminDashboard = () => {
                                                                 <button 
                                                                     onClick={() => dismissReport(r._id)} 
                                                                     className="btn btn-primary" 
-                                                                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '0.5rem', background: '#10b981', borderColor: '#10b981', color: '#fff', minHeight: '30px' }}
+                                                                    style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', borderRadius: '0.5rem', background: 'var(--success)', borderColor: 'var(--success)', color: 'var(--text-on-primary)', minHeight: '30px' }}
                                                                 >
                                                                     Dismiss Report
                                                                 </button>

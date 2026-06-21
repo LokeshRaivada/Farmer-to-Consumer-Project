@@ -99,7 +99,24 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
               </div>
               <button 
                 onClick={() => setIsOpen(false)} 
-                style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                aria-label={lang === 'te' ? 'చాట్ విండోను మూసివేయి' : 'Close chat box'}
+                style={{ 
+                  background: 'transparent', 
+                  border: 'none', 
+                  color: 'var(--white)', 
+                  cursor: 'pointer', 
+                  width: '40px', 
+                  height: '40px', 
+                  borderRadius: '50%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  transition: 'background 0.2s', 
+                  minHeight: '40px', 
+                  padding: 0 
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
               >
                 <X size={20} />
               </button>
@@ -191,7 +208,7 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
                   justifyContent: 'center',
                   background: 'var(--primary)',
                   border: 'none',
-                  color: 'white',
+                  color: 'var(--text-on-primary)',
                   cursor: 'pointer'
                 }}
               >

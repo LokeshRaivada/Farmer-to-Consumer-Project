@@ -189,6 +189,17 @@ const FarmerDashboard = () => {
                 </div>
             </div>
 
+            {user && !user.isVerified && (
+                <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '1rem', borderRadius: '1rem', color: 'rgb(245, 158, 11)', fontSize: '0.85rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>⏳</span>
+                    <span>
+                        {lang === 'te' 
+                            ? 'మీ రైతు ప్రొఫైల్ అడ్మిన్ ఆమోదం కోసం వేచి ఉంది. ఆమోదించబడిన తర్వాత మీరు పంటలను విక్రయించగలరు.' 
+                            : 'Your farmer profile is pending administrator approval. You will be able to list and sell crops once approved.'}
+                    </span>
+                </div>
+            )}
+
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
                 <StatCard title={lang === 'te' ? 'కొత్త ఆర్డర్లు' : 'New Orders'} value={pendingOrdersCount} icon={ShoppingBag} color="245, 158, 11" />
                 <StatCard title={lang === 'te' ? 'ఈరోజు డెలివరీలు' : 'Deliveries Today'} value={deliveriesTodayCount} icon={Clock} color="59, 130, 246" />
@@ -472,7 +483,7 @@ const FarmerDashboard = () => {
                                             </div>
                                             <div style={{ display: 'flex' }}>
                                                 {[...Array(5)].map((_, i) => (
-                                                    <Star key={i} size={12} fill={i < review.rating ? "#F59E0B" : "transparent"} color={i < review.rating ? "#F59E0B" : "rgba(255,255,255,0.2)"} />
+                                                    <Star key={i} size={12} fill={i < review.rating ? "#F59E0B" : "transparent"} color={i < review.rating ? "#F59E0B" : "var(--glass-border)"} />
                                                 ))}
                                             </div>
                                         </div>
@@ -502,7 +513,31 @@ const FarmerDashboard = () => {
                             initial={{ scale: 0.95, y: 15 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 15 }}
                             className="glass" style={{ padding: '2rem', maxWidth: '460px', width: '100%', position: 'relative', border: '1px solid var(--glass-border)', background: 'var(--bg-darkest)' }}
                         >
-                            <button onClick={() => { setShowAddForm(false); setWizardStep(1); }} style={{ position: 'absolute', right: '1rem', top: '1rem', background: 'var(--bg-darker)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-light)', cursor: 'pointer', minHeight: 'auto' }}><X size={18} /></button>
+                            <button 
+                                onClick={() => { setShowAddForm(false); setWizardStep(1); }} 
+                                aria-label="Close crop modal"
+                                style={{ 
+                                    position: 'absolute', 
+                                    right: '1rem', 
+                                    top: '1rem', 
+                                    background: 'var(--bg-darker)', 
+                                    border: 'none', 
+                                    borderRadius: '50%', 
+                                    width: '40px', 
+                                    height: '40px', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    color: 'var(--text-light)', 
+                                    cursor: 'pointer', 
+                                    minHeight: '40px',
+                                    padding: 0,
+                                    transition: 'all 0.2s'
+                                }}
+                                className="hover-glow"
+                            >
+                                <X size={20} />
+                            </button>
                             
                             <h2 style={{ fontSize: '1.35rem', marginBottom: '0.25rem', fontWeight: 'bold', color: 'var(--text-light)', textTransform: 'none' }}>Add New Crop</h2>
                             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.85rem' }}>Step {wizardStep} of 4</p>

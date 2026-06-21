@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Package, Clock, Truck, CheckCircle, MapPin, Calendar, Heart, DollarSign, ShoppingBag, RefreshCw, X, Star, AlertCircle, Camera, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const getFriendlyNotification = (msg) => {
     if (!msg) return '';
@@ -213,12 +213,30 @@ const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview }) => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="btn btn-primary"
-                                    style={{ flex: 1, minHeight: '40px', padding: '0.25rem 0.5rem', fontSize: '0.8rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', background: '#25D366', borderColor: '#25D366', color: 'white' }}
+                                    style={{ flex: 1, minHeight: '40px', padding: '0.25rem 0.5rem', fontSize: '0.8rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', background: '#25D366', borderColor: '#25D366', color: 'var(--white)' }}
                                 >
                                     💬 WhatsApp
                                 </a>
                             )}
                         </div>
+                    )}
+                    {order.status !== 'delivered' && order.status !== 'cancelled' && (
+                        <button
+                            onClick={() => navigate(`/orders/${order._id}/track`)}
+                            className="btn btn-primary"
+                            style={{ 
+                                marginTop: '0.5rem', 
+                                width: '100%', 
+                                minHeight: '40px', 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                gap: '0.5rem',
+                                fontWeight: 'bold'
+                            }}
+                        >
+                            <Truck size={16} /> {lang === 'te' ? 'లైవ్ ట్రాక్ డెలివరీ' : 'Live Track Delivery'}
+                        </button>
                     )}
                 </div>
             </div>
@@ -315,6 +333,7 @@ const ConsumerOrders = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const { t, lang } = useAuth();
+    const navigate = useNavigate();
 
     // Review modal state
     const [reviewProduct, setReviewProduct] = useState(null);
@@ -577,9 +596,26 @@ const ConsumerOrders = () => {
                             </h3>
                             <button 
                                 onClick={() => { setReviewProduct(null); setReviewOrder(null); setEditingReview(null); }} 
-                                style={{ background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
+                                aria-label="Close review modal"
+                                style={{ 
+                                    background: 'transparent', 
+                                    border: 'none', 
+                                    color: 'var(--text-secondary)', 
+                                    cursor: 'pointer', 
+                                    width: '40px', 
+                                    height: '40px', 
+                                    borderRadius: '50%', 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center', 
+                                    transition: 'all 0.2s', 
+                                    minHeight: '40px', 
+                                    padding: 0 
+                                }}
+                                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-darker)'; e.currentTarget.style.color = 'var(--text-primary)'; }}
+                                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-secondary)'; }}
                             >
-                                <X size={22} />
+                                <X size={20} />
                             </button>
                         </div>
 
@@ -676,7 +712,7 @@ const ConsumerOrders = () => {
                                                     <button 
                                                         type="button" 
                                                         onClick={() => handleRemoveImage(idx)}
-                                                        style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', cursor: 'pointer', padding: 0 }}
+                                                        style={{ position: 'absolute', top: '2px', right: '2px', background: 'rgba(0,0,0,0.6)', border: 'none', borderRadius: '50%', width: '14px', height: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--white)', cursor: 'pointer', padding: 0 }}
                                                     >
                                                         <X size={10} />
                                                     </button>

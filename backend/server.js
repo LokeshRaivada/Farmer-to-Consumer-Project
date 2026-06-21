@@ -123,6 +123,13 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 
+app.get('/api/config/public', (req, res) => {
+    res.json({
+        emailVerificationRequired: process.env.EMAIL_VERIFICATION_REQUIRED !== 'false',
+        emailEnabled: process.env.EMAIL_ENABLED !== 'false'
+    });
+});
+
 app.get('/', (req, res) => {
     res.send('FarmerDirect MERN API is currently running.');
 });
@@ -144,7 +151,40 @@ app.use((err, req, res, next) => {
 
 // Database Connection with optimized settings
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('Connected securely to MongoDB Atlas'))
+    .then(() => {
+        console.log('Connected securely to MongoDB Atlas');
+        
+        // Verify Nodemailer SMTP connectivity after successful DB connection
+        const isEmailRequired = process.env.EMAIL_VERIFICATION_REQUIRED !== 'false';
+        const emailEnabled = process.env.EMAIL_ENABLED !== 'false';
+        if (emailEnabled) {
+            if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+                const nodemailer = require('nodemailer');
+                const transporter = nodemailer.createTransport({
+                    host: process.env.EMAIL_HOST,
+                    port: parseInt(process.env.EMAIL_PORT) || 587,
+                    secure: process.env.EMAIL_SECURE === 'true',
+                    auth: {
+                        user: process.env.EMAIL_USER,
+                        pass: process.env.EMAIL_PASS
+                    }
+                });
+
+                transporter.verify()
+                    .then(() => console.log('📧 [SMTP] Connected and authenticated successfully to SMTP server'))
+                    .catch((err) => {
+                        console.error('❌ [SMTP] SMTP Connection Verification Failed:', err.message);
+                        if (isEmailRequired) {
+                            console.error('🚨 [SMTP] EMAIL_VERIFICATION_REQUIRED is true. Real emails will NOT work.');
+                        }
+                    });
+            } else {
+                console.warn('⚠️ [SMTP] SMTP configuration variables are missing. Real emails will not be sent.');
+            }
+        } else {
+            console.log('ℹ️ [EMAIL] Email features are disabled globally (EMAIL_ENABLED=false). Using local sandboxed log fallback.');
+        }
+    })
     .catch((err) => console.error('MongoDB Connection Error:', err));
 
 // Start Server
