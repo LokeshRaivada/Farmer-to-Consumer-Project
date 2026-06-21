@@ -101,12 +101,16 @@ router.post('/register', async (req, res) => {
         // Send email
         const frontendBase = req.get('origin') || process.env.FRONTEND_URL || 'http://localhost:3000';
         const verificationLink = `${frontendBase}/verify-email?token=${verifyTokenRaw}`;
-        await sendEmail({
-            to: user.email,
-            subject: 'Verify your FarmerDirect Account 🌾',
-            text: `Hello ${user.name},\n\nPlease verify your account by clicking the following link:\n${verificationLink}\n\nThis link will expire in 24 hours.`,
-            html: `<h3>Hello ${user.name},</h3><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Account</a></p><p>Or copy this link to your browser: ${verificationLink}</p><p>This link will expire in 24 hours.</p>`
-        });
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Verify your FarmerDirect Account 🌾',
+                text: `Hello ${user.name},\n\nPlease verify your account by clicking the following link:\n${verificationLink}\n\nThis link will expire in 24 hours.`,
+                html: `<h3>Hello ${user.name},</h3><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Account</a></p><p>Or copy this link to your browser: ${verificationLink}</p><p>This link will expire in 24 hours.</p>`
+            });
+        } catch (emailError) {
+            console.error('📧 [SMTP ERROR] Failed to send registration verification email:', emailError.message);
+        }
 
         res.status(201).json({
             _id: user._id,
