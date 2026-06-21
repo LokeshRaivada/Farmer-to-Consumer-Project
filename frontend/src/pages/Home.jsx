@@ -247,6 +247,7 @@ const Home = () => {
   };
 
   const getCategoryRealAvg = (categoryKey) => {
+    if (!Array.isArray(allProducts)) return null;
     const matches = allProducts.filter(p => p.category === categoryKey && p.price > 0);
     if (matches.length === 0) return null;
     const avg = matches.reduce((sum, p) => sum + p.price, 0) / matches.length;
@@ -254,6 +255,7 @@ const Home = () => {
   };
 
   const getCategoryTrend = (categoryKey) => {
+    if (!Array.isArray(trends)) return 0;
     const catTrends = trends.filter(t => t.category === categoryKey);
     if (catTrends.length >= 2) {
       const latest = catTrends[catTrends.length - 1].avgPrice;
@@ -270,6 +272,7 @@ const Home = () => {
   const getCategoryPrice = (categoryKey) => {
     const realAvg = getCategoryRealAvg(categoryKey);
     if (realAvg !== null) return realAvg;
+    if (!Array.isArray(trends)) return defaultTrends[categoryKey].price;
     const catTrends = trends.filter(t => t.category === categoryKey);
     if (catTrends.length > 0) return catTrends[catTrends.length - 1].avgPrice;
     return defaultTrends[categoryKey].price;
@@ -277,6 +280,7 @@ const Home = () => {
 
   // Calculate dynamic averages for Tomato, Potato, Onion, Rice
   const getCropAvgPrice = (nameEn, nameTe, fallbackVal) => {
+    if (!Array.isArray(allProducts)) return fallbackVal;
     const matches = allProducts.filter(p => 
       p.name.toLowerCase().includes(nameEn.toLowerCase()) || 
       p.name.includes(nameTe)
