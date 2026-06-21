@@ -99,7 +99,8 @@ router.post('/register', async (req, res) => {
         );
 
         // Send email
-        const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verifyTokenRaw}`;
+        const frontendBase = req.get('origin') || process.env.FRONTEND_URL || 'http://localhost:3000';
+        const verificationLink = `${frontendBase}/verify-email?token=${verifyTokenRaw}`;
         await sendEmail({
             to: user.email,
             subject: 'Verify your FarmerDirect Account 🌾',
@@ -267,7 +268,8 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
         await user.save();
 
         // Send email
-        const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${verifyTokenRaw}`;
+        const frontendBase = req.get('origin') || process.env.FRONTEND_URL || 'http://localhost:3000';
+        const verificationLink = `${frontendBase}/verify-email?token=${verifyTokenRaw}`;
         await sendEmail({
             to: user.email,
             subject: 'Verify your FarmerDirect Account 🌾',
