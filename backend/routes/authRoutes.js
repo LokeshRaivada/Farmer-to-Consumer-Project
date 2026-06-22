@@ -84,6 +84,8 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'An account with this email already exists.' });
         }
 
+        const isVerificationRequired = process.env.EMAIL_VERIFICATION_REQUIRED !== 'false';
+
         // Create user
         const lastVerificationEmailSentAt = new Date();
         const user = await User.create({
@@ -97,38 +99,41 @@ router.post('/register', async (req, res) => {
                 type: 'Point',
                 coordinates: coordinates || [78.4867, 17.3850], // Lon, Lat
             },
-            isEmailVerified: false,
+            isEmailVerified: !isVerificationRequired,
             lastVerificationEmailSentAt
         });
 
-        // Generate cryptographically secure JWT email verification token
-        const verifyTokenRaw = jwt.sign(
-            { 
-                userId: user._id, 
-                type: 'email_verification',
-                sentAt: lastVerificationEmailSentAt.getTime()
-            },
-            process.env.JWT_SECRET,
-            { expiresIn: '24h' }
-        );
-
-        // Send email
-        const frontendBase = getFrontendBaseUrl(req);
-        const verificationLink = `${frontendBase}/verify-email?token=${verifyTokenRaw}`;
-        
         let emailErrorOccurred = false;
         let emailErrorMessage = '';
-        try {
-            await sendEmail({
-                to: user.email,
-                subject: 'Verify your FarmerDirect Account 🌾',
-                text: `Hello ${user.name},\n\nPlease verify your account by clicking the following link:\n${verificationLink}\n\nThis link will expire in 24 hours.`,
-                html: `<h3>Hello ${user.name},</h3><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Account</a></p><p>Or copy this link to your browser: ${verificationLink}</p><p>This link will expire in 24 hours.</p>`
-            });
-        } catch (emailError) {
-            console.error('📧 [SMTP ERROR] Failed to send registration verification email:', emailError.message);
-            emailErrorOccurred = true;
-            emailErrorMessage = emailError.message;
+
+        if (isVerificationRequired) {
+            // Generate cryptographically secure JWT email verification token
+            const verifyTokenRaw = jwt.sign(
+                { 
+                    userId: user._id, 
+                    type: 'email_verification',
+                    sentAt: lastVerificationEmailSentAt.getTime()
+                },
+                process.env.JWT_SECRET,
+                { expiresIn: '24h' }
+            );
+
+            // Send email
+            const frontendBase = getFrontendBaseUrl(req);
+            const verificationLink = `${frontendBase}/verify-email?token=${verifyTokenRaw}`;
+            
+            try {
+                await sendEmail({
+                    to: user.email,
+                    subject: 'Verify your FarmerDirect Account 🌾',
+                    text: `Hello ${user.name},\n\nPlease verify your account by clicking the following link:\n${verificationLink}\n\nThis link will expire in 24 hours.`,
+                    html: `<h3>Hello ${user.name},</h3><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Account</a></p><p>Or copy this link to your browser: ${verificationLink}</p><p>This link will expire in 24 hours.</p>`
+                });
+            } catch (emailError) {
+                console.error('📧 [SMTP ERROR] Failed to send registration verification email:', emailError.message);
+                emailErrorOccurred = true;
+                emailErrorMessage = emailError.message;
+            }
         }
 
         res.status(201).json({
@@ -136,7 +141,7 @@ router.post('/register', async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
-            isEmailVerified: false,
+            isEmailVerified: !isVerificationRequired || user.isEmailVerified,
             isVerified: user.isVerified,
             token: generateToken(user),
             emailError: emailErrorOccurred ? emailErrorMessage : null
@@ -255,6 +260,11 @@ router.post('/verify-email/:token', async (req, res) => {
 // @access  Public
 router.post('/resend-verification', resendLimiter, async (req, res) => {
     try {
+        const isVerificationRequired = process.env.EMAIL_VERIFICATION_REQUIRED !== 'false';
+        if (!isVerificationRequired) {
+            return res.status(400).json({ message: 'Email verification is not enabled.' });
+        }
+
         const { email } = req.body;
         if (!email) {
             return res.status(400).json({ message: 'Email address is required.' });
