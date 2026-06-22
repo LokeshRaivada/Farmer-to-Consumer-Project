@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 
 const AuthContext = createContext();
 
@@ -18,6 +19,30 @@ export const AuthProvider = ({ children }) => {
     const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
     const [loading, setLoading] = useState(true);
     const [config, setConfig] = useState({ emailVerificationRequired: false, emailEnabled: false });
+    const [socket, setSocket] = useState(null);
+
+    useEffect(() => {
+        if (user && user._id) {
+            const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+            const newSocket = io(SOCKET_URL, {
+                query: { userId: user._id }
+            });
+            
+            newSocket.on('connect', () => {
+                console.log('📡 [SOCKET] Connected with ID:', newSocket.id);
+                newSocket.emit('join_room', user._id);
+            });
+
+            setSocket(newSocket);
+
+            return () => {
+                newSocket.disconnect();
+                setSocket(null);
+            };
+        } else {
+            setSocket(null);
+        }
+    }, [user?._id]);
 
     useEffect(() => {
         const fetchConfig = async () => {
@@ -255,7 +280,7 @@ export const AuthProvider = ({ children }) => {
         <AuthContext.Provider value={{ 
             user, lang, toggleLang, t, login, register, logout, loading, largeText, toggleLargeText, darkMode, toggleDarkMode,
             changePassword, updateProfile, forgotPassword, resetPassword, verifyEmailToken, resendVerification,
-            config
+            config, socket
         }}>
             {children}
         </AuthContext.Provider>

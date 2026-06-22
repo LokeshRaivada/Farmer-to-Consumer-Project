@@ -68,7 +68,8 @@ Farmer Project/
 ## 🧪 Testing Credentials (after node seed.js)
 | Role | Email | Password |
 |------|-------|----------|
-| Admin | admin@farmer.com | password123 |
+| Admin (Prudhvi) | jubburuprudhviraju@gmail.com | Prudhvi@2005 |
+| Admin (Lokesh) | raivadalokesh@gmail.com | Lokesh@2006 |
 | Farmer | farmer@farmer.com | password123 |
 | Consumer | consumer@farmer.com | password123 |
 

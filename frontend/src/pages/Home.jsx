@@ -239,13 +239,6 @@ const Home = () => {
     );
   };
 
-  // Default realistic baseline for Live Market Card if database is empty/insufficient
-  const defaultTrends = {
-    vegetables: { price: 50.0, trend: 4.2 },
-    fruits: { price: 118.0, trend: -1.7 },
-    grains: { price: 65.0, trend: 1.6 }
-  };
-
   const getCategoryRealAvg = (categoryKey) => {
     if (!Array.isArray(allProducts)) return null;
     const matches = allProducts.filter(p => p.category === categoryKey && p.price > 0);
@@ -255,27 +248,18 @@ const Home = () => {
   };
 
   const getCategoryTrend = (categoryKey) => {
-    if (!Array.isArray(trends)) return 0;
+    if (!Array.isArray(trends)) return null;
     const catTrends = trends.filter(t => t.category === categoryKey);
     if (catTrends.length >= 2) {
       const latest = catTrends[catTrends.length - 1].avgPrice;
       const prev = catTrends[catTrends.length - 2].avgPrice;
       return ((latest - prev) / prev) * 100;
     }
-    // Stable realistic default trends matching the layout
-    if (categoryKey === 'vegetables') return 4.2;
-    if (categoryKey === 'fruits') return -1.7;
-    if (categoryKey === 'grains') return 1.6;
-    return 0;
+    return null;
   };
 
   const getCategoryPrice = (categoryKey) => {
-    const realAvg = getCategoryRealAvg(categoryKey);
-    if (realAvg !== null) return realAvg;
-    if (!Array.isArray(trends)) return defaultTrends[categoryKey].price;
-    const catTrends = trends.filter(t => t.category === categoryKey);
-    if (catTrends.length > 0) return catTrends[catTrends.length - 1].avgPrice;
-    return defaultTrends[categoryKey].price;
+    return getCategoryRealAvg(categoryKey); // Use real data only, no fake fallbacks
   };
 
   // Calculate dynamic averages for Tomato, Potato, Onion, Rice
@@ -290,10 +274,10 @@ const Home = () => {
     return avg;
   };
 
-  const tomatoPrice = getCropAvgPrice('tomato', 'టమాటా', 50.0);
-  const potatoPrice = getCropAvgPrice('potato', 'బంగాళాదుంప', 45.0);
-  const onionPrice = getCropAvgPrice('onion', 'ఉల్లిపాయ', 42.0);
-  const ricePrice = getCropAvgPrice('rice', 'వరి', 65.0);
+  const tomatoPrice = getCropAvgPrice('tomato', 'టమాటా', null);
+  const potatoPrice = getCropAvgPrice('potato', 'బంగాళాదుంప', null);
+  const onionPrice = getCropAvgPrice('onion', 'ఉల్లిపాయ', null);
+  const ricePrice = getCropAvgPrice('rice', 'వరి', null);
 
   const vegetableTrend = getCategoryTrend('vegetables');
   const grainTrend = getCategoryTrend('grains');
@@ -418,12 +402,22 @@ const Home = () => {
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>{lang === 'te' ? 'సగటు ధర' : 'Average Price'}</div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <div style={{ color: 'var(--text-light)', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                          ₹{latest.toFixed(1)}/kg
-                        </div>
-                        <div style={{ color: diff >= 0 ? 'var(--primary)' : '#ef4444', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                          {trendStr}
-                        </div>
+                        {latest !== null ? (
+                          <>
+                            <div style={{ color: 'var(--text-light)', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                              ₹{latest.toFixed(1)}/kg
+                            </div>
+                            {diff !== null && (
+                              <div style={{ color: diff >= 0 ? 'var(--primary)' : '#ef4444', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                {trendStr}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div style={{ color: 'var(--text-muted)', fontSize: '0.72rem', fontStyle: 'italic', maxWidth: '120px', lineHeight: '1.2' }}>
+                            {lang === 'te' ? 'ధరల వివరాలు లేవు' : 'No market data available yet.'}
+                          </div>
+                        )}
                       </div>
                     </motion.div>
                   );
@@ -580,7 +574,7 @@ const Home = () => {
               ))}
               {featuredProducts.length === 0 && (
                 <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
-                  {lang === 'te' ? 'ఏ పంటలు అందుబాటులో లేవు.' : 'No products listed on the marketplace yet.'}
+                  {lang === 'te' ? 'ఏ పంటలు అందుబాటులో లేవు.' : 'No crops available yet.'}
                 </div>
               )}
             </div>

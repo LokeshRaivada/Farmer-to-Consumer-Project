@@ -4,7 +4,7 @@ const Review = require('../models/Review');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
-const { protect, requireEmailVerified } = require('../middleware/auth');
+const { protect, authorize, requireEmailVerified } = require('../middleware/auth');
 const { updateRatings } = require('../utils/ratingHelper');
 const mongoose = require('mongoose');
 
@@ -215,6 +215,32 @@ router.get('/product/:productId', async (req, res) => {
         });
     } catch (error) {
         console.error('Get product reviews error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   GET /api/reviews/farmer/stats
+// @desc    Get review statistics and recent reviews for the logged-in farmer
+// @access  Private/Farmer
+router.get('/farmer/stats', protect, authorize('farmer'), async (req, res) => {
+    try {
+        const reviews = await Review.find({ farmer: req.user._id })
+            .populate('user', 'name')
+            .populate('product', 'name')
+            .sort({ createdAt: -1 });
+
+        const totalReviews = reviews.length;
+        const avgRating = totalReviews > 0
+            ? parseFloat((reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1))
+            : 0;
+
+        res.json({
+            averageRating: avgRating,
+            numReviews: totalReviews,
+            recentReviews: reviews.slice(0, 10)
+        });
+    } catch (error) {
+        console.error('Get farmer stats error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

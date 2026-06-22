@@ -33,6 +33,24 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false // Used for farmers
     },
+    verificationDocs: {
+        governmentId: String,
+        farmerCertificate: String,
+        farmImages: { type: [String], default: [] }
+    },
+    verificationStatus: {
+        type: String,
+        enum: ['none', 'pending', 'under_review', 'approved', 'rejected'],
+        default: 'none'
+    },
+    verificationFeedback: String,
+    verifiedAt: Date,
+    verificationExpiresAt: Date,
+    isReported: {
+        type: Boolean,
+        default: false
+    },
+    reportReason: String,
     isEmailVerified: {
         type: Boolean,
         default: false

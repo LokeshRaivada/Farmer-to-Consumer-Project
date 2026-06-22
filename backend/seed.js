@@ -19,24 +19,26 @@ const seedData = async () => {
         await Notification.deleteMany({});
 
         // Create Admin
-        const admin = await User.create({
-            name: 'System Admin',
-            email: 'admin@farmer.com',
-            password: 'password123',
-            role: 'admin',
-            phone: '1234567890',
-            isEmailVerified: true
-        });
-
-        // Create Prudhvi Admin
         await User.create({
             name: 'Prudhvi',
             email: 'jubburuprudhviraju@gmail.com',
             password: 'Prudhvi@2005',
             role: 'admin',
             phone: '9999999999',
-            isEmailVerified: true
+            isEmailVerified: true,
+            isVerified: true
         });
+
+        await User.create({
+            name: 'Lokesh',
+            email: 'raivadalokesh@gmail.com',
+            password: 'Lokesh@2006',
+            role: 'admin',
+            phone: '8888888888',
+            isEmailVerified: true,
+            isVerified: true
+        });
+
 
         // Create Farmer
         const farmer = await User.create({

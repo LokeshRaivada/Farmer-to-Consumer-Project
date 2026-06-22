@@ -83,42 +83,121 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 const io = require('socket.io')(http, { cors: corsOptions });
+app.set('io', io);
+
+// Map to track online users: Map<userId, socketId>
+const onlineUsers = new Map();
 
 // Socket.IO Connection Handling
 io.on('connection', (socket) => {
-    console.log(`User Connected: ${socket.id}`);
+    const userId = socket.handshake.query.userId;
+    if (userId && userId !== 'undefined') {
+        onlineUsers.set(userId, socket.id);
+        console.log(`User Connected: ${socket.id} (Registered user ID: ${userId})`);
+    } else {
+        console.log(`User Connected: ${socket.id} (Anonymous/Unregistered)`);
+    }
     
-    socket.on('join_room', (data) => {
-        socket.join(data);
-        console.log(`User with ID: ${socket.id} joined room: ${data}`);
+    socket.on('join_room', async (data) => {
+        const room = typeof data === 'string' ? data : data.room;
+        if (!room) return;
+
+        // If joining an order-based room, enforce authorization
+        if (room.startsWith('chat_order_')) {
+            const orderId = room.split('chat_order_')[1];
+            try {
+                const Order = require('./models/Order');
+                const User = require('./models/User');
+                const order = await Order.findById(orderId);
+                
+                if (!userId || userId === 'undefined') {
+                    socket.emit('error_message', 'Authentication required to join this chat.');
+                    return;
+                }
+
+                const user = await User.findById(userId);
+                if (order && user) {
+                    const isConsumer = order.consumer.toString() === user._id.toString();
+                    const isFarmer = order.farmer.toString() === user._id.toString();
+                    const isAdmin = user.role === 'admin';
+
+                    if (isConsumer || isFarmer || isAdmin) {
+                        socket.join(room);
+                        console.log(`Authorized user ${userId} joined room: ${room}`);
+                    } else {
+                        console.warn(`Unauthorized join attempt to ${room} by user ${userId}`);
+                        socket.emit('error_message', 'Unauthorized access to this chat room.');
+                    }
+                } else {
+                    socket.emit('error_message', 'Order or User not found.');
+                }
+            } catch (err) {
+                console.error('Socket join authorization error:', err);
+                socket.emit('error_message', 'Internal server error during authorization.');
+            }
+        } else {
+            socket.join(room);
+            console.log(`User with ID: ${socket.id} joined general room: ${room}`);
+        }
     });
 
     socket.on('send_message', async (data) => {
-        socket.to(data.room).emit('receive_message', data);
-        
-        if (data.receiverId) {
+        if (data.orderId) {
             try {
-                await Notification.create({
-                    recipient: data.receiverId,
-                    sender: data.senderId,
-                    type: 'message_received',
-                    title: 'New Message 💬',
-                    message: `New message from ${data.senderName || 'Farmer'}: "${data.text}"`,
-                    link: '/orders'
-                });
+                const Order = require('./models/Order');
+                const order = await Order.findById(data.orderId);
+                if (order) {
+                    const isConsumer = order.consumer.toString() === data.senderId.toString();
+                    const isFarmer = order.farmer.toString() === data.senderId.toString();
+
+                    if (isConsumer || isFarmer) {
+                        // Save message to database
+                        const Message = require('./models/Message');
+                        const msg = await Message.create({
+                            sender: data.senderId,
+                            receiver: data.receiverId,
+                            content: data.text,
+                            orderId: data.orderId,
+                            isRead: false
+                        });
+
+                        data._id = msg._id;
+                        data.createdAt = msg.createdAt;
+
+                        // Broadcast message to room
+                        socket.to(data.room).emit('receive_message', data);
+
+                        // Trigger notifications via Helper
+                        const notificationHelper = require('./utils/notificationHelper');
+                        await notificationHelper.createNotification(app, {
+                            recipient: data.receiverId,
+                            sender: data.senderId,
+                            type: 'message',
+                            title: 'New Message 💬',
+                            message: `New message from ${data.senderName || 'User'}: "${data.text}"`,
+                            link: `/orders`
+                        });
+                    } else {
+                        socket.emit('error_message', 'Forbidden: You cannot send messages to this order.');
+                    }
+                }
             } catch (err) {
-                console.error('Socket message notification save error:', err);
+                console.error('Socket message save/broadcast error:', err);
             }
         }
     });
 
     socket.on('update_location', (data) => {
-        // Broadcast location updates to specific room (e.g., order ID or user ID)
         socket.to(data.room).emit('receive_location', data);
     });
 
     socket.on('disconnect', () => {
-        console.log('User Disconnected', socket.id);
+        if (userId) {
+            onlineUsers.delete(userId);
+            console.log(`User Disconnected: ${socket.id} (Deregistered user ID: ${userId})`);
+        } else {
+            console.log('User Disconnected', socket.id);
+        }
     });
 });
 
@@ -135,6 +214,15 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/farmers', require('./routes/farmerPublicRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
+
+app.get('/api/health', (req, res) => {
+    res.json({
+        status: 'ok',
+        mongodb: mongoose.connection.readyState === 1,
+        timestamp: new Date().toISOString()
+    });
+});
 
 app.get('/api/config/public', (req, res) => {
     res.json({
@@ -207,4 +295,16 @@ mongoose.connect(process.env.MONGODB_URI)
 const PORT = process.env.PORT || 5000;
 http.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+    
+    console.log('\n========= FarmerDirect Production Audit Checks =========');
+    console.log(`MongoDB Connected: ${mongoose.connection.readyState === 1 ? '✅ Connected' : '❌ Disconnected'}`);
+    console.log(`JWT Secret Loaded: ${process.env.JWT_SECRET ? '✅ YES' : '❌ NO'}`);
+    console.log(`Frontend URL: ${process.env.FRONTEND_URL || '❌ NOT SET'}`);
+    
+    const smtpConfigured = !!(process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS);
+    console.log(`SMTP Status: ${smtpConfigured ? '✅ Configured' : '❌ Missing Config'}`);
+    
+    const razorpayConfigured = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+    console.log(`Razorpay Status: ${razorpayConfigured ? '✅ Configured' : '❌ Missing Config'}`);
+    console.log('========================================================\n');
 });

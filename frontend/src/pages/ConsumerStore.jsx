@@ -182,6 +182,7 @@ const ConsumerStore = () => {
     const [locating, setLocating] = useState(false);
 
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showMobileFilters, setShowMobileFilters] = useState(false);
 
@@ -204,6 +205,7 @@ const ConsumerStore = () => {
 
     const fetchProducts = async () => {
         setLoading(true);
+        setError(null);
         try {
             const params = {};
             if (search) params.search = search;
@@ -225,6 +227,7 @@ const ConsumerStore = () => {
             setProducts(processedProducts);
         } catch (error) {
             console.error('Fetch store error:', error);
+            setError('Failed to load products. Please check your network connection or try again.');
         } finally {
             setLoading(false);
         }
@@ -427,6 +430,16 @@ const ConsumerStore = () => {
                             <div className="loading" style={{ width: '40px', height: '40px', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                             <span style={{ color: 'var(--text-muted)', fontWeight: '600' }}>Loading Products...</span>
                         </div>
+                    ) : error ? (
+                        <motion.div 
+                            initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
+                            style={{ textAlign: 'center', padding: '4rem 2rem', background: 'var(--bg-darker)', borderRadius: '2rem', border: '1px solid var(--glass-border)', maxWidth: '500px', margin: '2rem auto' }}
+                        >
+                            <div style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>⚠️</div>
+                            <h2 style={{ fontSize: '1.35rem', marginBottom: '0.5rem', color: 'var(--text-light)' }}>Connection Error</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>{error}</p>
+                            <button onClick={fetchProducts} className="btn btn-primary" style={{ padding: '0.5rem 1.5rem', borderRadius: '2rem' }}>Retry</button>
+                        </motion.div>
                     ) : products.length === 0 ? (
                         <motion.div 
                             initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}

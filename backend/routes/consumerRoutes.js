@@ -256,8 +256,9 @@ router.post('/orders', protect, authorize('consumer'), requireEmailVerified, asy
             });
             createdOrders.push(order);
             
-            // Create notification for farmer
-            await Notification.create({
+            // Create notification for farmer (with real-time socket delivery)
+            const notificationHelper = require('../utils/notificationHelper');
+            await notificationHelper.createNotification(req.app, {
                 recipient: farmerId,
                 sender: req.user._id,
                 type: 'order_created',
@@ -394,6 +395,61 @@ router.put('/notifications/:id/read', protect, async (req, res) => {
         res.json(notification);
     } catch (error) {
         console.error('Mark read notification error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   POST /api/consumer/products/:id/report
+// @desc    Report a product listing
+// @access  Private/Consumer
+router.post('/products/:id/report', protect, authorize('consumer'), async (req, res) => {
+    try {
+        const { reason } = req.body;
+        if (!reason || reason.trim() === '') {
+            return res.status(400).json({ message: 'Report reason is required.' });
+        }
+
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({ message: 'Product not found.' });
+        }
+
+        product.isReported = true;
+        product.reportReason = reason;
+        await product.save();
+
+        res.json({ message: 'Product reported successfully. Administrators will review it.', product });
+    } catch (error) {
+        console.error('Report product error:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+// @route   POST /api/consumer/reviews/:id/report
+// @desc    Report a review
+// @access  Private/Consumer
+router.post('/reviews/:id/report', protect, authorize('consumer'), async (req, res) => {
+    try {
+        const { reason } = req.body;
+        const Review = require('../models/Review');
+        
+        const validReasons = ['Spam', 'Abuse', 'Fake Review', 'Offensive Content'];
+        if (!reason || !validReasons.includes(reason)) {
+            return res.status(400).json({ message: `Invalid or missing report reason. Must be one of: ${validReasons.join(', ')}` });
+        }
+
+        const review = await Review.findById(req.params.id);
+        if (!review) {
+            return res.status(404).json({ message: 'Review not found.' });
+        }
+
+        review.isReported = true;
+        review.reportReason = reason;
+        await review.save();
+
+        res.json({ message: 'Review reported successfully. Administrators will review it.', review });
+    } catch (error) {
+        console.error('Report review error:', error);
         res.status(500).json({ message: 'Server error' });
     }
 });

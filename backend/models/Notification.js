@@ -13,14 +13,14 @@ const notificationSchema = new mongoose.Schema({
     type: {
         type: String,
         enum: [
-            'order_created',
-            'order_updated',
-            'payment_success',
-            'payment_failed',
-            'message_received',
-            'farmer_verified',
+            'order',
+            'delivery',
+            'review',
+            'message',
+            'verification',
             'system'
-        ]
+        ],
+        required: true
     },
     title: {
         type: String,

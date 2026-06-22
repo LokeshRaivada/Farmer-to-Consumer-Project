@@ -2,8 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { protect, authorize, requireEmailVerified } = require('../middleware/auth');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
+const { uploadToCloudinary } = require('../utils/cloudinary');
 
 const requireApprovedFarmer = (req, res, next) => {
     if (!req.user.isVerified) {
@@ -11,6 +15,65 @@ const requireApprovedFarmer = (req, res, next) => {
     }
     next();
 };
+
+// @route   POST /api/farmer/verify/upload
+// @desc    Upload farmer verification documents to Cloudinary
+// @access  Private/Farmer
+router.post('/verify/upload', protect, authorize('farmer'), upload.fields([
+    { name: 'governmentId', maxCount: 1 },
+    { name: 'farmerCertificate', maxCount: 1 },
+    { name: 'farmImages', maxCount: 5 }
+]), async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ message: 'Farmer not found.' });
+
+        const governmentIdFiles = req.files['governmentId'];
+        const farmerCertificateFiles = req.files['farmerCertificate'];
+        const farmImagesFiles = req.files['farmImages'];
+
+        if (!governmentIdFiles || governmentIdFiles.length === 0) {
+            return res.status(400).json({ message: 'Government ID is required for verification.' });
+        }
+
+        console.log('Uploading government ID to Cloudinary...');
+        const governmentIdUrl = await uploadToCloudinary(governmentIdFiles[0].buffer, 'farmer_verifications/govt_ids');
+
+        let farmerCertificateUrl = '';
+        if (farmerCertificateFiles && farmerCertificateFiles.length > 0) {
+            console.log('Uploading farmer certificate to Cloudinary...');
+            farmerCertificateUrl = await uploadToCloudinary(farmerCertificateFiles[0].buffer, 'farmer_verifications/certificates');
+        }
+
+        const farmImagesUrls = [];
+        if (farmImagesFiles && farmImagesFiles.length > 0) {
+            console.log(`Uploading ${farmImagesFiles.length} farm images to Cloudinary...`);
+            for (const file of farmImagesFiles) {
+                const url = await uploadToCloudinary(file.buffer, 'farmer_verifications/farm_photos');
+                farmImagesUrls.push(url);
+            }
+        }
+
+        // Update user state
+        user.verificationDocs = {
+            governmentId: governmentIdUrl,
+            farmerCertificate: farmerCertificateUrl,
+            farmImages: farmImagesUrls
+        };
+        user.verificationStatus = 'pending';
+        user.verificationFeedback = ''; // Clear previous feedback
+        await user.save();
+
+        res.json({
+            message: 'Verification documents uploaded successfully. Profile status set to pending review.',
+            verificationStatus: user.verificationStatus,
+            verificationDocs: user.verificationDocs
+        });
+    } catch (error) {
+        console.error('Farmer verification upload error:', error);
+        res.status(500).json({ message: 'Server error during upload: ' + error.message });
+    }
+});
 
 // @route   POST /api/farmer/products
 // @desc    Add product
@@ -143,6 +206,10 @@ router.put('/orders/:id', protect, authorize('farmer'), requireEmailVerified, as
             note: auditNote
         });
 
+        if (status === 'delivered' && order.paymentMethod === 'COD') {
+            order.paymentStatus = 'Completed';
+        }
+
         await order.save();
 
         // Update farmer completed orders and total products sold
@@ -184,10 +251,11 @@ router.put('/orders/:id', protect, authorize('farmer'), requireEmailVerified, as
             message = `Your order has been cancelled by Farmer ${req.user.name}.`;
         }
 
-        await Notification.create({
+        const notificationHelper = require('../utils/notificationHelper');
+        await notificationHelper.createNotification(req.app, {
             recipient: order.consumer,
             sender: req.user._id,
-            type: 'order_updated',
+            type: ['accepted', 'packed'].includes(status) ? 'order' : 'delivery',
             title,
             message,
             link: '/orders'

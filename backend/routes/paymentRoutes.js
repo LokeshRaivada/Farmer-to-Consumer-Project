@@ -41,6 +41,9 @@ router.post('/success', protect, async (req, res) => {
         const { orderId, amount } = req.body;
         const orderSnippet = orderId ? `#${orderId.slice(-6).toUpperCase()}` : '';
         
+        const Order = require('../models/Order');
+        await Order.findByIdAndUpdate(orderId, { paymentStatus: 'Completed' });
+
         await Notification.create({
             recipient: req.user._id,
             type: 'payment_success',

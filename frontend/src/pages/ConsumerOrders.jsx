@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { Package, Clock, Truck, CheckCircle, MapPin, Calendar, Heart, DollarSign, ShoppingBag, RefreshCw, X, Star, AlertCircle, Camera, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
+import ChatBox from '../components/ChatBox';
 
 const getFriendlyNotification = (msg) => {
     if (!msg) return '';
@@ -71,7 +72,7 @@ const isOrderRecent = (createdAt) => {
     return new Date(createdAt) >= ninetyDaysAgo;
 };
 
-const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview }) => {
+const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview, unreadCount, onChatClick, navigate }) => {
     const { lang } = useAuth();
     const statuses = ['pending', 'accepted', 'packed', 'shipped', 'delivered'];
     const currentStatusIndex = statuses.indexOf(order.status);
@@ -98,6 +99,11 @@ const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview }) => {
                         <div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Order ID: <strong style={{ color: 'var(--text-light)' }}>#{order._id.slice(-6).toUpperCase()}</strong></div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Placed on {new Date(order.createdAt).toLocaleDateString()}</div>
+                            <div style={{ marginTop: '0.4rem' }}>
+                                <span style={{ fontSize: '0.7rem', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '0.2rem 0.6rem', borderRadius: '4px', fontWeight: '600', display: 'inline-block' }}>
+                                    Est. Delivery: {new Date(new Date(order.createdAt).getTime() + 2 * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                                </span>
+                            </div>
                         </div>
                         <StatusBadge status={order.status} />
                     </div>
@@ -195,27 +201,39 @@ const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview }) => {
                         <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Total Amount</span>
                         <span style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '1.25rem' }}>₹{order.totalAmount}</span>
                     </div>
-                    {/* Call Farmer and WhatsApp actions */}
+                    {/* Call Farmer, Chat, and WhatsApp actions */}
                     {order.farmer && (
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
                             {order.farmer.phone && (
                                 <a 
                                     href={`tel:${order.farmer.phone}`}
                                     className="btn btn-secondary"
-                                    style={{ flex: 1, minHeight: '40px', padding: '0.25rem 0.5rem', fontSize: '0.8rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}
+                                    style={{ flex: '1 1 80px', minHeight: '40px', padding: '0.25rem 0.5rem', fontSize: '0.8rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}
                                 >
-                                    📞 Call Farmer
+                                    📞 Call
                                 </a>
                             )}
+                            <button 
+                                onClick={() => onChatClick(order)}
+                                className="btn btn-secondary"
+                                style={{ flex: '1 1 80px', minHeight: '40px', padding: '0.25rem 0.5rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', position: 'relative' }}
+                            >
+                                💬 Chat
+                                {unreadCount > 0 && (
+                                    <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: 'var(--primary)', color: 'var(--bg-darkest)', borderRadius: '50%', minWidth: '18px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 'bold', padding: '0 4px', border: '2px solid var(--bg-dark)' }}>
+                                        {unreadCount}
+                                    </span>
+                                )}
+                            </button>
                             {order.farmer.phone && (
                                 <a 
                                     href={`https://wa.me/${order.farmer.phone.replace(/[^0-9]/g, '')}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="btn btn-primary"
-                                    style={{ flex: 1, minHeight: '40px', padding: '0.25rem 0.5rem', fontSize: '0.8rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', background: '#25D366', borderColor: '#25D366', color: 'var(--white)' }}
+                                    style={{ flex: '1 1 80px', minHeight: '40px', padding: '0.25rem 0.5rem', fontSize: '0.8rem', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem', background: '#25D366', borderColor: '#25D366', color: 'var(--white)' }}
                                 >
-                                    💬 WhatsApp
+                                    💬 WA
                                 </a>
                             )}
                         </div>
@@ -330,9 +348,11 @@ const ConsumerOrders = () => {
     const [wishlistCount, setWishlistCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
     const [userReviews, setUserReviews] = useState({});
+    const [unreadCounts, setUnreadCounts] = useState({});
+    const [activeChatOrder, setActiveChatOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
-    const { t, lang } = useAuth();
+    const { t, lang, socket } = useAuth();
     const navigate = useNavigate();
 
     // Review modal state
@@ -353,11 +373,12 @@ const ConsumerOrders = () => {
         setLoading(true);
         setError(false);
         try {
-            const [ordersRes, wishlistRes, notificationsRes, reviewsRes] = await Promise.all([
+            const [ordersRes, wishlistRes, notificationsRes, reviewsRes, unreadRes] = await Promise.all([
                 axios.get('/api/consumer/orders'),
                 axios.get('/api/consumer/wishlist'),
                 axios.get('/api/consumer/notifications?limit=5'),
-                axios.get('/api/reviews/my-reviews')
+                axios.get('/api/reviews/my-reviews'),
+                axios.get('/api/chat/unread-counts')
             ]);
             setOrders(ordersRes.data || []);
             setWishlistCount(wishlistRes.data?.length || 0);
@@ -373,6 +394,15 @@ const ConsumerOrders = () => {
                 });
             }
             setUserReviews(reviewsMap);
+
+            // Map unread counts
+            const countsMap = {};
+            if (unreadRes.data) {
+                unreadRes.data.forEach(item => {
+                    countsMap[item._id] = item.count;
+                });
+            }
+            setUnreadCounts(countsMap);
         } catch (error) {
             console.error('Fetch consumer orders dashboard error:', error);
             setError(true);
@@ -384,6 +414,28 @@ const ConsumerOrders = () => {
     useEffect(() => {
         fetchConsumerData();
     }, []);
+
+    // Real-time order status updates via socket notifications
+    useEffect(() => {
+        if (!socket) return;
+        const handleOrderNotification = (data) => {
+            // Refresh orders when farmer updates status or new message arrives
+            // Types: 'order' (accepted/packed), 'delivery' (shipped/delivered/cancelled), 'message', 'order_created'
+            const orderTypes = ['order', 'delivery', 'message', 'order_created', 'order_status'];
+            if (!data?.type || orderTypes.includes(data.type)) {
+                fetchConsumerData();
+            }
+        };
+        socket.on('new_notification', handleOrderNotification);
+        return () => socket.off('new_notification', handleOrderNotification);
+    }, [socket]);
+
+    const handleMessagesRead = (orderId) => {
+        setUnreadCounts(prev => ({
+            ...prev,
+            [orderId]: 0
+        }));
+    };
 
     const handleReviewClick = (product, order, existingReview) => {
         setReviewProduct(product);
@@ -545,6 +597,9 @@ const ConsumerOrders = () => {
                                         onReviewClick={handleReviewClick} 
                                         userReviews={userReviews}
                                         onDeleteReview={handleDeleteReview}
+                                        unreadCount={unreadCounts[order._id] || 0}
+                                        onChatClick={(ord) => setActiveChatOrder(ord)}
+                                        navigate={navigate}
                                     />
                                 ))}
                             </AnimatePresence>
@@ -748,6 +803,16 @@ const ConsumerOrders = () => {
                         )}
                     </motion.div>
                 </div>
+            )}
+            {activeChatOrder && (
+                <ChatBox 
+                    recipientId={activeChatOrder.farmer._id} 
+                    recipientName={activeChatOrder.farmer.name} 
+                    orderId={activeChatOrder._id} 
+                    isOpen={!!activeChatOrder} 
+                    setIsOpen={(open) => !open && setActiveChatOrder(null)} 
+                    onMessagesRead={handleMessagesRead}
+                />
             )}
         </div>
     );

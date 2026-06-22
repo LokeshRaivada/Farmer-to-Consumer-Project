@@ -28,7 +28,7 @@ const AssistantPanel = lazy(() => import('./components/AssistantPanel'));
 const FarmerGuideModal = lazy(() => import('./components/FarmerGuideModal'));
 
 const Navbar = () => {
-  const { user, logout, t, lang, toggleLang, largeText, toggleLargeText } = useAuth();
+  const { user, logout, t, lang, toggleLang, largeText, toggleLargeText, socket } = useAuth();
   const { cartCount } = useCart();
   const location = window.location.pathname;
   
@@ -53,9 +53,23 @@ const Navbar = () => {
 
   React.useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000);
+    const interval = setInterval(fetchNotifications, 15000); // reduced frequency since we have socket
     return () => clearInterval(interval);
   }, [fetchNotifications]);
+
+  React.useEffect(() => {
+    if (socket) {
+      const handleNewNotification = (notif) => {
+        setNotifications(prev => [notif, ...prev]);
+        setUnreadCount(prev => prev + 1);
+      };
+      
+      socket.on('new_notification', handleNewNotification);
+      return () => {
+        socket.off('new_notification', handleNewNotification);
+      };
+    }
+  }, [socket]);
 
   const markAllRead = async () => {
     try {

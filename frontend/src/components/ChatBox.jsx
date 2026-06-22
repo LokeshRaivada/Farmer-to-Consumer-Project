@@ -1,45 +1,114 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { io } from 'socket.io-client';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { MessageCircle, X, Send } from 'lucide-react';
+import { MessageCircle, X, Send, Loader } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setIsOpen: propSetIsOpen }) => {
-  const { user, lang } = useAuth();
+const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setIsOpen: propSetIsOpen, onMessagesRead }) => {
+  const { user, lang, socket } = useAuth();
   const [localIsOpen, setLocalIsOpen] = useState(false);
   const isOpen = propIsOpen !== undefined ? propIsOpen : localIsOpen;
   const setIsOpen = propSetIsOpen !== undefined ? propSetIsOpen : setLocalIsOpen;
+  
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [socket, setSocket] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  
   const messagesEndRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  
+  const roomName = orderId ? `chat_order_${orderId}` : `chat_${[user?._id, recipientId].sort().join('_')}`;
 
-  const roomName = `chat_${orderId || [user?._id, recipientId].sort().join('_')}`;
+  // Fetch messages from backend
+  const fetchMessages = async (pageNum, append = false) => {
+    if (!orderId) return;
+    try {
+      setIsLoading(true);
+      const { data } = await axios.get(`/api/chat/messages/${orderId}?page=${pageNum}&limit=30`);
+      
+      if (data.length < 30) {
+        setHasMore(false);
+      }
+      
+      if (append) {
+        const container = chatContainerRef.current;
+        const scrollHeightBefore = container ? container.scrollHeight : 0;
+        const scrollTopBefore = container ? container.scrollTop : 0;
 
+        setMessages(prev => [...data, ...prev]);
+
+        // Retain scroll position
+        setTimeout(() => {
+          if (container) {
+            container.scrollTop = container.scrollHeight - scrollHeightBefore + scrollTopBefore;
+          }
+        }, 50);
+      } else {
+        setMessages(data);
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+        }, 50);
+      }
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Error fetching chat history:', error);
+      setIsLoading(false);
+    }
+  };
+
+  const markAsRead = async () => {
+    if (!orderId) return;
+    try {
+      await axios.put(`/api/chat/messages/${orderId}/read`);
+      if (onMessagesRead) {
+        onMessagesRead(orderId);
+      }
+    } catch (error) {
+      console.error('Error marking messages as read:', error);
+    }
+  };
+
+  // Setup Socket Listeners
   useEffect(() => {
-    if (isOpen && user) {
-      const newSocket = io(SOCKET_URL);
-      setSocket(newSocket);
+    if (isOpen && user && socket) {
+      // Join order chat room
+      socket.emit('join_room', { room: roomName });
+      
+      // Initial fetch and read mark
+      setPage(1);
+      setHasMore(true);
+      fetchMessages(1, false);
+      markAsRead();
 
-      newSocket.on('connect', () => {
-        newSocket.emit('join_room', roomName);
-      });
+      const handleReceiveMessage = (data) => {
+        if (data.room === roomName || (data.orderId && data.orderId === orderId)) {
+          setMessages(prev => [...prev, data]);
+          markAsRead();
+          setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+          }, 50);
+        }
+      };
 
-      newSocket.on('receive_message', (data) => {
-        setMessages((prev) => [...prev, data]);
-      });
-
+      socket.on('receive_message', handleReceiveMessage);
+      
       return () => {
-        newSocket.disconnect();
+        socket.off('receive_message', handleReceiveMessage);
       };
     }
-  }, [isOpen, user, roomName]);
+  }, [isOpen, user?._id, socket, roomName, orderId]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  // Handle scroll to top for pagination
+  const handleScroll = (e) => {
+    const container = e.currentTarget;
+    if (container.scrollTop === 0 && hasMore && !isLoading && orderId) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchMessages(nextPage, true);
+    }
+  };
 
   const sendMessage = (e) => {
     e.preventDefault();
@@ -47,6 +116,7 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
 
     const messageData = {
       room: roomName,
+      orderId: orderId,
       senderId: user._id,
       senderName: user.name,
       receiverId: recipientId,
@@ -55,8 +125,12 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
     };
 
     socket.emit('send_message', messageData);
-    setMessages((prev) => [...prev, messageData]);
+    setMessages(prev => [...prev, messageData]);
     setInputMessage('');
+    
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 50);
   };
 
   const formatMessageTime = (isoString) => {
@@ -86,7 +160,7 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
             style={{ width: '330px', maxWidth: 'calc(100vw - 3rem)', height: '480px', maxHeight: 'calc(100vh - 7.5rem)', marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '1rem', border: '1px solid var(--glass-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
           >
             
-            {/* WhatsApp Header */}
+            {/* Header */}
             <div style={{ padding: '0.75rem 1rem', background: 'var(--primary-dark)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(0,0,0,0.08)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
@@ -122,8 +196,17 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
               </button>
             </div>
 
-            {/* WhatsApp Message Logs Container */}
-            <div style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'var(--whatsapp-bg)' }}>
+            {/* Message Logs */}
+            <div 
+              ref={chatContainerRef}
+              onScroll={handleScroll}
+              style={{ flex: 1, padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'var(--whatsapp-bg)' }}
+            >
+              {isLoading && hasMore && (
+                <div style={{ textAlign: 'center', padding: '0.5rem', display: 'flex', justifyContent: 'center' }}>
+                  <Loader size={16} className="animate-spin" style={{ color: 'var(--primary)' }} />
+                </div>
+              )}
               {messages.length === 0 ? (
                 <div style={{ margin: 'auto', textAlign: 'center', maxWidth: '200px' }}>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', background: 'var(--whatsapp-their-bubble)', padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid var(--glass-border)', margin: 0 }}>
@@ -132,13 +215,13 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
                 </div>
               ) : (
                 messages.map((msg, idx) => {
-                  const isMe = msg.senderId === user._id;
+                  const isMe = msg.senderId === user._id || (msg.sender && msg.sender._id === user._id) || (msg.sender === user._id);
                   return (
                     <div 
                       key={idx} 
                       style={{ 
                         alignSelf: isMe ? 'flex-end' : 'flex-start', 
-                        maxWidth: '80%', 
+                        maxWidth: '85%', 
                         textAlign: 'left',
                         position: 'relative'
                       }}
@@ -153,7 +236,7 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
                         lineHeight: '1.35',
                         position: 'relative'
                       }}>
-                        {msg.text}
+                        {msg.text || msg.content}
                         <span style={{ 
                           position: 'absolute', 
                           bottom: '2px', 
@@ -164,7 +247,7 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
                           display: 'block',
                           textAlign: 'right'
                         }}>
-                          {formatMessageTime(msg.timestamp)}
+                          {formatMessageTime(msg.timestamp || msg.createdAt)}
                         </span>
                       </div>
                     </div>
@@ -174,7 +257,7 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
               <div ref={messagesEndRef} />
             </div>
 
-            {/* WhatsApp Chat Send Pill Input */}
+            {/* Input Form */}
             <form onSubmit={sendMessage} style={{ padding: '0.75rem', borderTop: '1px solid var(--glass-border)', display: 'flex', gap: '0.5rem', background: 'var(--bg-darkest)', alignItems: 'center' }}>
               <input 
                 type="text" 

@@ -32,6 +32,15 @@ const productSchema = new mongoose.Schema({
         type: String, // Path to image file
         default: '/uploads/product-placeholder.png'
     },
+    images: {
+        type: [String],
+        default: []
+    },
+    isReported: {
+        type: Boolean,
+        default: false
+    },
+    reportReason: String,
     isAvailable: {
         type: Boolean,
         default: true

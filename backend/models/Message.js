@@ -23,10 +23,16 @@ const messageSchema = new mongoose.Schema({
         type: Boolean,
         default: false
     },
+    readAt: {
+        type: Date
+    },
     createdAt: {
         type: Date,
         default: Date.now
     }
 });
+
+// Compound index for fast paginated chat query retrieval
+messageSchema.index({ orderId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Message', messageSchema);

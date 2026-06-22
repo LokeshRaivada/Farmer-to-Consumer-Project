@@ -4,15 +4,8 @@ import { Plus, Trash, Package, ShoppingBag, DollarSign, MapPin, CheckCircle, Clo
 import { useAuth } from '../context/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import ChatBox from '../components/ChatBox';
 
-const data = [
-  { name: 'Jan', revenue: 4000 },
-  { name: 'Feb', revenue: 3000 },
-  { name: 'Mar', revenue: 8000 },
-  { name: 'Apr', revenue: 6000 },
-  { name: 'May', revenue: 11000 },
-  { name: 'Jun', revenue: 9500 },
-];
 
 const StatCard = ({ title, value, icon: Icon, color }) => (
     <div className="glass" style={{ padding: '1.25rem', display: 'flex', gap: '1rem', alignItems: 'center', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '1rem', flex: '1 1 220px' }}>
@@ -26,17 +19,182 @@ const StatCard = ({ title, value, icon: Icon, color }) => (
     </div>
 );
 
+const FarmerVerificationPanel = () => {
+    const { user, lang } = useAuth();
+    const [govIdFile, setGovIdFile] = useState(null);
+    const [certFile, setCertFile] = useState(null);
+    const [farmFiles, setFarmFiles] = useState([]);
+    const [uploading, setUploading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+
+    const handleUploadSubmit = async (e) => {
+        e.preventDefault();
+        if (!govIdFile) {
+            alert('Government ID is required.');
+            return;
+        }
+
+        setUploading(true);
+        setErrorMessage('');
+        setSuccessMessage('');
+
+        const formData = new FormData();
+        formData.append('governmentId', govIdFile);
+        if (certFile) {
+            formData.append('farmerCertificate', certFile);
+        }
+        for (let file of farmFiles) {
+            formData.append('farmImages', file);
+        }
+
+        try {
+            const { data } = await axios.post('/api/farmer/verify/upload', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            setSuccessMessage(data.message || 'Verification documents submitted successfully!');
+            setUploading(false);
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } catch (err) {
+            console.error('Document upload error:', err);
+            setErrorMessage(err.response?.data?.message || 'Failed to upload verification documents.');
+            setUploading(false);
+        }
+    };
+
+    if (!user) return null;
+
+    const status = user.verificationStatus || 'none';
+
+    return (
+        <div className="glass" style={{ padding: '1.5rem', borderRadius: '1rem', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', marginBottom: '2rem' }}>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-light)', margin: '0 0 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                🛡️ Farmer Verification Status
+            </h3>
+
+            {status === 'none' && (
+                <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
+                        To list crops and complete transactions, please verify your profile by uploading official verification documents.
+                    </p>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                        <div>
+                            <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'block', marginBottom: '0.25rem' }}>Government ID (Aadhaar/PAN) *</label>
+                            <input type="file" accept="image/*,application/pdf" onChange={(e) => setGovIdFile(e.target.files[0])} required style={{ width: '100%', fontSize: '0.85rem' }} />
+                        </div>
+                        <div>
+                            <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'block', marginBottom: '0.25rem' }}>Farmer Certificate (Optional)</label>
+                            <input type="file" accept="image/*,application/pdf" onChange={(e) => setCertFile(e.target.files[0])} style={{ width: '100%', fontSize: '0.85rem' }} />
+                        </div>
+                        <div>
+                            <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'block', marginBottom: '0.25rem' }}>Farm Photo Listings (Max 5)</label>
+                            <input type="file" accept="image/*" multiple onChange={(e) => setFarmFiles(Array.from(e.target.files))} style={{ width: '100%', fontSize: '0.85rem' }} />
+                        </div>
+                    </div>
+
+                    {errorMessage && <p style={{ color: 'var(--error)', fontSize: '0.8rem', margin: 0 }}>{errorMessage}</p>}
+                    {successMessage && <p style={{ color: 'var(--primary)', fontSize: '0.8rem', margin: 0 }}>{successMessage}</p>}
+                    
+                    <button type="submit" disabled={uploading} className="btn btn-primary" style={{ alignSelf: 'flex-start', minHeight: '38px', padding: '0.4rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {uploading ? 'Uploading Documents...' : 'Submit Verification Docs'}
+                    </button>
+                </form>
+            )}
+
+            {status === 'pending' && (
+                <div style={{ background: 'rgba(234, 179, 8, 0.08)', border: '1px solid rgba(234, 179, 8, 0.2)', padding: '1rem', borderRadius: '0.5rem', color: '#EAB308', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>⏳</span>
+                    <div>
+                        <div style={{ fontWeight: 'bold' }}>Verification Request Pending Review</div>
+                        <p style={{ fontSize: '0.75rem', margin: '0.2rem 0 0 0' }}>An administrator will review your documents and verify your profile shortly.</p>
+                    </div>
+                </div>
+            )}
+
+            {status === 'under_review' && (
+                <div style={{ background: 'rgba(6, 182, 212, 0.08)', border: '1px solid rgba(6, 182, 212, 0.2)', padding: '1rem', borderRadius: '0.5rem', color: '#06B6D4', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>🔍</span>
+                    <div>
+                        <div style={{ fontWeight: 'bold' }}>Profile Under Review</div>
+                        <p style={{ fontSize: '0.75rem', margin: '0.2rem 0 0 0' }}>Your documents are currently being checked by our trust compliance team.</p>
+                    </div>
+                </div>
+            )}
+
+            {status === 'approved' && (
+                <div style={{ background: 'rgba(34, 197, 94, 0.08)', border: '1px solid rgba(34, 197, 94, 0.2)', padding: '1rem', borderRadius: '0.5rem', color: '#22C55E', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>🛡️</span>
+                    <div>
+                        <div style={{ fontWeight: 'bold' }}>Profile Verified & Trusted</div>
+                        <p style={{ fontSize: '0.75rem', margin: '0.2rem 0 0 0' }}>
+                            Your profile was verified on {user.verifiedAt ? new Date(user.verifiedAt).toLocaleDateString() : 'N/A'}. 
+                            {user.verificationExpiresAt && ` Expiry Date: ${new Date(user.verificationExpiresAt).toLocaleDateString()}`}
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {status === 'rejected' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', padding: '1rem', borderRadius: '0.5rem', color: '#EF4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <span>⚠️</span>
+                        <div>
+                            <div style={{ fontWeight: 'bold' }}>Verification Rejected</div>
+                            <p style={{ fontSize: '0.75rem', margin: '0.2rem 0 0 0' }}>
+                                Reason: <strong>{user.verificationFeedback || 'Provided documents are unclear or invalid.'}</strong>
+                            </p>
+                        </div>
+                    </div>
+
+                    <h4 style={{ fontSize: '0.9rem', color: 'var(--text-light)', margin: '0.5rem 0 0 0', fontWeight: 'bold' }}>Resubmit Verification Documents</h4>
+                    <form onSubmit={handleUploadSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'block', marginBottom: '0.25rem' }}>Government ID (Aadhaar/PAN) *</label>
+                                <input type="file" accept="image/*,application/pdf" onChange={(e) => setGovIdFile(e.target.files[0])} required style={{ width: '100%', fontSize: '0.85rem' }} />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'block', marginBottom: '0.25rem' }}>Farmer Certificate (Optional)</label>
+                                <input type="file" accept="image/*,application/pdf" onChange={(e) => setCertFile(e.target.files[0])} style={{ width: '100%', fontSize: '0.85rem' }} />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--text-light)', display: 'block', marginBottom: '0.25rem' }}>Farm Photo Listings (Max 5)</label>
+                                <input type="file" accept="image/*" multiple onChange={(e) => setFarmFiles(Array.from(e.target.files))} style={{ width: '100%', fontSize: '0.85rem' }} />
+                            </div>
+                        </div>
+
+                        {errorMessage && <p style={{ color: 'var(--error)', fontSize: '0.8rem', margin: 0 }}>{errorMessage}</p>}
+                        {successMessage && <p style={{ color: 'var(--primary)', fontSize: '0.8rem', margin: 0 }}>{successMessage}</p>}
+                        
+                        <button type="submit" disabled={uploading} className="btn btn-primary" style={{ alignSelf: 'flex-start', minHeight: '38px', padding: '0.4rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {uploading ? 'Uploading Documents...' : 'Submit Verification Docs'}
+                        </button>
+                    </form>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const FarmerDashboard = () => {
-    const { t, user, lang } = useAuth();
+    const { t, user, lang, socket } = useAuth();
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
     const [showAddForm, setShowAddForm] = useState(false);
     const [formData, setFormData] = useState({ name: '', price: '', quantity: '', category: 'vegetables', description: '' });
     const [activeTab, setActiveTab] = useState('overview');
     const [farmerStats, setFarmerStats] = useState({ averageRating: 0, numReviews: 0, recentReviews: [] });
+    const [analytics, setAnalytics] = useState(null);
     const [wizardStep, setWizardStep] = useState(1);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const [unreadCounts, setUnreadCounts] = useState({});
+    const [activeChatOrder, setActiveChatOrder] = useState(null);
 
     const fetchDashData = async () => {
         setLoading(true);
@@ -52,6 +210,22 @@ const FarmerDashboard = () => {
             } catch (err) {
                 console.error('Fetch stats error:', err);
             }
+            try {
+                const { data: analyticsData } = await axios.get('/api/farmer/analytics');
+                setAnalytics(analyticsData);
+            } catch (err) {
+                console.error('Fetch analytics error:', err);
+            }
+            try {
+                const { data: unreadRes } = await axios.get('/api/chat/unread-counts');
+                const countsMap = {};
+                unreadRes.forEach(item => {
+                    countsMap[item._id] = item.count;
+                });
+                setUnreadCounts(countsMap);
+            } catch (err) {
+                console.error('Fetch unread error:', err);
+            }
         } catch (err) {
             console.error('Fetch dashboard data error:', err);
             setError('Something went wrong. Please try again.');
@@ -60,7 +234,30 @@ const FarmerDashboard = () => {
         }
     };
 
+    const handleMessagesRead = (orderId) => {
+        setUnreadCounts(prev => ({
+            ...prev,
+            [orderId]: 0
+        }));
+    };
+
     useEffect(() => { fetchDashData(); }, []);
+
+    // Real-time order updates via socket notifications
+    useEffect(() => {
+        if (!socket) return;
+        const handleNewNotification = (data) => {
+            // Refresh dashboard when new orders arrive or status changes
+            // 'order_created': consumer placed a new order
+            // 'message': new chat message from a consumer
+            const orderRelatedTypes = ['order_created', 'message'];
+            if (!data?.type || orderRelatedTypes.includes(data.type)) {
+                fetchDashData();
+            }
+        };
+        socket.on('new_notification', handleNewNotification);
+        return () => socket.off('new_notification', handleNewNotification);
+    }, [socket]);
 
     const handleNextStep = () => {
         if (wizardStep === 1 && !formData.name.trim()) {
@@ -189,16 +386,7 @@ const FarmerDashboard = () => {
                 </div>
             </div>
 
-            {user && !user.isVerified && (
-                <div style={{ background: 'rgba(245, 158, 11, 0.08)', border: '1px solid rgba(245, 158, 11, 0.2)', padding: '1rem', borderRadius: '1rem', color: 'rgb(245, 158, 11)', fontSize: '0.85rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span>⏳</span>
-                    <span>
-                        {lang === 'te' 
-                            ? 'మీ రైతు ప్రొఫైల్ అడ్మిన్ ఆమోదం కోసం వేచి ఉంది. ఆమోదించబడిన తర్వాత మీరు పంటలను విక్రయించగలరు.' 
-                            : 'Your farmer profile is pending administrator approval. You will be able to list and sell crops once approved.'}
-                    </span>
-                </div>
-            )}
+            <FarmerVerificationPanel />
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
                 <StatCard title={lang === 'te' ? 'కొత్త ఆర్డర్లు' : 'New Orders'} value={pendingOrdersCount} icon={ShoppingBag} color="245, 158, 11" />
@@ -281,7 +469,7 @@ const FarmerDashboard = () => {
                                 </div>
                                 <div style={{ height: '260px', width: '100%' }}>
                                     <ResponsiveContainer width="100%" height="100%">
-                                        <AreaChart data={data}>
+                                        <AreaChart data={analytics?.revenue || []}>
                                             <defs>
                                                 <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                                                 <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
@@ -386,6 +574,20 @@ const FarmerDashboard = () => {
                                                     📞 Call Customer ({order.consumer.phone})
                                                 </a>
                                             )}
+                                            {order.consumer && (
+                                                <button
+                                                    onClick={() => setActiveChatOrder(order)}
+                                                    className="btn btn-secondary"
+                                                    style={{ padding: '0.2rem 0.5rem', fontSize: '0.7rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', minHeight: '28px', borderRadius: '1rem', position: 'relative', cursor: 'pointer' }}
+                                                >
+                                                    💬 Chat
+                                                    {unreadCounts[order._id] > 0 && (
+                                                        <span style={{ position: 'absolute', top: '-5px', right: '-5px', background: 'var(--primary)', color: 'var(--bg-darkest)', borderRadius: '50%', minWidth: '16px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontWeight: 'bold', padding: '0 3px', border: '1px solid var(--bg-dark)' }}>
+                                                            {unreadCounts[order._id]}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
@@ -439,7 +641,7 @@ const FarmerDashboard = () => {
                         </div>
                         <div style={{ height: '300px', width: '100%' }}>
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={data}>
+                                <AreaChart data={analytics?.revenue || []}>
                                     <defs>
                                         <linearGradient id="colorRevenue2" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
@@ -606,6 +808,16 @@ const FarmerDashboard = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
+            {activeChatOrder && (
+                <ChatBox 
+                    recipientId={activeChatOrder.consumer._id} 
+                    recipientName={activeChatOrder.consumer.name} 
+                    orderId={activeChatOrder._id} 
+                    isOpen={!!activeChatOrder} 
+                    setIsOpen={(open) => !open && setActiveChatOrder(null)} 
+                    onMessagesRead={handleMessagesRead}
+                />
+            )}
         </div>
     );
 };

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
-import { Users, ShoppingBag, Package, Star, Activity, Trash, Ban, CheckCircle, Search, Menu, X, DollarSign, TrendingUp, ShieldAlert, Award, Clock } from 'lucide-react';
+import { Users, ShoppingBag, Package, Star, Activity, Trash, Ban, CheckCircle, Search, Menu, X, DollarSign, TrendingUp, ShieldAlert, Award, Clock, ShieldCheck, FileText, Eye, AlertTriangle, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // Premium Stat Card
@@ -172,7 +172,7 @@ const Pagination = ({ current, total, onPageChange }) => {
 };
 
 const AdminDashboard = () => {
-    const { user } = useAuth();
+    const { user, socket } = useAuth();
     const [activeTab, setActiveTab] = useState('overview');
     const [loading, setLoading] = useState(true);
     const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -183,26 +183,37 @@ const AdminDashboard = () => {
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
     const [reviews, setReviews] = useState([]);
+    const [verifications, setVerifications] = useState([]);
+    const [reportedProducts, setReportedProducts] = useState([]);
+    const [reportedUsers, setReportedUsers] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [reviewsFilterReported, setReviewsFilterReported] = useState('all');
     const [reviewsFilterReason, setReviewsFilterReason] = useState('all');
+    const [verificationFeedback, setVerificationFeedback] = useState({});
+    const [moderationSubTab, setModerationSubTab] = useState('verifications');
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const [analyticsRes, usersRes, productsRes, ordersRes, reviewsRes] = await Promise.all([
+            const [analyticsRes, usersRes, productsRes, ordersRes, reviewsRes, verificationsRes, repProductsRes, repUsersRes] = await Promise.all([
                 axios.get('/api/admin/analytics'),
                 axios.get('/api/admin/users'),
                 axios.get('/api/admin/products'),
                 axios.get('/api/admin/orders'),
-                axios.get('/api/admin/reviews')
+                axios.get('/api/admin/reviews'),
+                axios.get('/api/admin/moderation/verifications'),
+                axios.get('/api/admin/moderation/reported-products'),
+                axios.get('/api/admin/moderation/reported-users')
             ]);
             setAnalytics(analyticsRes.data || { totalUsers: 0, totalFarmers: 0, totalProducts: 0, totalOrders: 0, totalSales: 0, recentUsers: [], ordersByStatus: [] });
             setUsers(usersRes.data || []);
             setProducts(productsRes.data || []);
             setOrders(ordersRes.data || []);
             setReviews(reviewsRes.data || []);
+            setVerifications(verificationsRes.data || []);
+            setReportedProducts(repProductsRes.data || []);
+            setReportedUsers(repUsersRes.data || []);
         } catch (error) {
             console.error('Admin fetch error:', error);
         } finally {
@@ -211,6 +222,19 @@ const AdminDashboard = () => {
     };
 
     useEffect(() => { fetchData(); }, []);
+
+    // Real-time admin notifications
+    useEffect(() => {
+        if (!socket) return;
+        const handleAdminNotification = (data) => {
+            // Refresh moderation data when new verification/report comes in
+            if (data?.type === 'verification' || data?.type === 'report') {
+                fetchData();
+            }
+        };
+        socket.on('new_notification', handleAdminNotification);
+        return () => socket.off('new_notification', handleAdminNotification);
+    }, [socket]);
 
     // Actions
     const toggleBlockUser = async (id) => {
@@ -267,6 +291,36 @@ const AdminDashboard = () => {
             fetchData();
         } catch (err) {
             alert(err.response?.data?.message || 'Error dismissing report');
+        }
+    };
+
+    const handleVerificationStatusChange = async (farmerId, status, feedback) => {
+        try {
+            await axios.put(`/api/admin/moderation/verifications/${farmerId}/status`, { status, feedback });
+            fetchData();
+            alert(`Farmer verification request updated to ${status}.`);
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error updating verification status');
+        }
+    };
+
+    const handleDismissProductReport = async (productId) => {
+        try {
+            await axios.put(`/api/admin/moderation/products/${productId}/dismiss-report`);
+            fetchData();
+            alert('Product report dismissed successfully.');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error dismissing product report');
+        }
+    };
+
+    const handleDismissUserReport = async (userId) => {
+        try {
+            await axios.put(`/api/admin/moderation/users/${userId}/dismiss-report`);
+            fetchData();
+            alert('User report dismissed successfully.');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error dismissing user report');
         }
     };
 
@@ -370,15 +424,8 @@ const AdminDashboard = () => {
 
     // Charts data
     const revenueData = useMemo(() => {
-        const sales = analytics?.totalSales || 0;
-        return [
-            { name: 'Jan', amount: sales * 0.2 },
-            { name: 'Feb', amount: sales * 0.4 },
-            { name: 'Mar', amount: sales * 0.5 },
-            { name: 'Apr', amount: sales * 0.8 },
-            { name: 'May', amount: sales }
-        ];
-    }, [analytics?.totalSales]);
+        return analytics?.revenue || [];
+    }, [analytics?.revenue]);
 
     const SidebarItem = ({ id, icon: Icon, label }) => (
         <motion.button 
@@ -458,10 +505,15 @@ const AdminDashboard = () => {
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                             <SidebarItem id="overview" icon={Activity} label="Overview" />
                             <SidebarItem id="users" icon={Users} label="User Management" />
-                            <SidebarItem id="farmers" icon={Award} label="Farmer Verification" />
+                            <SidebarItem id="farmers" icon={Award} label="Farmer Profiles" />
                             <SidebarItem id="products" icon={Package} label="Products" />
                             <SidebarItem id="orders" icon={ShoppingBag} label="Orders" />
-                            <SidebarItem id="reviews" icon={Star} label="Reviews & Moderation" />
+                            <SidebarItem id="reviews" icon={Star} label="Reviews" />
+                            <SidebarItem 
+                                id="moderation" 
+                                icon={ShieldCheck} 
+                                label={`Moderation${verifications.length + reportedProducts.length + reportedUsers.length > 0 ? ` (${verifications.length + reportedProducts.length + reportedUsers.length})` : ''}`} 
+                            />
                         </div>
                     </motion.div>
                 )}
@@ -481,7 +533,7 @@ const AdminDashboard = () => {
                         </button>
                     )}
                     <h1 style={{ fontSize: '1.75rem', fontWeight: '800', textTransform: 'capitalize', color: 'var(--text-light)', letterSpacing: '-0.5px' }}>
-                        {activeTab === 'farmers' ? 'Farmer Verification' : activeTab} Dashboard
+                        {activeTab === 'farmers' ? 'Farmer Profiles' : activeTab === 'moderation' ? 'Moderation Center' : activeTab} Dashboard
                     </h1>
                 </div>
 
@@ -973,6 +1025,280 @@ const AdminDashboard = () => {
                                             <Pagination current={currentPage} total={totalOrdersPages} onPageChange={setCurrentPage} />
                                         </>
                                     )}
+                                </div>
+                            )}
+
+                            {/* MODERATION TAB */}
+                            {activeTab === 'moderation' && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                                    
+                                    {/* Sub-tab navigation */}
+                                    <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                        {[
+                                            { id: 'verifications', icon: ShieldCheck, label: 'Verifications', count: verifications.length },
+                                            { id: 'reportedProducts', icon: Package, label: 'Reported Products', count: reportedProducts.length },
+                                            { id: 'reportedUsers', icon: AlertTriangle, label: 'Reported Users', count: reportedUsers.length },
+                                        ].map(tab => (
+                                            <button
+                                                key={tab.id}
+                                                onClick={() => setModerationSubTab(tab.id)}
+                                                className={`btn ${moderationSubTab === tab.id ? 'btn-primary' : 'btn-ghost'}`}
+                                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.6rem 1.25rem', fontSize: '0.85rem', fontWeight: '600', borderRadius: '2rem' }}
+                                            >
+                                                <tab.icon size={15} />
+                                                {tab.label}
+                                                {tab.count > 0 && (
+                                                    <span style={{ background: moderationSubTab === tab.id ? 'rgba(255,255,255,0.25)' : 'var(--primary)', color: moderationSubTab === tab.id ? 'white' : 'var(--bg-dark)', borderRadius: '50%', width: '20px', height: '20px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
+                                                        {tab.count}
+                                                    </span>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Verifications Sub-tab */}
+                                    {moderationSubTab === 'verifications' && (
+                                        <div className="glass" style={{ padding: '2rem' }}>
+                                            <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <ShieldCheck size={20} color="var(--primary)" /> Farmer Verification Requests ({verifications.length})
+                                            </h3>
+
+                                            {verifications.length === 0 ? (
+                                                <EmptyState message="No verification requests" subtitle="All farmer verification requests have been processed." icon={ShieldCheck} />
+                                            ) : (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                                    {verifications.map(farmer => (
+                                                        <div key={farmer._id} style={{ background: 'var(--bg-darkest)', borderRadius: '1rem', border: '1px solid var(--glass-border)', overflow: 'hidden' }}>
+                                                            {/* Farmer Header */}
+                                                            <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', borderBottom: '1px solid var(--glass-border)' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                                    <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(0,255,157,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.1rem', flexShrink: 0 }}>
+                                                                        {(farmer?.name || 'F').charAt(0).toUpperCase()}
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 style={{ fontWeight: 'bold', color: 'var(--text-light)', margin: 0, fontSize: '0.95rem' }}>{farmer?.name || 'Anonymous'}</h4>
+                                                                        <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', margin: '0.1rem 0 0 0' }}>{farmer?.email} • {farmer?.phone || 'No phone'} • {farmer?.address?.city || 'No city'}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                                    <span style={{ padding: '0.3rem 0.8rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'capitalize',
+                                                                        background: farmer.verificationStatus === 'approved' ? 'rgba(0,255,157,0.1)' : farmer.verificationStatus === 'rejected' ? 'rgba(239,68,68,0.1)' : farmer.verificationStatus === 'under_review' ? 'rgba(59,130,246,0.1)' : 'rgba(234,179,8,0.1)',
+                                                                        color: farmer.verificationStatus === 'approved' ? 'var(--primary)' : farmer.verificationStatus === 'rejected' ? '#f87171' : farmer.verificationStatus === 'under_review' ? '#60a5fa' : '#fbbf24',
+                                                                        border: '1px solid currentColor'
+                                                                    }}>
+                                                                        {farmer.verificationStatus || 'pending'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                            
+                                                            {/* Documents Section */}
+                                                            {farmer.verificationDocs && (farmer.verificationDocs.governmentId || farmer.verificationDocs.farmerCertificate || (farmer.verificationDocs.farmImages && farmer.verificationDocs.farmImages.length > 0)) && (
+                                                                <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--glass-border)' }}>
+                                                                    <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '0.75rem' }}>Submitted Documents</p>
+                                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-start' }}>
+                                                                        {farmer.verificationDocs.governmentId && (
+                                                                            <a href={farmer.verificationDocs.governmentId} target="_blank" rel="noopener noreferrer"
+                                                                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '0.5rem', color: '#60a5fa', fontSize: '0.8rem', textDecoration: 'none', fontWeight: '600' }}
+                                                                            >
+                                                                                <FileText size={14} /> Government ID
+                                                                            </a>
+                                                                        )}
+                                                                        {farmer.verificationDocs.farmerCertificate && (
+                                                                            <a href={farmer.verificationDocs.farmerCertificate} target="_blank" rel="noopener noreferrer"
+                                                                                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: 'rgba(168,85,247,0.08)', border: '1px solid rgba(168,85,247,0.25)', borderRadius: '0.5rem', color: '#c084fc', fontSize: '0.8rem', textDecoration: 'none', fontWeight: '600' }}
+                                                                            >
+                                                                                <FileText size={14} /> Farmer Certificate
+                                                                            </a>
+                                                                        )}
+                                                                        {(farmer.verificationDocs.farmImages || []).map((img, idx) => (
+                                                                            <a key={idx} href={img} target="_blank" rel="noopener noreferrer"
+                                                                                style={{ display: 'block', width: '60px', height: '60px', borderRadius: '0.5rem', overflow: 'hidden', border: '1px solid var(--glass-border)', flexShrink: 0 }}
+                                                                            >
+                                                                                <img src={img} alt={`Farm ${idx+1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                                            </a>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Admin Feedback + Action Buttons */}
+                                                            {farmer.verificationStatus !== 'approved' && (
+                                                                <div style={{ padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end' }}>
+                                                                    <div style={{ flex: 1, minWidth: '220px' }}>
+                                                                        <label style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 'bold', display: 'block', marginBottom: '0.3rem' }}>Feedback for Farmer (optional)</label>
+                                                                        <input
+                                                                            type="text"
+                                                                            placeholder="e.g. Documents unclear, please resubmit."
+                                                                            value={verificationFeedback[farmer._id] || ''}
+                                                                            onChange={(e) => setVerificationFeedback(prev => ({ ...prev, [farmer._id]: e.target.value }))}
+                                                                            style={{ width: '100%', padding: '0.6rem 1rem', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', borderRadius: '0.5rem', color: 'var(--text-light)', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                                                                        />
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                                                                        <button
+                                                                            onClick={() => handleVerificationStatusChange(farmer._id, 'under_review', verificationFeedback[farmer._id] || '')}
+                                                                            className="btn btn-ghost"
+                                                                            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.3)' }}
+                                                                        >
+                                                                            <Eye size={14} /> Under Review
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleVerificationStatusChange(farmer._id, 'rejected', verificationFeedback[farmer._id] || '')}
+                                                                            className="btn btn-ghost"
+                                                                            style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)' }}
+                                                                        >
+                                                                            <ThumbsDown size={14} /> Reject
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleVerificationStatusChange(farmer._id, 'approved', verificationFeedback[farmer._id] || '')}
+                                                                            className="btn btn-primary"
+                                                                            style={{ padding: '0.5rem 1.25rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                                                                        >
+                                                                            <ThumbsUp size={14} /> Approve
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {farmer.verificationStatus === 'approved' && (
+                                                                <div style={{ padding: '1rem 1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                                                                    <button
+                                                                        onClick={() => handleVerificationStatusChange(farmer._id, 'rejected', 'Verification revoked by admin.')}
+                                                                        className="btn btn-ghost"
+                                                                        style={{ padding: '0.5rem 1rem', fontSize: '0.8rem', color: '#f87171', border: '1px solid rgba(239,68,68,0.3)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+                                                                    >
+                                                                        <Ban size={14} /> Revoke Approval
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Reported Products Sub-tab */}
+                                    {moderationSubTab === 'reportedProducts' && (
+                                        <div className="glass" style={{ padding: '2rem' }}>
+                                            <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <Package size={20} color="var(--error)" /> Reported Product Listings ({reportedProducts.length})
+                                            </h3>
+                                            {reportedProducts.length === 0 ? (
+                                                <EmptyState message="No reported products" subtitle="There are no product listings currently flagged for review." icon={Package} />
+                                            ) : (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                                    {reportedProducts.map(product => (
+                                                        <div key={product._id} style={{ background: 'var(--bg-darkest)', borderRadius: '0.75rem', border: '1px solid rgba(239,68,68,0.3)', padding: '1.25rem 1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', boxShadow: '0 0 12px rgba(239,68,68,0.07)' }}>
+                                                            <div style={{ flex: 1, minWidth: '200px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                                                                    <h4 style={{ fontWeight: 'bold', color: 'var(--text-light)', margin: 0 }}>{product?.name || 'Unnamed Product'}</h4>
+                                                                    <span style={{ padding: '0.15rem 0.5rem', background: 'rgba(239,68,68,0.1)', color: '#f87171', fontSize: '0.7rem', borderRadius: '0.25rem', fontWeight: 'bold' }}>⚠️ Reported</span>
+                                                                </div>
+                                                                <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', margin: 0, lineHeight: '1.5' }}>
+                                                                    <strong>Farmer:</strong> {product?.farmer?.name || 'Unknown'} ({product?.farmer?.email || 'No email'})<br />
+                                                                    <strong>Category:</strong> {product?.category} &nbsp;|&nbsp; <strong>Price:</strong> ₹{product?.price}/kg &nbsp;|&nbsp; <strong>Stock:</strong> {product?.quantity}kg<br />
+                                                                    {product?.reportReason && <><strong>Report Reason:</strong> {product.reportReason}</>}
+                                                                </p>
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+                                                                <button
+                                                                    onClick={() => handleDismissProductReport(product._id)}
+                                                                    className="btn btn-primary"
+                                                                    style={{ padding: '0.45rem 1rem', fontSize: '0.8rem', background: 'var(--success)', borderColor: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                                                >
+                                                                    <CheckCircle size={14} /> Dismiss Report
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => deleteProduct(product._id)}
+                                                                    className="btn btn-ghost"
+                                                                    style={{ padding: '0.45rem 0.75rem', fontSize: '0.8rem', color: 'var(--error)', border: '1px solid rgba(239,68,68,0.3)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                                                >
+                                                                    <Trash size={14} /> Remove
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Reported Users Sub-tab */}
+                                    {moderationSubTab === 'reportedUsers' && (
+                                        <div className="glass" style={{ padding: '2rem' }}>
+                                            <h3 style={{ fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <AlertTriangle size={20} color="#fbbf24" /> Reported Users ({reportedUsers.length})
+                                            </h3>
+                                            {reportedUsers.length === 0 ? (
+                                                <EmptyState message="No reported users" subtitle="No users have been flagged for review at this time." icon={Users} />
+                                            ) : (
+                                                <div style={{ overflowX: 'auto' }}>
+                                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                                                        <thead>
+                                                            <tr style={{ borderBottom: '1px solid var(--glass-border)', color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                                                <th style={{ padding: '1rem' }}>User</th>
+                                                                <th style={{ padding: '1rem' }}>Role</th>
+                                                                <th style={{ padding: '1rem' }}>Report Reason</th>
+                                                                <th style={{ padding: '1rem' }}>Status</th>
+                                                                <th style={{ padding: '1rem', textAlign: 'right' }}>Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {reportedUsers.map(u => (
+                                                                <tr key={u._id} style={{ borderBottom: '1px solid var(--glass-border)' }} className="hover-row">
+                                                                    <td style={{ padding: '1rem' }}>
+                                                                        <div style={{ fontWeight: 'bold', color: 'var(--text-light)', fontSize: '0.9rem' }}>{u?.name || 'Anonymous'}</div>
+                                                                        <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{u?.email}</div>
+                                                                    </td>
+                                                                    <td style={{ padding: '1rem' }}>
+                                                                        <span style={{ padding: '0.2rem 0.6rem', background: u?.role === 'farmer' ? 'rgba(22, 163, 74, 0.08)' : 'var(--bg-darker)', color: u?.role === 'farmer' ? 'var(--primary)' : 'var(--text-light)', borderRadius: '1rem', fontSize: '0.75rem', textTransform: 'capitalize', fontWeight: 'bold' }}>
+                                                                            {u?.role}
+                                                                        </span>
+                                                                    </td>
+                                                                    <td style={{ padding: '1rem', color: '#fbbf24', fontSize: '0.85rem' }}>
+                                                                        {u?.reportReason || 'No reason provided'}
+                                                                    </td>
+                                                                    <td style={{ padding: '1rem', fontSize: '0.85rem' }}>
+                                                                        {u?.isBlocked ? (
+                                                                            <span style={{ color: 'var(--error)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><Ban size={12} /> Blocked</span>
+                                                                        ) : (
+                                                                            <span style={{ color: 'var(--primary)', display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}><CheckCircle size={12} /> Active</span>
+                                                                        )}
+                                                                    </td>
+                                                                    <td style={{ padding: '1rem', textAlign: 'right' }}>
+                                                                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+                                                                            <button
+                                                                                onClick={() => handleDismissUserReport(u._id)}
+                                                                                className="btn btn-primary"
+                                                                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', background: 'var(--success)', borderColor: 'var(--success)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                                                            >
+                                                                                <CheckCircle size={13} /> Dismiss
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => toggleBlockUser(u._id)}
+                                                                                className="btn btn-ghost"
+                                                                                style={{ padding: '0.4rem 0.8rem', fontSize: '0.75rem', color: u?.isBlocked ? 'var(--primary)' : 'var(--error)', border: `1px solid ${u?.isBlocked ? 'rgba(0,255,157,0.3)' : 'rgba(239,68,68,0.3)'}`, display: 'flex', alignItems: 'center', gap: '0.3rem' }}
+                                                                            >
+                                                                                <ShieldAlert size={13} /> {u?.isBlocked ? 'Unblock' : 'Block'}
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => deleteUser(u._id)}
+                                                                                className="btn btn-ghost"
+                                                                                style={{ padding: '0.4rem', color: 'var(--text-muted)' }}
+                                                                            >
+                                                                                <Trash size={14} />
+                                                                            </button>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                 </div>
                             )}
 

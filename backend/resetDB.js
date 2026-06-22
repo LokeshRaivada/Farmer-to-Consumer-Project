@@ -24,31 +24,12 @@ const resetData = async () => {
         await PriceTrend.deleteMany({});
         console.log('Cleared all products, orders, reviews, wishlists, notifications, messages, and price trends.');
 
-        // Delete all non-admin users
-        await User.deleteMany({ role: { $ne: 'admin' } });
-        console.log('Cleared all non-admin users.');
+        // Delete all users except the allowed admins
+        await User.deleteMany({ email: { $nin: ['jubburuprudhviraju@gmail.com', 'raivadalokesh@gmail.com'] } });
+        console.log('Cleared all users except the allowed Admins.');
 
-        // Ensure System Admin exists
-        let systemAdmin = await User.findOne({ email: 'admin@farmer.com' });
-        if (!systemAdmin) {
-            systemAdmin = await User.create({
-                name: 'System Admin',
-                email: 'admin@farmer.com',
-                password: 'password123',
-                role: 'admin',
-                phone: '1234567890',
-                isEmailVerified: true,
-                isVerified: true
-            });
-            console.log('Created System Admin.');
-        } else {
-            console.log('System Admin already exists.');
-        }
-
-        // Ensure Prudhvi Admin exists
-        let prudhviAdmin = await User.findOne({ email: 'jubburuprudhviraju@gmail.com' });
-        if (!prudhviAdmin) {
-            await User.create({
+        const admins = [
+            {
                 name: 'Prudhvi',
                 email: 'jubburuprudhviraju@gmail.com',
                 password: 'Prudhvi@2005',
@@ -56,10 +37,33 @@ const resetData = async () => {
                 phone: '9999999999',
                 isEmailVerified: true,
                 isVerified: true
-            });
-            console.log('Created Prudhvi Admin.');
-        } else {
-            console.log('Prudhvi Admin already exists.');
+            },
+            {
+                name: 'Lokesh',
+                email: 'raivadalokesh@gmail.com',
+                password: 'Lokesh@2006',
+                role: 'admin',
+                phone: '8888888888',
+                isEmailVerified: true,
+                isVerified: true
+            }
+        ];
+
+        for (const adminData of admins) {
+            let admin = await User.findOne({ email: adminData.email });
+            if (!admin) {
+                await User.create(adminData);
+                console.log(`Created ${adminData.name} Admin.`);
+            } else {
+                admin.name = adminData.name;
+                admin.password = adminData.password; // Pre-save hook will hash it
+                admin.role = 'admin';
+                admin.isEmailVerified = true;
+                admin.isVerified = true;
+                admin.phone = adminData.phone;
+                await admin.save();
+                console.log(`${adminData.name} Admin already exists and has been updated.`);
+            }
         }
 
         console.log('Database reset completed successfully! Only admins remain.');
