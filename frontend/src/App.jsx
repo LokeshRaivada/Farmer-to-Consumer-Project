@@ -582,11 +582,8 @@ const AppContent = () => {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6', margin: '0 0 0.5rem', opacity: 0.8 }}>
               📍 Rajam Main Road, Andhra Pradesh, India
             </p>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6', margin: '0 0 0.5rem', opacity: 0.8 }}>
-              📧 support@farmerdirect.com
-            </p>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: '1.6', margin: 0, opacity: 0.8 }}>
-              📞 +91 9988776655
+              📞 +91 8500660430
             </p>
           </div>
 
@@ -600,8 +597,14 @@ const AppContent = () => {
           </div>
         </div>
         
-        <div style={{ borderTop: '1px solid var(--glass-border)', marginTop: '2.5rem', paddingTop: '1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.6 }}>
+        <div style={{ borderTop: '1px solid var(--glass-border)', marginTop: '2.5rem', paddingTop: '1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.8 }}>
            <p>&copy; {new Date().getFullYear()} FarmerDirect. All rights reserved.</p>
+           <p style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
+             {lang === 'te' ? 'రూపకల్పన & అభివృద్ధి: ' : 'Designed & Developed by '}
+             <a href="https://www.linkedin.com/in/jubburu-prudhvi-raju/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 'bold' }}>Jubburu Prudhvi Raju</a>
+             &
+             <a href="https://www.linkedin.com/in/raivadalokesh/" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', textDecoration: 'none', fontWeight: 'bold' }}>Lokesh Raivada</a>
+           </p>
            <p>Empowering farming communities across India 🚜</p>
         </div>
       </footer>

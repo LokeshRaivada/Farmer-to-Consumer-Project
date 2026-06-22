@@ -132,7 +132,7 @@ const AssistantPanel = ({ onOpenChat, onOpenHelp, onOpenGuide }) => {
               {lang === 'te' ? 'నేరుగా కాల్ చేయండి:' : 'DIRECT SUPPORT CALL:'}
             </span>
             <a 
-              href="tel:+919988776655" 
+              href="tel:+918500660430" 
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -150,11 +150,8 @@ const AssistantPanel = ({ onOpenChat, onOpenHelp, onOpenGuide }) => {
               }}
             >
               <Phone size={16} />
-              <span>+91 9988776655</span>
+              <span>+91 8500660430</span>
             </a>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center', marginTop: '0.1rem' }}>
-              support@farmerdirect.com
-            </span>
           </div>
 
           {/* Language Toggle Selector */}
