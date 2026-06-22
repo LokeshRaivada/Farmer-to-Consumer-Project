@@ -227,7 +227,8 @@ app.get('/api/health', (req, res) => {
 app.get('/api/config/public', (req, res) => {
     res.json({
         emailVerificationRequired: process.env.EMAIL_VERIFICATION_REQUIRED !== 'false',
-        emailEnabled: process.env.EMAIL_ENABLED !== 'false'
+        emailEnabled: process.env.EMAIL_ENABLED !== 'false',
+        nodeEnv: process.env.NODE_ENV || 'development'
     });
 });
 

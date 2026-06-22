@@ -59,9 +59,12 @@ const Signup = () => {
 
         setLoading(true);
         try {
-            await register(userData);
-            // Redirect to verify-email with email parameter
-            navigate(`/verify-email?email=${encodeURIComponent(userData.email)}`);
+            const registeredUser = await register(userData);
+            if (registeredUser && registeredUser.emailError) {
+                navigate(`/verify-email?email=${encodeURIComponent(userData.email)}&emailError=${encodeURIComponent(registeredUser.emailError)}`);
+            } else {
+                navigate(`/verify-email?email=${encodeURIComponent(userData.email)}`);
+            }
         } catch (err) {
             setError(err.response?.data?.message || 'Error occurred during registration.');
         } finally {

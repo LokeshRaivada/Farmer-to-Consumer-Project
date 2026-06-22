@@ -115,14 +115,21 @@ router.post('/register', async (req, res) => {
         // Send email
         const frontendBase = getFrontendBaseUrl(req);
         const verificationLink = `${frontendBase}/verify-email?token=${verifyTokenRaw}`;
-        sendEmail({
-            to: user.email,
-            subject: 'Verify your FarmerDirect Account 🌾',
-            text: `Hello ${user.name},\n\nPlease verify your account by clicking the following link:\n${verificationLink}\n\nThis link will expire in 24 hours.`,
-            html: `<h3>Hello ${user.name},</h3><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Account</a></p><p>Or copy this link to your browser: ${verificationLink}</p><p>This link will expire in 24 hours.</p>`
-        }).catch(emailError => {
-            console.error('📧 [SMTP ERROR] Failed to send registration verification email (background):', emailError.message);
-        });
+        
+        let emailErrorOccurred = false;
+        let emailErrorMessage = '';
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Verify your FarmerDirect Account 🌾',
+                text: `Hello ${user.name},\n\nPlease verify your account by clicking the following link:\n${verificationLink}\n\nThis link will expire in 24 hours.`,
+                html: `<h3>Hello ${user.name},</h3><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Account</a></p><p>Or copy this link to your browser: ${verificationLink}</p><p>This link will expire in 24 hours.</p>`
+            });
+        } catch (emailError) {
+            console.error('📧 [SMTP ERROR] Failed to send registration verification email:', emailError.message);
+            emailErrorOccurred = true;
+            emailErrorMessage = emailError.message;
+        }
 
         res.status(201).json({
             _id: user._id,
@@ -132,6 +139,7 @@ router.post('/register', async (req, res) => {
             isEmailVerified: false,
             isVerified: user.isVerified,
             token: generateToken(user),
+            emailError: emailErrorOccurred ? emailErrorMessage : null
         });
     } catch (error) {
         console.error('Register error:', error);
@@ -286,16 +294,18 @@ router.post('/resend-verification', resendLimiter, async (req, res) => {
         // Send email
         const frontendBase = getFrontendBaseUrl(req);
         const verificationLink = `${frontendBase}/verify-email?token=${verifyTokenRaw}`;
-        sendEmail({
-            to: user.email,
-            subject: 'Verify your FarmerDirect Account 🌾',
-            text: `Hello ${user.name},\n\nPlease verify your account by clicking the following link:\n${verificationLink}\n\nThis link will expire in 24 hours.`,
-            html: `<h3>Hello ${user.name},</h3><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Account</a></p><p>Or copy this link to your browser: ${verificationLink}</p><p>This link will expire in 24 hours.</p>`
-        }).catch(emailError => {
-            console.error('📧 [SMTP ERROR] Failed to resend verification email (background):', emailError.message);
-        });
-
-        res.json({ message: 'We sent a verification email to your inbox.' });
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Verify your FarmerDirect Account 🌾',
+                text: `Hello ${user.name},\n\nPlease verify your account by clicking the following link:\n${verificationLink}\n\nThis link will expire in 24 hours.`,
+                html: `<h3>Hello ${user.name},</h3><p>Please verify your account by clicking the link below:</p><p><a href="${verificationLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Account</a></p><p>Or copy this link to your browser: ${verificationLink}</p><p>This link will expire in 24 hours.</p>`
+            });
+            res.json({ message: 'We sent a verification email to your inbox.' });
+        } catch (emailError) {
+            console.error('📧 [SMTP ERROR] Failed to resend verification email:', emailError.message);
+            res.status(500).json({ message: `Failed to send email: ${emailError.message}. Please check SMTP configuration.` });
+        }
     } catch (error) {
         console.error('Resend verification error:', error);
         res.status(500).json({ message: 'Unable to send email right now. Please try again later.' });
@@ -328,14 +338,16 @@ router.post('/forgot-password', async (req, res) => {
 
         const frontendBase = getFrontendBaseUrl(req);
         const resetLink = `${frontendBase}/reset-password/${resetTokenRaw}`;
-        sendEmail({
-            to: user.email,
-            subject: 'Reset your FarmerDirect Password 🔒',
-            text: `Hello ${user.name},\n\nYou requested a password reset. Please click the following link to set a new password:\n${resetLink}\n\nIf you did not request this, please ignore this email. This link will expire in 1 hour.`,
-            html: `<h3>Hello ${user.name},</h3><p>You requested a password reset. Please click the link below to set a new password:</p><p><a href="${resetLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p><p>Or copy this link to your browser: ${resetLink}</p><p>This link will expire in 1 hour.</p><p>If you did not make this request, you can safely ignore this email.</p>`
-        }).catch(emailError => {
-            console.error('📧 [SMTP ERROR] Failed to send password reset email (background):', emailError.message);
-        });
+        try {
+            await sendEmail({
+                to: user.email,
+                subject: 'Reset your FarmerDirect Password 🔒',
+                text: `Hello ${user.name},\n\nYou requested a password reset. Please click the following link to set a new password:\n${resetLink}\n\nIf you did not request this, please ignore this email. This link will expire in 1 hour.`,
+                html: `<h3>Hello ${user.name},</h3><p>You requested a password reset. Please click the link below to set a new password:</p><p><a href="${resetLink}" style="padding: 10px 20px; background-color: #16A34A; color: white; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a></p><p>Or copy this link to your browser: ${resetLink}</p><p>This link will expire in 1 hour.</p><p>If you did not make this request, you can safely ignore this email.</p>`
+            });
+        } catch (emailError) {
+            console.error('📧 [SMTP ERROR] Failed to send password reset email:', emailError.message);
+        }
 
         res.json({ message: 'If this email exists in our records, a password reset link has been sent.' });
     } catch (error) {

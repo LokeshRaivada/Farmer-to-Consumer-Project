@@ -12,6 +12,7 @@ const VerifyEmail = () => {
 
     const queryParams = new URLSearchParams(window.location.search);
     const emailParam = queryParams.get('email') || user?.email || '';
+    const emailErrorParam = queryParams.get('emailError') || '';
     const tokenFromQuery = queryParams.get('token');
     const token = tokenFromParams || tokenFromQuery;
 
@@ -151,9 +152,23 @@ const VerifyEmail = () => {
                             <Mail size={32} />
                         </div>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text-light)', marginBottom: '0.75rem' }}>Verify Your Email 🌾</h2>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                            We sent a verification email to your inbox {emailParam ? <strong>({emailParam})</strong> : ''}. Please click the link to confirm your account.
-                        </p>
+                        
+                        {emailErrorParam ? (
+                            <div style={{ background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)', color: 'var(--error)', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1.5rem', fontSize: '0.85rem', textAlign: 'left', lineHeight: '1.4' }}>
+                                <span style={{ fontWeight: 'bold', display: 'block', marginBottom: '0.25rem' }}>⚠️ Email Delivery Failed</span>
+                                We registered your account, but the system could not send a verification email to <strong>{emailParam}</strong>.
+                                <div style={{ background: 'var(--bg-darker)', padding: '0.5rem', borderRadius: '0.4rem', marginTop: '0.5rem', fontSize: '0.8rem', wordBreak: 'break-all' }}>
+                                    Error: {emailErrorParam}
+                                </div>
+                                <div style={{ marginTop: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                    Please ensure your server SMTP variables are correctly configured or click below to try resending.
+                                </div>
+                            </div>
+                        ) : (
+                            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '1.5rem', lineHeight: '1.5' }}>
+                                We sent a verification email to your inbox {emailParam ? <strong>({emailParam})</strong> : ''}. Please click the link to confirm your account.
+                            </p>
+                        )}
 
                         {config?.emailVerificationRequired === false && (
                             <button 
@@ -165,15 +180,17 @@ const VerifyEmail = () => {
                             </button>
                         )}
 
-                        <div style={{ background: 'rgba(22, 163, 74, 0.05)', border: '1px solid rgba(22, 163, 74, 0.1)', borderRadius: '0.75rem', padding: '1rem', marginBottom: '2rem', textAlign: 'left', fontSize: '0.8rem' }}>
-                            <span style={{ fontWeight: 'bold', display: 'block', color: 'var(--primary)', marginBottom: '0.25rem' }}>💡 Sandbox Testing Tip</span>
-                            <span style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
-                                Since this is a test environment, you can check the raw email details in the local email log file:
-                                <code style={{ display: 'block', background: 'var(--bg-darker)', padding: '0.4rem', borderRadius: '0.4rem', marginTop: '0.4rem', wordBreak: 'break-all' }}>
-                                    scratch/email_log.txt
-                                </code>
-                            </span>
-                        </div>
+                        {config?.nodeEnv === 'development' && (
+                            <div style={{ background: 'rgba(22, 163, 74, 0.05)', border: '1px solid rgba(22, 163, 74, 0.1)', borderRadius: '0.75rem', padding: '1rem', marginBottom: '2rem', textAlign: 'left', fontSize: '0.8rem' }}>
+                                <span style={{ fontWeight: 'bold', display: 'block', color: 'var(--primary)', marginBottom: '0.25rem' }}>💡 Sandbox Testing Tip</span>
+                                <span style={{ color: 'var(--text-muted)', lineHeight: '1.4' }}>
+                                    Since this is a test environment, you can check the raw email details in the local email log file:
+                                    <code style={{ display: 'block', background: 'var(--bg-darker)', padding: '0.4rem', borderRadius: '0.4rem', marginTop: '0.4rem', wordBreak: 'break-all' }}>
+                                        scratch/email_log.txt
+                                    </code>
+                                </span>
+                            </div>
+                        )}
 
                         {resendStatus.text && (
                             <div style={{ 
