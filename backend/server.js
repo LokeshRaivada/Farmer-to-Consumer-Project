@@ -258,11 +258,13 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(async () => {
         console.log('Connected securely to MongoDB Atlas');
         
-        // Verify Nodemailer SMTP connectivity after successful DB connection
+        // Verify Nodemailer SMTP connectivity or Resend API key after successful DB connection
         const isEmailRequired = process.env.EMAIL_VERIFICATION_REQUIRED !== 'false';
         const emailEnabled = process.env.EMAIL_ENABLED !== 'false';
         if (emailEnabled) {
-            if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+            if (process.env.RESEND_API_KEY) {
+                console.log('📧 [Email] Resend API Key detected. Emails will be sent via HTTP API (Render Free Tier compatible).');
+            } else if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
                 const nodemailer = require('nodemailer');
                 
                 let host = process.env.EMAIL_HOST;
@@ -301,7 +303,7 @@ mongoose.connect(process.env.MONGODB_URI)
                         }
                     });
             } else {
-                console.warn('⚠️ [SMTP] SMTP configuration variables are missing. Real emails will not be sent.');
+                console.warn('⚠️ [SMTP/Resend] Email configuration variables are missing. Real emails will not be sent.');
             }
         } else {
             console.log('ℹ️ [EMAIL] Email features are disabled globally (EMAIL_ENABLED=false). Using local sandboxed log fallback.');
@@ -320,7 +322,12 @@ http.listen(PORT, () => {
     console.log(`Frontend URL: ${process.env.FRONTEND_URL || '❌ NOT SET'}`);
     
     const smtpConfigured = !!(process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS);
-    console.log(`SMTP Status: ${smtpConfigured ? '✅ Configured' : '❌ Missing Config'}`);
+    const resendConfigured = !!process.env.RESEND_API_KEY;
+    if (resendConfigured) {
+        console.log('Email Status: ✅ Configured (Resend HTTP API)');
+    } else {
+        console.log(`Email Status: ${smtpConfigured ? '✅ Configured (SMTP)' : '❌ Missing Config'}`);
+    }
     
     const razorpayConfigured = !!(process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
     console.log(`Razorpay Status: ${razorpayConfigured ? '✅ Configured' : '❌ Missing Config'}`);

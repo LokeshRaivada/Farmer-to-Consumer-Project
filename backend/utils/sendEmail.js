@@ -15,6 +15,43 @@ const sendEmail = async ({ to, subject, text, html }) => {
         return;
     }
 
+    // 1. Check if Resend API is configured (highly recommended for Render Free Tier)
+    if (process.env.RESEND_API_KEY) {
+        try {
+            console.log(`📧 [Resend API] Attempting to send email to ${to} via HTTP...`);
+            const fromAddress = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+            const response = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: fromAddress,
+                    to,
+                    subject,
+                    text,
+                    html
+                })
+            });
+            const resData = await response.json();
+            if (!response.ok) {
+                throw new Error(resData.message || `HTTP error ${response.status}: ${JSON.stringify(resData)}`);
+            }
+            console.log(`📧 [Resend API] Email sent successfully. ID: ${resData.id}`);
+            return;
+        } catch (error) {
+            console.error('❌ [Resend API] Failed to send email via HTTP:', error.message);
+            if (!isRequired || isDev) {
+                console.log('ℹ️ [Resend API] Falling back to local logging in development mode.');
+                logToSandbox({ to, subject, text, html });
+                return;
+            }
+            throw error;
+        }
+    }
+
+    // 2. Otherwise, fall back to traditional SMTP
     const hasSmtp = process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS;
     if (!hasSmtp) {
         console.warn('⚠️ [SMTP] Nodemailer environment variables are missing.');
@@ -23,7 +60,7 @@ const sendEmail = async ({ to, subject, text, html }) => {
             logToSandbox({ to, subject, text, html });
             return;
         }
-        throw new Error('SMTP configuration missing, but email verification is required.');
+        throw new Error('SMTP/Resend configuration missing, but email verification is required.');
     }
 
     try {
