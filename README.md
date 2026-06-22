@@ -1,6 +1,6 @@
 # Farmer-to-Consumer Direct Market Platform
 
-![FarmerDirect Project Preview](project_preview.png)
+![FarmerDirect Home Marketplace](images/home_preview.png)
 
 A full-stack MERN (MongoDB, Express, React, Node) application that connects farmers directly with consumers for fair pricing and fresh produce.
 
@@ -67,12 +67,15 @@ Farmer Project/
     └── vite.config.js # Proxy and Port Setup
 ```
 
-## 🧪 Testing Credentials (after node seed.js)
-| Role | Email | Password |
-|------|-------|----------|
-| Admin (Prudhvi) | jubburuprudhviraju@gmail.com | Prudhvi@2005 |
-| Admin (Lokesh) | raivadalokesh@gmail.com | Lokesh@2006 |
-| Farmer | farmer@farmer.com | password123 |
-| Consumer | consumer@farmer.com | password123 |
+## 📷 Project Previews
+
+### Home Marketplace
+![FarmerDirect Home Marketplace](images/home_preview.png)
+
+### Floating Assistant & Multilingual Support
+![FarmerDirect Assistant Support](images/assistant_preview.png)
+
+### Registration & Signup Flow
+![FarmerDirect Signup Flow](images/signup_preview.png)
 
 Enjoy bridging the gap between farms and homes! 🌾🥕
