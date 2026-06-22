@@ -125,8 +125,8 @@ export const AuthProvider = ({ children }) => {
         return updatedUser;
     };
 
-    const forgotPassword = async (email) => {
-        const { data } = await axios.post('/api/auth/forgot-password', { email });
+    const forgotPassword = async (resetData) => {
+        const { data } = await axios.post('/api/auth/forgot-password', resetData);
         return data;
     };
 

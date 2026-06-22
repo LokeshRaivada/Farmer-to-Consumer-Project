@@ -1,5 +1,7 @@
 # Farmer-to-Consumer Direct Market Platform
 
+![FarmerDirect Project Preview](project_preview.png)
+
 A full-stack MERN (MongoDB, Express, React, Node) application that connects farmers directly with consumers for fair pricing and fresh produce.
 
 ## 🚀 Key Features

@@ -59,12 +59,8 @@ const Signup = () => {
 
         setLoading(true);
         try {
-            const registeredUser = await register(userData);
-            if (registeredUser && registeredUser.emailError) {
-                navigate(`/verify-email?email=${encodeURIComponent(userData.email)}&emailError=${encodeURIComponent(registeredUser.emailError)}`);
-            } else {
-                navigate(`/verify-email?email=${encodeURIComponent(userData.email)}`);
-            }
+            await register(userData);
+            navigate('/');
         } catch (err) {
             setError(err.response?.data?.message || 'Error occurred during registration.');
         } finally {

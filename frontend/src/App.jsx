@@ -21,8 +21,6 @@ const Reviews = lazy(() => import('./pages/Reviews'));
 const Farmers = lazy(() => import('./pages/Farmers'));
 const FarmerProfile = lazy(() => import('./pages/FarmerProfile'));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('./pages/ResetPassword'));
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const LiveTracking = lazy(() => import('./pages/LiveTracking'));
 const AssistantPanel = lazy(() => import('./components/AssistantPanel'));
 const FarmerGuideModal = lazy(() => import('./components/FarmerGuideModal'));
@@ -482,63 +480,6 @@ const HelpModal = ({ isOpen, onClose, path, lang }) => {
   );
 };
 
-const VerificationBanner = () => {
-  const { user, config, lang } = useAuth();
-  const location = useLocation();
-  const path = location.pathname;
-
-  const showBanner = user && 
-                     !user.isEmailVerified && 
-                     config?.emailVerificationRequired && 
-                     path !== '/verify-email' && 
-                     !path.startsWith('/verify-email/') &&
-                     path !== '/login' && 
-                     path !== '/signup';
-
-  if (!showBanner) return null;
-
-  return (
-    <div style={{
-      background: 'rgba(239, 68, 68, 0.08)',
-      border: '1px solid rgba(239, 68, 68, 0.2)',
-      borderRadius: '1rem',
-      padding: '0.75rem 1.25rem',
-      margin: '1rem auto',
-      maxWidth: '1200px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '1rem',
-      flexWrap: 'wrap'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--error)', fontSize: '0.85rem', fontWeight: '500' }}>
-        <span>⚠️</span>
-        <span>
-          {lang === 'te' 
-            ? 'అన్ని ఫీచర్లను ఉపయోగించడానికి మీ ఈమెయిల్ వెరిఫై చేయండి.' 
-            : 'Verify your email to unlock all marketplace features.'}
-        </span>
-      </div>
-      <Link 
-        to={`/verify-email?email=${encodeURIComponent(user.email)}`}
-        className="btn"
-        style={{
-          background: 'var(--error)',
-          color: 'white',
-          padding: '0.35rem 0.85rem',
-          borderRadius: '0.5rem',
-          fontSize: '0.75rem',
-          fontWeight: 'bold',
-          textDecoration: 'none',
-          minHeight: 'auto',
-          boxShadow: '0 2px 4px rgba(239, 68, 68, 0.2)'
-        }}
-      >
-        {lang === 'te' ? 'ఈమెయిల్ వెరిఫై చేయి' : 'Verify Email'}
-      </Link>
-    </div>
-  );
-};
 
 const AppContent = () => {
   const { user, lang, largeText, t } = useAuth();
@@ -552,7 +493,6 @@ const AppContent = () => {
     <div className={`${lang === 'te' ? 'lang-te' : ''} ${largeText ? 'large-mode' : ''}`} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Navbar />
       <main style={{ flex: 1, padding: '0 1rem', paddingBottom: '80px' }}>
-        <VerificationBanner />
         <Suspense fallback={<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}><div className="loading" style={{ width: '40px', height: '40px', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /></div>}>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -560,9 +500,6 @@ const AppContent = () => {
             <Route path="/signup" element={<Signup />} />
             <Route path="/store" element={<ConsumerStore />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/verify-email/:token" element={<VerifyEmail />} />
             <Route path="/farmer/*" element={<ProtectedRoute allowedRoles={['farmer']}><FarmerDashboard /></ProtectedRoute>} />
             <Route path="/admin/*" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
             <Route path="/cart" element={<Cart />} />
