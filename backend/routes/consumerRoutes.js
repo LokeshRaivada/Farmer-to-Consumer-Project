@@ -261,7 +261,7 @@ router.post('/orders', protect, authorize('consumer'), requireEmailVerified, asy
             await notificationHelper.createNotification(req.app, {
                 recipient: farmerId,
                 sender: req.user._id,
-                type: 'order_created',
+                type: 'order',
                 title: 'New Order Received 📦',
                 message: `You have received a new order from ${req.user.name} for a total of ₹${data.totalAmount}.`,
                 link: '/farmer'
