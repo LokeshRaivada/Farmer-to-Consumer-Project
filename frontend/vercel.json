@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://farmer-to-consumer-project.onrender.com/api/:path*"
+      "destination": "https://farmer-to-consumer-project-production.up.railway.app/api/:path*"
     },
     {
       "source": "/(.*)",
