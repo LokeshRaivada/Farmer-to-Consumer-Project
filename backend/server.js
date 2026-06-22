@@ -7,6 +7,8 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const Notification = require('./models/Notification');
 require('dotenv').config();
+const dns = require('dns').promises;
+const net = require('net');
 
 const app = express();
 const http = require('http').createServer(app);
@@ -253,7 +255,7 @@ app.use((err, req, res, next) => {
 
 // Database Connection with optimized settings
 mongoose.connect(process.env.MONGODB_URI)
-    .then(() => {
+    .then(async () => {
         console.log('Connected securely to MongoDB Atlas');
         
         // Verify Nodemailer SMTP connectivity after successful DB connection
@@ -262,14 +264,29 @@ mongoose.connect(process.env.MONGODB_URI)
         if (emailEnabled) {
             if (process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS) {
                 const nodemailer = require('nodemailer');
+                
+                let host = process.env.EMAIL_HOST;
+                let servername = undefined;
+                if (host && !net.isIP(host)) {
+                    try {
+                        const lookup = await dns.lookup(host, { family: 4 });
+                        servername = host;
+                        host = lookup.address;
+                        console.log(`ℹ️ [SMTP Check] Resolved ${process.env.EMAIL_HOST} to IPv4 ${host}`);
+                    } catch (dnsErr) {
+                        console.warn(`⚠️ [SMTP Check] DNS lookup failed for ${host}:`, dnsErr.message);
+                    }
+                }
+
                 const transporter = nodemailer.createTransport({
-                    host: process.env.EMAIL_HOST,
+                    host: host,
                     port: parseInt(process.env.EMAIL_PORT) || 587,
                     secure: process.env.EMAIL_SECURE === 'true',
                     auth: {
                         user: process.env.EMAIL_USER,
                         pass: process.env.EMAIL_PASS
                     },
+                    tls: servername ? { servername } : undefined,
                     connectionTimeout: 5000,
                     greetingTimeout: 5000,
                     socketTimeout: 5000

@@ -1,6 +1,8 @@
 const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
+const dns = require('dns').promises;
+const net = require('net');
 
 const sendEmail = async ({ to, subject, text, html }) => {
     const emailEnabled = process.env.EMAIL_ENABLED !== 'false';
@@ -30,14 +32,29 @@ const sendEmail = async ({ to, subject, text, html }) => {
             ? process.env.EMAIL_SECURE === 'true'
             : (smtpPort === 465);
 
+        let host = process.env.EMAIL_HOST;
+        let servername = undefined;
+
+        if (host && !net.isIP(host)) {
+            try {
+                const lookup = await dns.lookup(host, { family: 4 });
+                servername = host;
+                host = lookup.address;
+                console.log(`ℹ️ [SMTP] Resolved ${process.env.EMAIL_HOST} to IPv4 ${host}`);
+            } catch (dnsErr) {
+                console.warn(`⚠️ [SMTP] DNS lookup failed for ${host}:`, dnsErr.message);
+            }
+        }
+
         const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST,
+            host: host,
             port: smtpPort,
             secure: smtpSecure,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
             },
+            tls: servername ? { servername } : undefined,
             connectionTimeout: 10000,
             greetingTimeout: 10000,
             socketTimeout: 10000
