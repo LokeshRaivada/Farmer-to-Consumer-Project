@@ -72,7 +72,7 @@ const isOrderRecent = (createdAt) => {
     return new Date(createdAt) >= ninetyDaysAgo;
 };
 
-const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview, unreadCount, onChatClick, navigate }) => {
+const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview, unreadCount, onChatClick, navigate, isMobile }) => {
     const { lang } = useAuth();
     const statuses = ['pending', 'accepted', 'packed', 'shipped', 'delivered'];
     const currentStatusIndex = statuses.indexOf(order.status);
@@ -265,13 +265,15 @@ const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview, unreadCo
                     <h4 style={{ fontSize: '0.85rem', color: 'var(--text-light)', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 'bold' }}>
                         <Truck size={14} color="var(--primary)" /> {lang === 'te' ? 'ఆర్డర్ ట్రాకింగ్ హిస్టరీ' : 'Order Tracking History'}
                     </h4>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+                    <div className="timeline-container">
                         {/* Progress Bar Line */}
-                        <div style={{ position: 'absolute', top: '14px', left: '8%', right: '8%', height: '3px', background: 'var(--glass-border)', zIndex: 0, borderRadius: '2px' }}>
-                            <motion.div 
-                                initial={{ width: 0 }}
-                                animate={{ width: `${(Math.max(0, currentStatusIndex) / (statuses.length - 1)) * 100}%` }}
-                                style={{ height: '100%', background: 'var(--primary)', borderRadius: '2px', transition: 'width 0.8s ease-in-out' }}
+                        <div className="timeline-track">
+                            <div 
+                                className="timeline-track-fill"
+                                style={isMobile 
+                                    ? { height: `${(Math.max(0, currentStatusIndex) / (statuses.length - 1)) * 100}%`, width: '100%' }
+                                    : { width: `${(Math.max(0, currentStatusIndex) / (statuses.length - 1)) * 100}%`, height: '100%' }
+                                }
                             />
                         </div>
 
@@ -300,25 +302,25 @@ const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview, unreadCo
                             const label = statusLabels[s] || s;
 
                             return (
-                                <div key={s} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.4rem', zIndex: 1, minWidth: '75px', flex: 1, textAlign: 'center' }}>
-                                    <div style={{ 
-                                        width: '28px', height: '28px', borderRadius: '50%', 
-                                        background: isCompleted ? nodeColor : 'var(--bg-darkest)',
-                                        border: `2px solid ${isCompleted ? nodeColor : 'var(--glass-border)'}`,
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        boxShadow: isCurrent ? `0 0 12px ${nodeColor}` : 'none',
-                                        transition: 'all 0.3s'
-                                    }}>
-                                        {isCompleted ? <CheckCircle size={14} color="var(--white)" /> : <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--text-muted)' }} />}
+                                <div key={s} className={`timeline-node ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''}`}>
+                                    <div 
+                                        className="timeline-icon"
+                                        style={{ 
+                                            borderColor: isCompleted ? nodeColor : 'var(--glass-border)',
+                                            background: isCompleted ? nodeColor : 'var(--bg-darkest)',
+                                            boxShadow: isCurrent ? `0 0 12px ${nodeColor}` : 'none'
+                                        }}
+                                    >
+                                        {isCompleted ? <CheckCircle size={14} color="var(--white)" /> : <div className="timeline-dot" />}
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
-                                        <span style={{ fontSize: '0.8rem', color: isCompleted ? 'var(--text-light)' : 'var(--text-muted)', fontWeight: isCurrent ? 'bold' : 'normal' }}>
+                                    <div className="timeline-content">
+                                        <span className="timeline-label">
                                             {label}
                                         </span>
                                         {auditItem && (
                                             <>
-                                                <span style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 'bold' }}>{getFriendlyNotification(auditItem.note)}</span>
-                                                <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>{formatAuditTime(auditItem.timestamp)}</span>
+                                                <span className="timeline-note">{getFriendlyNotification(auditItem.note)}</span>
+                                                <span className="timeline-time">{formatAuditTime(auditItem.timestamp)}</span>
                                             </>
                                         )}
                                     </div>
@@ -344,6 +346,13 @@ const OrderCard = ({ order, onReviewClick, userReviews, onDeleteReview, unreadCo
 };
 
 const ConsumerOrders = () => {
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const [orders, setOrders] = useState([]);
     const [wishlistCount, setWishlistCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
@@ -600,6 +609,7 @@ const ConsumerOrders = () => {
                                         unreadCount={unreadCounts[order._id] || 0}
                                         onChatClick={(ord) => setActiveChatOrder(ord)}
                                         navigate={navigate}
+                                        isMobile={isMobile}
                                     />
                                 ))}
                             </AnimatePresence>
@@ -608,7 +618,7 @@ const ConsumerOrders = () => {
                 </div>
 
                 {/* Right Column: Live Notifications */}
-                <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: 'sticky', top: '7.5rem' }}>
+                <div style={{ flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: '1.5rem', position: isMobile ? 'static' : 'sticky', top: '7.5rem' }}>
                     <div className="glass" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid var(--glass-border)' }}>
                         <h3 style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--text-light)', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--glass-border)', paddingBottom: '0.5rem' }}>
                             {lang === 'te' ? 'ఇటీవలి నోటిఫికేషన్లు' : 'Recent Notifications'}

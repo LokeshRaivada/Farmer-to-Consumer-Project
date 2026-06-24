@@ -341,6 +341,33 @@ const Navbar = () => {
               📦 {lang === 'te' ? 'నా ఆర్డర్లు' : 'Orders'}
             </NavLink>
             
+            {/* Mobile Language Selector */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', background: 'var(--bg-darker)', borderRadius: '0.75rem', border: '1px solid var(--glass-border)', marginTop: '0.5rem' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-light)' }}>🌐 {lang === 'te' ? 'భాష / Language' : 'Language'}</span>
+              <div style={{ display: 'flex', background: 'var(--bg-darkest)', borderRadius: '1.5rem', padding: '2px', border: '1px solid var(--glass-border)', alignItems: 'center', height: '32px' }}>
+                <button 
+                  onClick={() => lang !== 'en' && toggleLang()} 
+                  style={{ 
+                    background: lang === 'en' ? 'var(--primary)' : 'transparent', 
+                    color: lang === 'en' ? 'var(--text-on-primary)' : 'var(--text-primary)',
+                    border: 'none', borderRadius: '1.5rem', padding: '0.1rem 0.75rem', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center' 
+                  }}
+                >
+                  EN
+                </button>
+                <button 
+                  onClick={() => lang !== 'te' && toggleLang()} 
+                  style={{ 
+                    background: lang === 'te' ? 'var(--primary)' : 'transparent', 
+                    color: lang === 'te' ? 'var(--text-on-primary)' : 'var(--text-primary)',
+                    border: 'none', borderRadius: '1.5rem', padding: '0.1rem 0.75rem', fontSize: '0.75rem', fontWeight: 'bold', cursor: 'pointer', transition: 'all 0.3s', height: '100%', display: 'flex', alignItems: 'center' 
+                  }}
+                >
+                  తెలుగు
+                </button>
+              </div>
+            </div>
+            
             {user ? (
               <>
                 <div style={{ height: '1px', background: 'var(--border)', margin: '0.5rem 0' }}></div>
@@ -553,7 +580,7 @@ const AppContent = () => {
       </div>
       
       {/* Simplified Footer */}
-      <footer className="glass" style={{ margin: '2px', maxWidth: '1500px', padding: '2rem', borderRadius: '2rem', border: '1px solid var(--glass-border)', textAlign: 'left' }}>
+      <footer className="glass app-footer" style={{ margin: '2px', maxWidth: '1500px', padding: '2rem', borderRadius: '2rem', border: '1px solid var(--glass-border)', textAlign: 'left' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2.5rem' }}>
           {/* Column 1: About */}
           <div>
@@ -597,7 +624,7 @@ const AppContent = () => {
           </div>
         </div>
         
-        <div style={{ borderTop: '1px solid var(--glass-border)', marginTop: '2.5rem', paddingTop: '1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.8 }}>
+        <div className="app-footer-bottom" style={{ borderTop: '1px solid var(--glass-border)', marginTop: '2.5rem', paddingTop: '1.5rem', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', opacity: 0.8 }}>
            <p>&copy; {new Date().getFullYear()} FarmerDirect. All rights reserved.</p>
            <p style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', alignItems: 'center' }}>
              {lang === 'te' ? 'రూపకల్పన & అభివృద్ధి: ' : 'Designed & Developed by '}

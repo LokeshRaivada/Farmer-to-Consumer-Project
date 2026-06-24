@@ -182,18 +182,18 @@ const Cart = () => {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 exit={{ opacity: 0, x: 20 }}
-                                className="glass" 
+                                className="glass cart-item-card" 
                                 style={{ padding: '1.5rem', display: 'flex', gap: '1.5rem', alignItems: 'center', border: '1px solid var(--glass-border)' }}
                             >
-                                <div style={{ width: '80px', height: '80px', background: 'var(--bg-darker)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <div style={{ width: '80px', height: '80px', background: 'var(--bg-darker)', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                     <Package color="var(--primary)" />
                                 </div>
-                                <div style={{ flex: 1, textAlign: 'left' }}>
+                                <div className="cart-item-details" style={{ flex: 1, textAlign: 'left' }}>
                                     <h3 style={{ fontSize: '1.1rem', color: 'var(--text-light)', margin: '0 0 0.25rem' }}>{item.product.name}</h3>
                                     <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '0 0 0.5rem' }}>By {item.product.farmer?.name || 'Local Farmer'}</p>
                                     <div style={{ fontWeight: 'bold', color: 'var(--primary)' }}>₹{item.price} / kg</div>
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                <div className="cart-item-actions" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-darkest)', border: '1px solid var(--glass-border)', borderRadius: '2rem', padding: '0.25rem' }}>
                                         <button 
                                             onClick={() => updateQuantity(item.product._id, item.quantity - 1)}

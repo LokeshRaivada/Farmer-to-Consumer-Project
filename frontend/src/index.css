@@ -706,6 +706,246 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
+/* Chat Box Responsive Layout */
+.chat-box-container {
+  position: fixed;
+  bottom: 5.5rem;
+  right: 1.5rem;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.chat-box-window {
+  width: 330px;
+  max-width: calc(100vw - 3rem);
+  height: 480px;
+  max-height: calc(100vh - 7.5rem);
+  margin-bottom: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+/* Auth Card Styles */
+.auth-card {
+  width: 100%;
+  padding: 3rem 2.5rem;
+  border-radius: 1.5rem;
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-card);
+  z-index: 1;
+  position: relative;
+  background: var(--bg-darkest);
+}
+
+/* Timeline Custom Styles */
+.timeline-container {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.timeline-track {
+  position: absolute;
+  top: 14px;
+  left: 8%;
+  right: 8%;
+  height: 3px;
+  background: var(--glass-border);
+  z-index: 0;
+  border-radius: 2px;
+}
+
+.timeline-track-fill {
+  height: 100%;
+  background: var(--primary);
+  border-radius: 2px;
+  transition: width 0.8s ease-in-out;
+}
+
+.timeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  z-index: 1;
+  min-width: 75px;
+  flex: 1;
+  text-align: center;
+}
+
+.timeline-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.timeline-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-muted);
+}
+
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.timeline-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.timeline-node.completed .timeline-label {
+  color: var(--text-light);
+}
+
+.timeline-node.current .timeline-label {
+  color: var(--text-light);
+  font-weight: bold;
+}
+
+.timeline-note {
+  font-size: 0.65rem;
+  color: var(--primary);
+  font-weight: bold;
+}
+
+.timeline-time {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+}
+
+/* Mobile Media Queries (<= 768px) */
+@media (max-width: 768px) {
+  /* Chat Box fullscreen overlay on mobile */
+  .chat-box-container {
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    align-items: stretch !important;
+  }
+  
+  .chat-box-window {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+    margin-bottom: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+  }
+
+  /* Auth Card spacing */
+  .auth-card {
+    padding: 2rem 1.25rem !important;
+    border-radius: 1.25rem !important;
+  }
+
+  /* App Footer adjustments */
+  .app-footer {
+    padding: 1.5rem 1rem !important;
+    border-radius: 1.5rem !important;
+    margin: 10px !important;
+  }
+
+  .app-footer-bottom {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  /* Cart Item Card stack */
+  .cart-item-card {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    align-items: stretch !important;
+    padding: 1.25rem !important;
+    text-align: left !important;
+  }
+
+  .cart-item-details {
+    text-align: left !important;
+  }
+
+  .cart-item-actions {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    border-top: 1px solid var(--glass-border) !important;
+    padding-top: 0.75rem !important;
+  }
+
+  /* Responsive Vertical Timeline */
+  .timeline-container {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1.5rem !important;
+    padding-left: 0.5rem !important;
+    position: relative !important;
+    overflow-x: hidden !important;
+  }
+
+  .timeline-track {
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 13px !important; /* Center of timeline-icon */
+    width: 3px !important;
+    height: auto !important;
+    margin: 14px 0 !important;
+  }
+
+  .timeline-track-fill {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .timeline-node {
+    flex-direction: row !important;
+    align-items: flex-start !important;
+    text-align: left !important;
+    gap: 1rem !important;
+    min-width: unset !important;
+    width: 100% !important;
+  }
+
+  .timeline-content {
+    align-items: flex-start !important;
+    text-align: left !important;
+    gap: 0.15rem !important;
+  }
+
+  /* Modal responsiveness fixes */
+  .modal-responsive-wrapper {
+    max-height: 85vh !important;
+  }
+
+  .modal-flex-container {
+    flex-direction: column !important;
+    overflow-y: auto !important;
+  }
+}
+
 
 
 

@@ -37,8 +37,8 @@ const Login = () => {
                 initial={{ opacity: 0, y: 30 }} 
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
-                className="glass" 
-                style={{ width: '100%', maxWidth: '420px', padding: '3rem 2.5rem', borderRadius: '1.5rem', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow-card)', zIndex: 1, position: 'relative', background: 'var(--bg-darkest)' }}
+                className="glass auth-card" 
+                style={{ maxWidth: '420px' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
                     <div style={{ width: '60px', height: '60px', borderRadius: '1rem', background: 'rgba(22, 163, 74, 0.1)', border: '1px solid var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--primary)' }}>

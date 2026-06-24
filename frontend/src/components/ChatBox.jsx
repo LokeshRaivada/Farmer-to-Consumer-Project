@@ -146,18 +146,17 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
   if (!user) return null;
 
   return (
-    <div style={{ position: 'fixed', bottom: '5.5rem', right: '1.5rem', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+    <div className="chat-box-container">
       
       {/* Chat Window */}
       <AnimatePresence>
         {isOpen && (
           <motion.div 
-            className="glass" 
+            className="glass chat-box-window" 
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            style={{ width: '330px', maxWidth: 'calc(100vw - 3rem)', height: '480px', maxHeight: 'calc(100vh - 7.5rem)', marginBottom: '0.75rem', display: 'flex', flexDirection: 'column', overflow: 'hidden', borderRadius: '1rem', border: '1px solid var(--glass-border)', boxShadow: '0 8px 30px rgba(0,0,0,0.15)' }}
           >
             
             {/* Header */}
@@ -271,7 +270,7 @@ const ChatBox = ({ recipientId, recipientName, orderId, isOpen: propIsOpen, setI
                   border: '1px solid var(--glass-border)', 
                   background: 'var(--bg-darker)', 
                   color: 'var(--text-light)',
-                  fontSize: '0.9rem',
+                  fontSize: '1rem',
                   outline: 'none',
                   minHeight: '38px'
                 }}

@@ -90,8 +90,8 @@ const Signup = () => {
                 initial={{ opacity: 0, scale: 0.95 }} 
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.4 }}
-                className="glass" 
-                style={{ width: '100%', maxWidth: '480px', padding: '3rem 2.5rem', borderRadius: '1.5rem', border: '1px solid var(--glass-border)', boxShadow: 'var(--shadow-card)', zIndex: 1, background: 'var(--bg-darkest)' }}
+                className="glass auth-card" 
+                style={{ maxWidth: '480px' }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
                     <div style={{ width: '56px', height: '56px', borderRadius: '1rem', background: 'rgba(22, 163, 74, 0.1)', border: '1px solid var(--primary)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--primary)' }}>
